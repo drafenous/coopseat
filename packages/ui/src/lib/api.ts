@@ -1,3 +1,5 @@
+import {bridge,platform} from '../platform';
+
 export type Session={accessToken:string;refreshToken:string;expiresAt:number};
 export type GateRequirement='email'|'nickname'|'age'|'mfa';
 export type Gate={allowed:boolean;missing:GateRequirement[]};
@@ -25,7 +27,12 @@ export const PROVIDER_LABELS:Record<string,string>={google:'Google',discord:'Dis
 export const GATE_MESSAGES:Record<GateRequirement,string>={email:'Confirme seu e-mail.',nickname:'Escolha um apelido.',age:'Verifique sua idade (18+).',mfa:'Confirme a autenticação em duas etapas.'};
 
 let bff:Promise<string>|null=null;
-export const bffUrl=()=>bff??=(window.input?window.input.info().then(i=>i.bffUrl||DEFAULT_BFF,()=>DEFAULT_BFF):Promise.resolve(DEFAULT_BFF));
+export const bffUrl=()=>{
+ const b=bridge();
+ return bff??=(b?b.info().then(i=>i.bffUrl||DEFAULT_BFF,()=>DEFAULT_BFF):Promise.resolve(platform().kind==='web'&&cookieSession()?location.origin:DEFAULT_BFF));
+};
+/** On the web the BFF serves this page, so the session lives in its httpOnly cookies. */
+const cookieSession=()=>{const p=platform();return p.kind==='web'&&p.accounts;};
 
 const SESSION_KEY='auth.session';
 let session:Session|null=null,loaded=false;
@@ -33,21 +40,23 @@ const isSession=(s:unknown):s is Session=>{const x=s as Session;return Boolean(x
 
 export async function loadSession(){
  if(loaded)return session;
- try{const raw=await window.input?.secureStore.get(SESSION_KEY);const s:unknown=raw?JSON.parse(raw):null;session=isSession(s)?s:null;}catch{session=null;}
+ try{const raw=await bridge()?.secureStore.get(SESSION_KEY);const s:unknown=raw?JSON.parse(raw):null;session=isSession(s)?s:null;}catch{session=null;}
  loaded=true;return session;
 }
 export async function saveSession(s:Session|null){
+ const b=bridge();if(!b)return;
  session=s;loaded=true;
- if(s)await window.input?.secureStore.set(SESSION_KEY,JSON.stringify(s));else await window.input?.secureStore.remove(SESSION_KEY);
+ if(s)await b.secureStore.set(SESSION_KEY,JSON.stringify(s));else await b.secureStore.remove(SESSION_KEY);
 }
 
 type Options={method?:string;body?:unknown;auth?:boolean};
 async function send<T>(path:string,{method='GET',body}:Options,token?:string):Promise<T>{
- const headers:Record<string,string>={'x-coopseat-client':'desktop'};
+ const cookies=cookieSession();
+ const headers:Record<string,string>=cookies?{}:{'x-coopseat-client':'desktop'};
  if(body!==undefined)headers['content-type']='application/json';
  if(token)headers.authorization=`Bearer ${token}`;
  let res:Response;
- try{res=await fetch(`${await bffUrl()}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body)});}
+ try{res=await fetch(`${await bffUrl()}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body),credentials:cookies?'same-origin':'omit'});}
  catch{throw new ApiError(0,'network','Não foi possível falar com o CoopSeat. Confira sua internet.');}
  const data=await res.json().catch(()=>({}));
  if(!res.ok){const e=data?.error??{};throw new ApiError(res.status,e.code??'error',e.message??'Algo deu errado. Tente novamente.',e.fields);}

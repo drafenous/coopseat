@@ -8,6 +8,7 @@ import {usePresets} from '../../hooks/usePresets';
 import {useSettings} from '../../hooks/useSettings';
 import {useToasts} from '../../hooks/useToasts';
 import {openDonation} from '../../lib/donate';
+import {bridge} from '../../platform';
 import {ONBOARDED_KEY,STATS_KEY} from '../../lib/storage';
 import {AccountModal,AppFooter,AppHeader,AuthModal,CaptureViewer,HelpModal,MetricsBar,NicknameStep,PresetPicker,SavePresetModal,SettingsPanel,ToastStack,TransportBar,ViewerEmptyState} from '../organisms';
 import {MainLayout} from '../templates/MainLayout';
@@ -37,7 +38,7 @@ export function CoopSeatPage(){
  const closeAuth=useCallback(()=>setAuthOpen(false),[]);
  const closeAccount=useCallback(()=>setAccountOpen(false),[]);
  const closeNickname=useCallback(()=>{setNicknameOpen(false);setNicknameSkipped(true);},[]);
- const pin=async()=>setTop(Boolean(await window.input?.window('top')));
+ const pin=async()=>setTop(Boolean(await bridge()?.window('top')));
  const disableAutoCinema=()=>{change('autoFull',false);setNotice('Modo cinema automático desativado. Você pode reativar em Exibição, no painel.');};
  const start=()=>void capture.start(),stop=()=>void capture.stop(),permit=()=>void capture.permit();
 
@@ -49,10 +50,10 @@ export function CoopSeatPage(){
 
  return <MainLayout
   immersive={cinema.chromeHidden}
-  header={<AppHeader status={running?'live':busy?'busy':'idle'} auth={auth} onHelp={()=>setHelp(true)} onLogin={()=>setAuthOpen(true)} onAccount={()=>setAccountOpen(true)}/>}
+  header={<AppHeader status={running?'live':busy?'busy':'idle'} auth={auth} onHelp={()=>setHelp(true)} onLogin={()=>auth.web?auth.openSignIn():setAuthOpen(true)} onAccount={()=>setAccountOpen(true)}/>}
   viewer={<CaptureViewer backend={s.backend} running={running} stats={stats} cinemaHint={cinema.cinemaHint} screenRef={capture.screenRef} videoRef={capture.videoRef} audioRef={capture.audioRef}
    emptyState={!running&&<ViewerEmptyState busy={busy} hasDevices={devices.video.length>0} videoName={videoName} audioName={audioName} formatLabel={formatLabel} needsPermission={needsPermission} canStart={canStart} onStart={start} onStop={stop} onPermit={permit}/>}
-   transport={<TransportBar volume={s.volume} onVolume={v=>change('volume',v)} showStats={showStats} onToggleStats={()=>setShowStats(x=>!x)} top={top} canPin={Boolean(window.input)} onPin={()=>void pin()} cinemaActive={cinema.chromeHidden} canCinema={running} onCinema={cinema.enterCinema} onFullscreen={()=>void cinema.fullscreen()}/>}/>}
+   transport={<TransportBar volume={s.volume} onVolume={v=>change('volume',v)} showStats={showStats} onToggleStats={()=>setShowStats(x=>!x)} top={top} canPin={Boolean(bridge())} onPin={()=>void pin()} cinemaActive={cinema.chromeHidden} canCinema={running} onCinema={cinema.enterCinema} onFullscreen={()=>void cinema.fullscreen()}/>}/>}
   panel={<SettingsPanel settings={s} change={change} devices={devices} modes={modes} native={capture.native} running={running} busy={busy} canStart={canStart} needsPermission={needsPermission}
    presetPicker={<PresetPicker presets={presets.presets} selected={presets.selectedPreset} defaultPreset={presets.defaultPreset} locked={running||busy} menuOpen={presetMenu} onMenuOpenChange={setPresetMenu} onApply={presets.applyPreset} onSaveNew={()=>setSaving(true)} onUpdate={presets.savePreset} onToggleDefault={presets.toggleDefaultPreset} onDelete={presets.deletePreset}/>}
    onRefresh={()=>void capture.refresh()} onPermit={permit} onSelectDevice={capture.selectDevice} onBackendChange={capture.changeBackend} onStart={start} onStop={stop}/>}

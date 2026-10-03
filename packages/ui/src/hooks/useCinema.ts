@@ -1,5 +1,6 @@
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {COUNTDOWN_FROM,PAUSE_MS,type Backend,type Countdown} from '../lib/settings';
+import {bridge} from '../platform';
 
 type Options={running:boolean;backend:Backend;autoFull:boolean;cinemaDelay:number;blocked:boolean};
 
@@ -20,14 +21,14 @@ export function useCinema(options:Options){
   if(countdownRef.current!==null){clearCinemaTimers();setCountdown('paused');timer.current=setTimeout(startCountdown,PAUSE_MS);return;}
   setChromeHidden(false);scheduleAutoFull();},[clearCinemaTimers,setCountdown,startCountdown,scheduleAutoFull]);
 
- const fullscreen=useCallback(async()=>{if(live.current.backend==='native'&&live.current.running){const on=Boolean(await window.input?.window('fullscreen'));pinned.current=on;setChromeHidden(on);}else if(window.input)await window.input.window('fullscreen');else if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();},[]);
- const exit=useCallback(()=>{pinned.current=false;void window.input?.window('exitFullscreen');setChromeHidden(false);},[]);
+ const fullscreen=useCallback(async()=>{const b=bridge();if(live.current.backend==='native'&&live.current.running){const on=Boolean(await b?.window('fullscreen'));pinned.current=on;setChromeHidden(on);}else if(b)await b.window('fullscreen');else if(document.fullscreenElement)await document.exitFullscreen();else await document.documentElement.requestFullscreen();},[]);
+ const exit=useCallback(()=>{pinned.current=false;void bridge()?.window('exitFullscreen');setChromeHidden(false);},[]);
 
  useEffect(()=>{if(running&&autoFull)scheduleAutoFull();else{cancelAutoFull();if(!running){pinned.current=false;setChromeHidden(false);}}},[running,autoFull,cinemaDelay,scheduleAutoFull,cancelAutoFull]);
  useEffect(()=>{if(!chromeHidden||backend!=='compat'){setCinemaHint(false);return;}setCinemaHint(true);const t=setTimeout(()=>setCinemaHint(false),2500);return()=>clearTimeout(t);},[chromeHidden,backend]);
  useEffect(()=>{const events=['mousemove','mousedown','wheel','keydown'] as const;events.forEach(n=>window.addEventListener(n,wake,{passive:true}));return()=>events.forEach(n=>window.removeEventListener(n,wake));},[wake]);
  const watchingPointer=running&&backend==='native'&&(autoFull||chromeHidden);
- useEffect(()=>{if(!watchingPointer||!window.input)return;void window.input.watchPointer(true);const off=window.input.onPointer(wake);return()=>{off();void window.input?.watchPointer(false);};},[watchingPointer,wake]);
+ useEffect(()=>{const b=bridge();if(!watchingPointer||!b)return;void b.watchPointer(true);const off=b.onPointer(wake);return()=>{off();void b.watchPointer(false);};},[watchingPointer,wake]);
  useEffect(()=>()=>{clearTimeout(timer.current);clearInterval(countdownTimer.current);},[]);
 
  return {chromeHidden,countdown,cinemaHint,enterCinema,fullscreen,exit};

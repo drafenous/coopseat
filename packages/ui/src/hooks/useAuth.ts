@@ -2,6 +2,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {api,ApiError,bffUrl,loadSession,refreshSession,saveSession,type Account,type LoginResult,type MfaPending,type OAuthProvider,type Session} from '../lib/api';
 import {errorText} from '../lib/errors';
 import {challengeFor,createVerifier} from '../lib/pkce';
+import {bridge,platform} from '../platform';
 import type {AuthDeepLink} from '../types';
 
 export type AuthStatus='loading'|'signedOut'|'signedIn';
@@ -14,7 +15,7 @@ export function useAuth({setError,setNotice}:Props){
  const [mfa,setMfa]=useState<MfaPending|null>(null);
  const [waiting,setWaiting]=useState<OAuthProvider|null>(null);
  const verifier=useRef<string|null>(null);
- const available=Boolean(window.input?.auth);
+ const p=platform(),web=p.kind==='web',available=p.kind==='desktop'||p.accounts;
 
  const loadAccount=useCallback(async()=>{
   try{const a=await api<Account>('/api/me');setAccount(a);setStatus('signedIn');return a;}
@@ -29,12 +30,12 @@ export function useAuth({setError,setNotice}:Props){
  useEffect(()=>{
   let alive=true;
   void (async()=>{
-   if(!(await loadSession())){if(alive)setStatus('signedOut');return;}
+   if(!available||(!web&&!(await loadSession()))){if(alive)setStatus('signedOut');return;}
    // Offline start keeps the stored session; capture works without an account.
    try{await loadAccount();}catch{if(alive)setStatus('signedOut');}
   })();
   return()=>{alive=false;};
- },[loadAccount]);
+ },[loadAccount,available,web]);
 
  const handleLink=useCallback(async(link:AuthDeepLink)=>{
   try{
@@ -49,17 +50,25 @@ export function useAuth({setError,setNotice}:Props){
  },[finishLogin,loadAccount,setError,setNotice]);
 
  useEffect(()=>{
-  const bridge=window.input?.auth;if(!bridge)return;
-  const off=bridge.onCallback(link=>void handleLink(link));
-  void bridge.pending().then(link=>{if(link)void handleLink(link);});
+  const links=bridge()?.auth;if(!links)return;
+  const off=links.onCallback(link=>void handleLink(link));
+  void links.pending().then(link=>{if(link)void handleLink(link);});
   return off;
  },[handleLink]);
 
- const open=async(url:string)=>{if(!window.input)throw Error('Disponível apenas no aplicativo.');await window.input.auth.open(url);};
+ // On the web, account pages open in a new tab so a running capture keeps going.
+ const open=async(url:string)=>{
+  const b=bridge();
+  if(b){await b.auth.open(url);return;}
+  if(!available)throw Error('Disponível apenas no aplicativo.');
+  window.open(url,'_blank','noopener');
+ };
  const openWeb=async(path:string)=>open(`${await bffUrl()}${path}`);
 
  return {
-  available,status,account,mfa,waiting,
+  available,web,status,account,mfa,waiting,
+  /** Web sign-in uses the site's own pages (Turnstile only runs there). */
+  openSignIn:()=>{location.assign(`/entrar?next=${encodeURIComponent(location.pathname)}`);},
   loginWithPassword:async(email:string,password:string)=>finishLogin(await api<LoginResult>('/api/auth/login',{method:'POST',body:{email,password},auth:false})),
   startOAuth:async(provider:OAuthProvider)=>{
    const v=createVerifier();verifier.current=v;setWaiting(provider);
@@ -70,7 +79,7 @@ export function useAuth({setError,setNotice}:Props){
   submitMfa:async(code:string)=>mfa?finishLogin(await api<LoginResult>('/api/auth/mfa/challenge',{method:'POST',body:{mfaToken:mfa.mfaToken,factorId:mfa.factors[0]?.id,code},auth:false})):false,
   cancelMfa:()=>setMfa(null),
   logout:async()=>{
-   if(await loadSession())await api('/api/auth/logout',{method:'POST'}).catch(()=>undefined);
+   if(web||await loadSession())await api('/api/auth/logout',{method:'POST'}).catch(()=>undefined);
    await saveSession(null);setAccount(null);setStatus('signedOut');
   },
   reload:loadAccount,
@@ -79,7 +88,7 @@ export function useAuth({setError,setNotice}:Props){
   unlink:async(id:string)=>{await api(`/api/auth/identities/${encodeURIComponent(id)}`,{method:'DELETE'});await loadAccount();},
   verifyAge:async()=>{const {url}=await api<{url:string}>('/api/identity/sessions',{method:'POST'});await open(url);},
   enrollTotp:()=>api<TotpEnrollment>('/api/auth/mfa/enroll',{method:'POST',body:{}}),
-  verifyTotp:async(factorId:string,code:string)=>{const r=await api<{session:Session}>('/api/auth/mfa/verify',{method:'POST',body:{factorId,code}});await saveSession(r.session);await loadAccount();},
+  verifyTotp:async(factorId:string,code:string)=>{const r=await api<{session?:Session}>('/api/auth/mfa/verify',{method:'POST',body:{factorId,code}});if(r.session)await saveSession(r.session);await loadAccount();},
   removeTotp:async(factorId:string)=>{await api(`/api/auth/mfa/${encodeURIComponent(factorId)}`,{method:'DELETE'});await loadAccount();},
   openWeb,
  };

@@ -1,12 +1,14 @@
-name: CI
+name: Web
 
 on:
   push:
     branches: [main]
+    paths: ['coopseat-web/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/web.yml']
   pull_request:
+    paths: ['coopseat-web/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/web.yml']
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: web-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -15,6 +17,9 @@ env:
 jobs:
   check:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: coopseat-web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -22,9 +27,13 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+        working-directory: .
       - run: npx prisma contract emit
+      - run: npx next typegen
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run typecheck -w @coopseat/ui
+        working-directory: .
       - run: npm test
       - run: npm run build
         env:
@@ -35,6 +44,9 @@ jobs:
     needs: check
     runs-on: ubuntu-latest
     environment: production
+    defaults:
+      run:
+        working-directory: coopseat-web
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -42,6 +54,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+        working-directory: .
       - run: npx prisma contract emit
       - run: npx prisma db migrate
         env:

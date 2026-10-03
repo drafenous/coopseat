@@ -1,4 +1,4 @@
-import {CoopSeatPage} from './components/pages/CoopSeatPage';
+import {CoopSeatPage} from '@coopseat/ui';
 
 export default function App(){
  return <CoopSeatPage/>;

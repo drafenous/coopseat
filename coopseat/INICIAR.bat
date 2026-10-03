@@ -6,9 +6,11 @@ if errorlevel 1 (
  pause
  exit /b 1
 )
-if not exist node_modules (
+if not exist ..\node_modules (
+ pushd ..
  call npm ci
- if errorlevel 1 goto erro
+ if errorlevel 1 (popd & goto erro)
+ popd
 )
 call npm run build
 if errorlevel 1 goto erro

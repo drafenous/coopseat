@@ -9,6 +9,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  transpilePackages: ['@coopseat/ui'],
   serverExternalPackages: ['pg', '@prisma/orm-postgres', '@prisma/orm-extension-supabase'],
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }];

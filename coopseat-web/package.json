@@ -20,6 +20,7 @@
     "supabase:configure": "node scripts/configure-supabase.mjs"
   },
   "dependencies": {
+    "@coopseat/ui": "0.1.0",
     "@prisma/orm-extension-supabase": "8.0.0-rc.13",
     "@prisma/orm-postgres": "8.0.0-rc.13",
     "@prisma/orm-target-postgres": "8.0.0-rc.13",

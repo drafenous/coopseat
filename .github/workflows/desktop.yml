@@ -1,13 +1,18 @@
 name: Windows build
 on:
   push:
+    paths: ['coopseat/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/desktop.yml']
   pull_request:
+    paths: ['coopseat/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/desktop.yml']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   build:
     runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: coopseat
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -15,6 +20,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+        working-directory: .
       - run: npm test
       - run: npm run dist
         env:
@@ -22,5 +28,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: CoopSeat-Windows-x64
-          path: release/*Setup.exe
+          path: coopseat/release/*Setup.exe
           if-no-files-found: error

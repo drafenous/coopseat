@@ -1,5 +1,7 @@
 import React from 'react';
 import {createRoot} from 'react-dom/client';
-import './styles/base.css';
+import {configurePlatform} from '@coopseat/ui';
+import '@coopseat/ui/base.css';
 import App from './App';
+configurePlatform(window.input?{kind:'desktop',bridge:window.input}:{kind:'web',accounts:false});
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);

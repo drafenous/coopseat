@@ -6,11 +6,18 @@ O navegador e o app desktop falam **só** com `/api`. O BFF valida tudo com Zod,
 
 ## Rodar localmente
 
+Este site faz parte de um monorepo (npm workspaces) com o app desktop (`../coopseat`) e a interface compartilhada (`../packages/ui`). Instale as dependências na raiz:
+
 ```bash
+npm ci                       # na raiz do repositório
+cd coopseat-web
 cp .env.example .env.local   # preencha os valores
-npm ci
 npm run dev                  # emite o contrato Prisma e sobe em http://localhost:3000
 ```
+
+## App no navegador (`/play`)
+
+`/play` roda a mesma interface do app desktop (`@coopseat/ui`), só no modo Compatibilidade (`getUserMedia`): o núcleo nativo (Media Foundation, Direct3D, WASAPI) e "Sempre no topo" existem apenas no desktop. A conta usa os cookies do site; "Entrar" abre `/entrar?next=/play`. A rota tem layout raiz próprio (`src/app/play/layout.tsx`) para o CSS do app não se misturar com o Tailwind das páginas em `src/app/(main)`; navegar entre os dois recarrega a página.
 
 Primeira configuração do Supabase (projeto, role `prisma`, migrations, SQL, Auth, provedores OAuth, SMTP e Turnstile): veja [`docs/supabase-setup.md`](docs/supabase-setup.md).
 

@@ -65,10 +65,11 @@ Para apontar o app de desenvolvimento para um BFF local, defina `COOPSEAT_BFF_UR
 
 ## Executar pelo código
 
-Instale Node.js 22 LTS ou superior. Extraia o ZIP inteiro e abra a pasta num terminal:
+Instale Node.js 22 LTS ou superior. Este app faz parte de um monorepo (npm workspaces): instale as dependências **na raiz do repositório** e rode os scripts nesta pasta:
 
 ```powershell
-npm ci
+npm ci          # na raiz
+cd coopseat
 npm run build
 npm start
 ```
@@ -109,18 +110,19 @@ Para gerar um instalador só com Chromium, sem compilar C++:
 npm run dist:compat
 ```
 
-O workflow `.github/workflows/windows.yml` recompila o núcleo com MSVC, executa os testes e publica o instalador como artifact do job. Ele está incluído, mas **não foi executado remotamente nesta entrega**.
+O workflow `.github/workflows/desktop.yml` (na raiz do repositório) recompila o núcleo com MSVC, executa os testes e publica o instalador como artifact do job. Ele está incluído, mas **não foi executado remotamente nesta entrega**.
 
 ## Estrutura
 
-- `src/`: UI, seleção de dispositivos e captura Chromium.
+- `src/`: entrada do renderer; liga a ponte do preload (`window.input`) à interface com `configurePlatform`.
+- `../packages/ui` (`@coopseat/ui`): interface, seleção de dispositivos e captura Chromium, compartilhadas com o site (`coopseat-web`, rota `/play`).
 - `electron/`: processo principal, preload restrito e validação de IPC.
 - `native/capture.hpp`: enumeração de modos, captura assíncrona e mailbox de último sample.
 - `native/render.hpp`: texturas YUV/RGB, shaders e janela Direct3D 11.
 - `native/audio.hpp`: enumeração de endpoints e monitoramento WASAPI.
 - `native/main.cpp`: comandos, janela, loop de render e estatísticas.
 - `scripts/`: inicialização de desenvolvimento e build Windows.
-- `src/lib/api.ts`, `src/lib/pkce.ts`, `src/hooks/useAuth.ts`: cliente do BFF, PKCE e estado da conta.
+- `../packages/ui/src/lib/api.ts`, `lib/pkce.ts`, `hooks/useAuth.ts`: cliente do BFF, PKCE e estado da conta.
 - `tests/`: validação de comandos encaminhados ao processo nativo, de deep links e de URLs externas.
 
 ## Validação desta entrega
