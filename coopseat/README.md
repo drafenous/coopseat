@@ -110,7 +110,16 @@ Para gerar um instalador só com Chromium, sem compilar C++:
 npm run dist:compat
 ```
 
-O workflow `.github/workflows/desktop.yml` (na raiz do repositório) recompila o núcleo com MSVC, executa os testes e publica o instalador como artifact do job. Ele está incluído, mas **não foi executado remotamente nesta entrega**.
+O workflow `.github/workflows/desktop.yml` (na raiz do repositório) recompila o núcleo com MSVC, executa os testes e publica o instalador como artifact do job.
+
+Para lançar uma versão, atualize `version` em `coopseat/package.json`, faça o commit e envie uma tag com o mesmo número:
+
+```powershell
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+O workflow confere se a tag bate com o `package.json` e cria uma GitHub Release com o `CoopSeat-<versão>-Setup.exe` e notas geradas a partir dos commits. O instalador não é assinado, então o Windows SmartScreen exibe um aviso na primeira execução.
 
 ## Estrutura
 
