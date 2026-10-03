@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { Brand } from '@coopseat/ui/design';
 import { getPageAccount } from '@/server/page-session';
 import { AccountPanel } from './AccountPanel';
 
@@ -14,7 +14,7 @@ export default async function AccountPage({ searchParams }: PageProps<'/conta'>)
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
       <header className="mb-8 flex items-center justify-between">
-        <Link href="/" className="text-lg font-bold text-white">CoopSeat</Link>
+        <Brand href="/" version={null} />
         <span className="text-sm text-muted">{account.email}</span>
       </header>
       <AccountPanel

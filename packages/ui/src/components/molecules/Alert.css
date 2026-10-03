@@ -1,0 +1,4 @@
+.alert{padding:10px 12px;border:1px solid;border-radius:var(--cs-radius);font-size:13px;line-height:1.5}
+.alert.error{color:var(--cs-danger);background:#ff9d9d12;border-color:#ff9d9d40}
+.alert.success{color:var(--cs-ok);background:#9ad9bd12;border-color:#9ad9bd40}
+.alert.info{color:var(--cs-accent);background:#b0f3d20f;border-color:#b0f3d238}

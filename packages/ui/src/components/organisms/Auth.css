@@ -1,6 +1,4 @@
 .auth-providers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
-.auth-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:#6f8193;font-size:12px}
-.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#26333f}
 .auth-field{display:grid;gap:6px;margin-bottom:12px;font-size:12px;color:#a2afbd}
 .auth-links{display:flex;justify-content:space-between;gap:12px;margin-top:14px}
 .auth-links .text-button{padding:0}

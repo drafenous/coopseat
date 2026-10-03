@@ -7,7 +7,9 @@
   "sideEffects": ["**/*.css"],
   "exports": {
     ".": "./src/index.ts",
-    "./base.css": "./src/styles/base.css"
+    "./design": "./src/design.ts",
+    "./base.css": "./src/styles/base.css",
+    "./tokens.css": "./src/styles/tokens.css"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { Card } from '@/components/ui';
+import { Button, Card, Field } from '@/components/ui';
 import { isMockAllowed } from '@/server/identity';
 import { applyVerificationResult } from '@/server/identity/service';
 import type { VerificationResult } from '@/server/identity/types';
@@ -44,22 +44,14 @@ export default async function MockVerificationPage({ searchParams }: PageProps<'
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-12">
       <Card title="Verificação simulada" subtitle="Provedor de KYC de desenvolvimento. Escolha o resultado.">
-        <form action={complete} className="space-y-3">
+        <form action={complete} className="flex flex-col gap-3">
           <input type="hidden" name="session" value={session} />
           <input type="hidden" name="return" value={back} />
-          <label className="block text-sm">
-            <span className="mb-1 block">Número do documento (para testar duplicidade)</span>
-            <input name="document" defaultValue="12345678909" className="w-full rounded-lg border border-white/10 bg-black/30 px-3 py-2" />
-          </label>
+          <Field label="Número do documento (para testar duplicidade)" name="document" defaultValue="12345678909" />
           {Object.entries(OUTCOMES).map(([key, outcome]) => (
-            <button
-              key={key}
-              name="outcome"
-              value={key}
-              className="block w-full rounded-lg bg-white/5 px-4 py-2 text-left text-sm ring-1 ring-white/10 hover:bg-white/10"
-            >
+            <Button key={key} type="submit" variant="secondary" name="outcome" value={key}>
               {outcome.label}
-            </button>
+            </Button>
           ))}
         </form>
       </Card>

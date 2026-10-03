@@ -1,1 +1,1 @@
-.text-button{display:flex;align-items:center;gap:6px;background:none;border:0;padding:0 0 16px;color:#b0f3d2;font-size:13px}
+.text-button{display:flex;align-items:center;gap:6px;background:none;border:0;padding:0 0 16px;color:var(--cs-accent);font-size:13px}

@@ -1,1 +1,3 @@
-.divider{height:1px;background:#25313d;margin:6px 0 18px}
+.divider{height:1px;background:var(--cs-border-soft);margin:6px 0 18px}
+.divider.labeled{height:auto;background:none;display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:var(--cs-subtle);font-size:12px}
+.divider.labeled::before,.divider.labeled::after{content:'';flex:1;height:1px;background:#26333f}

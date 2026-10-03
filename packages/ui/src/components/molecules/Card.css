@@ -1,0 +1,6 @@
+.card{width:min(440px,100%);padding:28px;background:var(--cs-surface);border:1px solid var(--cs-border);border-radius:var(--cs-radius-lg);box-shadow:0 24px 60px #00000060;color:var(--cs-text)}
+.card h1{font-size:20px;font-weight:600;letter-spacing:-.3px;margin:0;color:var(--cs-text-strong)}
+.card-subtitle{margin-top:8px;font-size:13px;color:var(--cs-muted)}
+.card-subtitle a{color:var(--cs-accent);text-decoration:none}
+.card-body{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.card-body>.field{margin-bottom:0}

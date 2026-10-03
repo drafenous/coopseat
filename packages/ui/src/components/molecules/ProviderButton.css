@@ -1,6 +1,7 @@
-.provider-button{display:flex;align-items:center;gap:10px;width:100%;height:42px;padding:0 12px;border:1px solid #33465a;background:#0d141c;color:#dbe4ed;border-radius:8px;font-size:13px;font-weight:600}
+.provider-button{display:flex;align-items:center;gap:8px;width:100%;height:42px;padding:0 10px;border:1px solid var(--cs-border);background:var(--cs-field);color:var(--cs-text-field);border-radius:var(--cs-radius);font-size:13px;font-weight:600;text-decoration:none}
 .provider-button:hover:not(:disabled){background:#152130;border-color:#3d5163}
-.provider-mark{display:grid;place-items:center;width:22px;height:22px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;background:#3a4b5c}
+.provider-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.provider-mark{flex:none;display:grid;place-items:center;width:22px;height:22px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;background:var(--cs-border-strong)}
 .provider-mark.google{background:#ea4335}
 .provider-mark.discord{background:#5865f2}
 .provider-mark.x{background:#000;border:1px solid #444}

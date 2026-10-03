@@ -70,7 +70,7 @@ export function AccountModal({auth,onClose,onNickname}:{auth:Auth;onClose():void
     <Button variant="secondary" disabled={busy} onClick={()=>void run(async()=>setEnrollment(await auth.enrollTotp()))}>Ativar</Button></div>}
    {enrollment&&<>
     <div className="account-qr"><img src={enrollment.qrCode} alt="QR code do autenticador"/><div><p>Escaneie com Google Authenticator, Authy ou similar. Ou digite a chave:</p><code>{enrollment.secret}</code></div></div>
-    <TextInput className="text-input code-input" autoFocus inputMode="numeric" autoComplete="one-time-code" aria-label="Código do autenticador" maxLength={6} value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,''))}/>
+    <TextInput className="code-input" autoFocus inputMode="numeric" autoComplete="one-time-code" aria-label="Código do autenticador" maxLength={6} value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,''))}/>
     <div className="modal-actions"><Button variant="secondary" onClick={()=>{setEnrollment(null);setCode('');}}>Cancelar</Button><Button type="submit" disabled={busy||code.length!==6}>Confirmar código</Button></div>
    </>}
    <div className="account-row"><span>Senha, e-mail e exclusão da conta</span><Button variant="secondary" disabled={busy} onClick={()=>void run(()=>auth.openWeb('/conta'))}>Abrir no site</Button></div>
