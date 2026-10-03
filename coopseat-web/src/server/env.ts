@@ -38,6 +38,18 @@ export const env = {
   get turnApiToken() {
     return required('CLOUDFLARE_TURN_API_TOKEN');
   },
+  get resendApiKey() {
+    return required('RESEND_API_KEY');
+  },
+  get emailFrom() {
+    return process.env['EMAIL_FROM'] || 'CoopSeat <no-reply@coopseat.com>';
+  },
+  get gaId() {
+    return process.env['NEXT_PUBLIC_GA_ID'] ?? '';
+  },
+  get gaApiSecret() {
+    return process.env['GA_API_SECRET'] ?? '';
+  },
   get isProduction() {
     return process.env['NODE_ENV'] === 'production';
   },

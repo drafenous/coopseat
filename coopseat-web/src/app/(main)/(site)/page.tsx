@@ -60,7 +60,7 @@ export default async function Home() {
 
   return (
     <>
-        <section className="relative overflow-hidden">
+        <section id="hero" className="relative overflow-hidden">
           <div
             aria-hidden
             className="absolute inset-0 bg-[linear-gradient(#ffffff08_1px,transparent_1px),linear-gradient(90deg,#ffffff08_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_70%_60%_at_50%_0%,#000_40%,transparent_100%)]"
@@ -233,7 +233,7 @@ export default async function Home() {
           </div>
         </section>
 
-        <section className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
+        <section id="cta" className="mx-auto max-w-6xl px-6 py-24 sm:py-32">
           <div className="relative overflow-hidden rounded-3xl border border-accent/25 bg-[linear-gradient(135deg,#16352a_0%,#131c26_60%)] px-8 py-16 text-center sm:px-16">
             <div aria-hidden className="absolute top-0 left-1/2 h-64 w-[600px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent/25 blur-3xl motion-safe:animate-glow" />
             <h2 className="relative text-3xl font-bold tracking-[-0.03em] text-strong sm:text-5xl">{h.ctaTitle}</h2>

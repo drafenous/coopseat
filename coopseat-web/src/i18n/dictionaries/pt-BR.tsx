@@ -381,6 +381,26 @@ export const ptBR: Dictionary = {
         body: <p>Autenticar você, manter a conta segura, cumprir a obrigação legal de verificação etária e operar as salas.</p>,
       },
       {
+        heading: 'Cookies',
+        body: (
+          <p>
+            Cookies essenciais mantêm sua sessão, o idioma escolhido e a segurança do login. Com a sua permissão, também usamos o
+            Google Analytics para ver, de forma agregada, quais páginas são visitadas. Você pode mudar sua escolha a qualquer
+            momento em Preferências de cookies, no rodapé do site.
+          </p>
+        ),
+      },
+      {
+        heading: 'Estatísticas do app para Windows',
+        body: (
+          <p>
+            Só se você permitir, o app avisa quando é aberto e quando a captura começa, com a versão do app, o modo de captura e um
+            identificador aleatório que não está ligado à sua conta. Esses dados passam pelo nosso servidor antes de chegar ao Google
+            Analytics, então o Google não recebe o seu IP. Você pode desligar isso nas Preferências do app, e o identificador é apagado.
+          </p>
+        ),
+      },
+      {
         heading: 'Seus direitos',
         body: (
           <p>
@@ -441,6 +461,33 @@ export const ptBR: Dictionary = {
       },
     ],
   },
+  cookies: {
+    preferences: 'Preferências de cookies',
+    acceptAll: 'Aceitar todos',
+    acceptNecessary: 'Só os essenciais',
+    save: 'Salvar escolhas',
+    close: 'Fechar',
+    consent: {
+      title: 'Usamos cookies',
+      description:
+        'Cookies essenciais fazem o site funcionar. Com a sua permissão, também usamos o Google Analytics para entender como o site é usado. Você pode mudar isso quando quiser.',
+      customize: 'Personalizar',
+    },
+    intro: 'Escolha quais cookies o CoopSeat pode usar. Os essenciais ficam sempre ligados, porque o site não funciona sem eles.',
+    necessary: {
+      title: 'Essenciais',
+      description: 'Mantêm sua sessão, o idioma escolhido e a segurança do login. Não dá para desligar.',
+    },
+    analytics: {
+      title: 'Estatísticas',
+      description:
+        'Google Analytics: mostra para a gente, de forma agregada, quais páginas são visitadas e de onde vêm os acessos. Só é ativado se você permitir.',
+    },
+    more: {
+      title: 'Mais informações',
+      description: (privacyLink) => `Leia a nossa ${privacyLink} para saber como tratamos os seus dados.`,
+    },
+  },
   messages: {
     confirmationSent: 'Enviamos um link de confirmação para o seu e-mail.',
     emailChangeSent: 'Enviamos um link de confirmação para o novo e-mail.',
@@ -460,6 +507,7 @@ export const ptBR: Dictionary = {
     captcha_required: 'Confirme que você não é um robô.',
     captcha_failed: 'Não foi possível validar o captcha. Tente de novo.',
     turn_unavailable: 'Não foi possível preparar a conexão agora. Tente novamente.',
+    email_unavailable: 'Não foi possível enviar o e-mail agora. Tente novamente.',
     invalid_credentials: 'E-mail ou senha incorretos.',
     email_not_confirmed: 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
     email_unconfirmed: 'Confirme seu e-mail antes de verificar a idade.',

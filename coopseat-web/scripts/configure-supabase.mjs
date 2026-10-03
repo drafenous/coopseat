@@ -1,6 +1,6 @@
 // Applies the CoopSeat Auth settings through the Supabase Management API.
 // Usage: SUPABASE_ACCESS_TOKEN=... SUPABASE_PROJECT_REF=... npm run supabase:configure
-// OAuth client ids/secrets and SMTP credentials are read from the env when present.
+// OAuth client ids/secrets and RESEND_API_KEY (or SMTP_*) are read from the env when present.
 import { config as loadEnv } from 'dotenv';
 loadEnv({ path: ['.env.local', '.env'], quiet: true });
 import { readFile } from 'node:fs/promises';
@@ -28,20 +28,25 @@ function provider(name, idVar, secretVar) {
   };
 }
 
-const smtp = process.env.SMTP_HOST
+// Resend SMTP by default; SMTP_* overrides it with another provider.
+const resendKey = process.env.RESEND_API_KEY;
+const smtpServer = process.env.SMTP_HOST
   ? {
       smtp_host: process.env.SMTP_HOST,
       smtp_port: process.env.SMTP_PORT ?? '587',
       smtp_user: process.env.SMTP_USER,
       smtp_pass: process.env.SMTP_PASS,
-      smtp_admin_email: 'no-reply@coopseat.com',
-      smtp_sender_name: 'CoopSeat',
     }
+  : resendKey
+    ? { smtp_host: 'smtp.resend.com', smtp_port: '465', smtp_user: 'resend', smtp_pass: resendKey }
+    : null;
+const smtp = smtpServer
+  ? { ...smtpServer, smtp_admin_email: 'no-reply@coopseat.com', smtp_sender_name: 'CoopSeat', rate_limit_email_sent: 100 }
   : {};
 
 // The free plan rejects the leaked-password check and, without custom SMTP, custom templates.
 const pro = process.env.SUPABASE_PLAN === 'pro';
-const customTemplates = Boolean(process.env.SMTP_HOST) || pro;
+const customTemplates = Boolean(smtpServer) || pro;
 const emailTemplates = customTemplates
   ? {
       mailer_subjects_confirmation: 'Confirm your CoopSeat e-mail / Confirme seu e-mail no CoopSeat',
@@ -96,7 +101,7 @@ if (!res.ok) {
   if (!pro) console.warn('Free plan: leaked-password protection (HaveIBeenPwned) is off. Set SUPABASE_PLAN=pro after upgrading.');
   if (!customTemplates) {
     console.warn(
-      'Email templates skipped: configure SMTP_* to use the PT-BR templates. Until then Supabase sends its ' +
+      'Email templates skipped: set RESEND_API_KEY (or SMTP_*) to use the PT-BR templates. Until then Supabase sends its ' +
         'default emails (only to members of your Supabase organization) and password reset links will not work.',
     );
   }

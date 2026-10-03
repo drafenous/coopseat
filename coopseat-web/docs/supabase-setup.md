@@ -30,7 +30,14 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    | Facebook | `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET` | same |
    | X (OAuth 2.0) | `X_CLIENT_ID`, `X_CLIENT_SECRET` | same |
    | Discord | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` | same |
-   | SMTP | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | sender `no-reply@coopseat.com` (SPF/DKIM on the domain) |
+   | E-mail (Resend) | `RESEND_API_KEY` | sender `no-reply@coopseat.com` via `smtp.resend.com:465` |
+   | Other SMTP (overrides Resend) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | same sender |
+
+   **Resend domain.** In Resend > Domains add `coopseat.com`, create the SPF (`send` MX + TXT) and DKIM
+   (`resend._domainkey`) records it lists at the DNS provider, and wait for *Verified*. Add a DMARC record
+   (`_dmarc` TXT `v=DMARC1; p=none;`) if the domain has none. Then create an API key with *Sending access*
+   for that domain and set it as `RESEND_API_KEY` locally and in Vercel. The BFF uses the same key for its
+   own e-mails (`sendEmail` in `src/server/email.ts`).
 
 5. **Captcha.** Create a Turnstile widget for `coopseat.com` and `localhost`; set
    `NEXT_PUBLIC_TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` in Vercel. The BFF verifies it; Supabase

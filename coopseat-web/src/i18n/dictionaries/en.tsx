@@ -389,6 +389,26 @@ export const en = {
         ) as ReactNode,
       },
       {
+        heading: 'Cookies',
+        body: (
+          <p>
+            Essential cookies keep your session, chosen language and sign-in security working. With your permission, we also use
+            Google Analytics to see, in aggregate, which pages are visited. You can change your choice at any time under Cookie
+            preferences, at the bottom of the site.
+          </p>
+        ) as ReactNode,
+      },
+      {
+        heading: 'Windows app statistics',
+        body: (
+          <p>
+            Only if you allow it, the app reports when it is opened and when a capture starts, with the app version, the capture mode
+            and a random identifier that is not linked to your account. This data goes through our server before reaching Google
+            Analytics, so Google never receives your IP. You can turn it off in the app's Preferences, which deletes the identifier.
+          </p>
+        ) as ReactNode,
+      },
+      {
         heading: 'Your rights',
         body: (
           <p>
@@ -452,6 +472,33 @@ export const en = {
       },
     ],
   },
+  cookies: {
+    preferences: 'Cookie preferences',
+    acceptAll: 'Accept all',
+    acceptNecessary: 'Essential only',
+    save: 'Save choices',
+    close: 'Close',
+    consent: {
+      title: 'We use cookies',
+      description:
+        'Essential cookies keep the site working. With your permission, we also use Google Analytics to understand how the site is used. You can change this at any time.',
+      customize: 'Customize',
+    },
+    intro: 'Choose which cookies CoopSeat may use. Essential ones are always on, because the site does not work without them.',
+    necessary: {
+      title: 'Essential',
+      description: 'Keep your session, chosen language and sign-in security. They cannot be turned off.',
+    },
+    analytics: {
+      title: 'Analytics',
+      description:
+        'Google Analytics: shows us, in aggregate, which pages are visited and where visits come from. Only enabled if you allow it.',
+    },
+    more: {
+      title: 'More information',
+      description: (privacyLink: string) => `Read our ${privacyLink} to learn how we handle your data.`,
+    },
+  },
   messages: {
     confirmationSent: 'We sent a confirmation link to your e-mail.',
     emailChangeSent: 'We sent a confirmation link to the new e-mail.',
@@ -471,6 +518,7 @@ export const en = {
     captcha_required: "Confirm you're not a robot.",
     captcha_failed: "Couldn't validate the captcha. Try again.",
     turn_unavailable: "Couldn't prepare the connection right now. Please try again.",
+    email_unavailable: "Couldn't send the e-mail right now. Please try again.",
     invalid_credentials: 'Incorrect e-mail or password.',
     email_not_confirmed: 'Confirm your e-mail before signing in. Check your inbox.',
     email_unconfirmed: 'Confirm your e-mail before verifying your age.',

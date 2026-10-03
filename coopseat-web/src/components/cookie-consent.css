@@ -1,0 +1,53 @@
+#cc-main {
+  --cc-font-family: Inter, "Segoe UI", Arial, sans-serif;
+  --cc-modal-border-radius: 0.75rem;
+  --cc-btn-border-radius: 0.5rem;
+  --cc-z-index: 2147483000;
+
+  --cc-bg: #131c26;
+  --cc-primary-color: #f3f6f8;
+  --cc-secondary-color: #a2afbd;
+  --cc-link-color: #b0f3d2;
+  --cc-overlay-bg: rgba(11, 16, 22, 0.75);
+
+  --cc-btn-primary-bg: #b0f3d2;
+  --cc-btn-primary-color: #16352a;
+  --cc-btn-primary-border-color: #baf9dc;
+  --cc-btn-primary-hover-bg: #cafee3;
+  --cc-btn-primary-hover-color: #16352a;
+  --cc-btn-primary-hover-border-color: #cafee3;
+
+  --cc-btn-secondary-bg: #0d141c;
+  --cc-btn-secondary-color: #e8edf3;
+  --cc-btn-secondary-border-color: #33465a;
+  --cc-btn-secondary-hover-bg: #25313d;
+  --cc-btn-secondary-hover-color: #f3f6f8;
+  --cc-btn-secondary-hover-border-color: #3a4b5c;
+
+  --cc-separator-border-color: #25313d;
+  --cc-section-category-border: #25313d;
+
+  --cc-toggle-on-bg: #b0f3d2;
+  --cc-toggle-off-bg: #33465a;
+  --cc-toggle-on-knob-bg: #16352a;
+  --cc-toggle-off-knob-bg: #e8edf3;
+  --cc-toggle-enabled-icon-color: #b0f3d2;
+  --cc-toggle-disabled-icon-color: #33465a;
+  --cc-toggle-readonly-bg: #25313d;
+  --cc-toggle-readonly-knob-bg: #6f8193;
+  --cc-toggle-readonly-knob-icon-color: #25313d;
+
+  --cc-cookie-category-block-bg: #0d141c;
+  --cc-cookie-category-block-border: #25313d;
+  --cc-cookie-category-block-hover-bg: #172230;
+  --cc-cookie-category-block-hover-border: #33465a;
+  --cc-cookie-category-expanded-block-bg: #0d141c;
+  --cc-cookie-category-expanded-block-hover-bg: #172230;
+
+  --cc-footer-bg: #0d141c;
+  --cc-footer-color: #a2afbd;
+  --cc-footer-border-color: #25313d;
+
+  --cc-webkit-scrollbar-bg: #33465a;
+  --cc-webkit-scrollbar-hover-bg: #3a4b5c;
+}

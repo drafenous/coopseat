@@ -14,6 +14,7 @@ export const LIMITS = {
   account: { max: 30, windowSeconds: 600 },
   kyc: { max: 5, windowSeconds: 3600 },
   turn: { max: 20, windowSeconds: 600 },
+  telemetry: { max: 30, windowSeconds: 600 },
 } satisfies Record<string, Limit>;
 
 /** Sliding-window limiter backed by Postgres, so it holds across serverless instances. */

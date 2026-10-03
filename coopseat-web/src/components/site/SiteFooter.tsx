@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Brand } from '@coopseat/ui/design';
+import { CookiePreferencesButton } from '@/components/CookieConsent';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { getDictionary } from '@/i18n/server';
 import { DOWNLOAD_URL, SOURCE_URL } from '@/lib/links';
@@ -29,6 +30,7 @@ export async function SiteFooter() {
           <ul className="mt-4 space-y-2.5 text-sm text-muted">
             <li><Link href="/terms" className="hover:text-strong">{t.common.termsOfUse}</Link></li>
             <li><Link href="/privacy" className="hover:text-strong">{t.common.privacyPolicy}</Link></li>
+            <li><CookiePreferencesButton className="cursor-pointer hover:text-strong">{t.cookies.preferences}</CookiePreferencesButton></li>
             <li><a href={SOURCE_URL} className="hover:text-strong">{h.footer.source}</a></li>
           </ul>
         </div>

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { CookieConsent } from '@/components/CookieConsent';
+import { GoogleTag } from '@/app/GoogleTag';
 import { getDictionary, getLocale } from '@/i18n/server';
 import './play.css';
 
@@ -16,7 +18,11 @@ export default async function PlayLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
   return (
     <html lang={locale}>
-      <body>{children}</body>
+      <body>
+        <GoogleTag />
+        {children}
+        <CookieConsent locale={locale} />
+      </body>
     </html>
   );
 }
