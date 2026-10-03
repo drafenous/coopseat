@@ -3,7 +3,7 @@ import {Clapperboard,Monitor} from 'lucide-react';
 import type {EffectIndex,NativeEvent,SmoothingLevel} from '../../types';
 import type {Backend} from '../../lib/settings';
 import {useVideoFilters} from '../../hooks/useVideoFilters';
-import {Dot,Tag} from '../atoms';
+import {Tag} from '../atoms';
 import {useT} from '../../i18n';
 
 type Props={backend:Backend;running:boolean;stats:NativeEvent|null;smoothing:SmoothingLevel;effect:EffectIndex;cinemaHint:boolean;screenRef:RefObject<HTMLDivElement|null>;videoRef:RefObject<HTMLVideoElement|null>;audioRef:RefObject<HTMLAudioElement|null>;emptyState:ReactNode;transport:ReactNode};
@@ -23,7 +23,6 @@ export function CaptureViewer({backend,running,stats,smoothing,effect,cinemaHint
   <div className={`relative flex min-h-0 flex-1 items-center justify-center bg-[#070b10] bg-[radial-gradient(ellipse_at_50%_45%,#17272a66,transparent_65%)] immersive:h-full max-[750px]:min-h-[360px] max-[750px]:flex-none ${grid}`} ref={screenRef}>
    <video ref={videoRef} autoPlay playsInline muted className={`absolute inset-0 size-full bg-black object-contain ${compatLive?'block':'hidden'}`}/><canvas ref={canvasRef} className={`pointer-events-none absolute inset-0 size-full bg-black object-contain ${compatLive&&filtered?'block':'hidden'}`}/><audio ref={audioRef} autoPlay/>
    {emptyState}
-   {compatLive&&<div className="absolute top-4 left-4 flex items-center gap-[7px] rounded-[5px] bg-[#07100cd9] px-2.5 py-[7px] text-[11px] tracking-[1px] text-[#a5f1c9]"><Dot tone="live"/>{t.live}</div>}
    {cinemaHint&&<div className="pointer-events-none absolute bottom-7 left-1/2 z-2 flex -translate-x-1/2 items-center gap-2 rounded-3xl border border-[#ffffff1a] bg-[#050a0ee0] px-4 py-2.5 text-[13px] whitespace-nowrap text-[#e1eaf2] animate-fade-in-slow"><Clapperboard size={15} className="text-accent"/> {t.cinemaHint}</div>}
   </div>
   {transport}

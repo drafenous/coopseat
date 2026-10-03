@@ -13,7 +13,8 @@ export const gridEffect=(e:Effect)=>e==='crt'||e==='crtFlat'||e==='lcd';
 export type Settings={backend:Backend;video:string;audio:string;output:string;mode:number;resolution:string;fps:number;volume:number;vsync:boolean;smoothing:Smoothing;effect:Effect;auto:boolean;autoFull:boolean;cinemaDelay:number};
 export type Countdown=number|'paused'|null;
 
-export const CINEMA_DELAYS=[5,10,30,60],COUNTDOWN_FROM=3,PAUSE_MS=3000;
+/** Total idle seconds before cinema mode, countdown included. */
+export const CINEMA_DELAYS=[1,2,3,4,5],COUNTDOWN_FROM=3,PAUSE_MS=3000;
 export const defaults:Settings={backend:'native',video:'',audio:'',output:'',mode:-1,resolution:'1920x1080',fps:60,volume:.75,vsync:false,smoothing:'off',effect:'none',auto:false,autoFull:true,cinemaDelay:5};
 export const emptyDevices:Devices={video:[],audio:[],output:[]};
 

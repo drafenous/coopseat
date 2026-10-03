@@ -2,6 +2,8 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {COUNTDOWN_FROM,PAUSE_MS,type Backend,type Countdown} from '../lib/settings';
 import {bridge} from '../platform';
 
+const countdownFrom=(delay:number)=>Math.min(COUNTDOWN_FROM,delay);
+
 type Options={running:boolean;backend:Backend;autoFull:boolean;cinemaDelay:number;blocked:boolean};
 
 export function useCinema(options:Options){
@@ -15,8 +17,8 @@ export function useCinema(options:Options){
  const cancelAutoFull=useCallback(()=>{clearCinemaTimers();setCountdown(null);},[clearCinemaTimers,setCountdown]);
  const enterCinema=useCallback(()=>{if(!live.current.running)return;cancelAutoFull();grace.current=Date.now()+1200;setChromeHidden(true);},[cancelAutoFull]);
  const startCountdown=useCallback(()=>{clearCinemaTimers();const o=live.current;if(!o.running||!o.autoFull||o.blocked||pinned.current){setCountdown(null);return;}
-  let n=COUNTDOWN_FROM;setCountdown(n);countdownTimer.current=setInterval(()=>{n--;if(n>0){setCountdown(n);return;}clearInterval(countdownTimer.current);setCountdown(null);grace.current=Date.now()+400;setChromeHidden(true);},1000);},[clearCinemaTimers,setCountdown]);
- const scheduleAutoFull=useCallback(()=>{cancelAutoFull();const o=live.current;if(!o.running||!o.autoFull||o.blocked)return;timer.current=setTimeout(startCountdown,(o.cinemaDelay-COUNTDOWN_FROM)*1000);},[cancelAutoFull,startCountdown]);
+  let n=countdownFrom(o.cinemaDelay);setCountdown(n);countdownTimer.current=setInterval(()=>{n--;if(n>0){setCountdown(n);return;}clearInterval(countdownTimer.current);setCountdown(null);grace.current=Date.now()+400;setChromeHidden(true);},1000);},[clearCinemaTimers,setCountdown]);
+ const scheduleAutoFull=useCallback(()=>{cancelAutoFull();const o=live.current;if(!o.running||!o.autoFull||o.blocked)return;timer.current=setTimeout(startCountdown,(o.cinemaDelay-countdownFrom(o.cinemaDelay))*1000);},[cancelAutoFull,startCountdown]);
  const wake=useCallback(()=>{if(pinned.current||Date.now()<grace.current)return;
   if(countdownRef.current!==null){clearCinemaTimers();setCountdown('paused');timer.current=setTimeout(startCountdown,PAUSE_MS);return;}
   setChromeHidden(false);scheduleAutoFull();},[clearCinemaTimers,setCountdown,startCountdown,scheduleAutoFull]);

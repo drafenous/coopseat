@@ -7,16 +7,17 @@ export type DesktopBridge = {
   secureStore:{get(key:string):Promise<string|null>;set(key:string,value:string):Promise<boolean>;remove(key:string):Promise<boolean>};
   devices():Promise<Devices>;modes(device:string):Promise<{modes:Mode[]}>;
   open(config:OpenConfig):Promise<boolean>;stop():Promise<void>;
-  control(key:string,value:number|boolean):Promise<void>;bounds(rect:{x:number;y:number;width:number;height:number}):Promise<void>;window(action:string):Promise<boolean|void>;donate():Promise<void>;watchPointer(on:boolean):Promise<void>;onPointer(callback:()=>void):()=>void;
+  control(key:string,value:number|boolean):Promise<void>;bounds(rect:{x:number;y:number;width:number;height:number;holes?:{x:number;y:number;width:number;height:number;radius?:number}[];dim?:number}):Promise<void>;window(action:string):Promise<boolean|void>;donate():Promise<void>;watchPointer(on:boolean):Promise<void>;onPointer(callback:()=>void):()=>void;
   onNative(callback:(event:NativeEvent)=>void):()=>void;
 };
 
 /**
  * - desktop: Electron, native capture and Bearer sessions kept in the OS secure store.
  * - web: browser only (Chromium capture). With `accounts`, the page is served by the BFF
- *   itself and the account rides on its same-origin httpOnly cookies.
+ *   itself and the account rides on its same-origin httpOnly cookies. `cookiePreferences`
+ *   opens the host's cookie consent dialog; omit it when the host sets no optional cookies.
  */
-export type Platform = {kind:'desktop';bridge:DesktopBridge}|{kind:'web';accounts:boolean};
+export type Platform = {kind:'desktop';bridge:DesktopBridge}|{kind:'web';accounts:boolean;cookiePreferences?():void};
 
 let current:Platform={kind:'web',accounts:false};
 

@@ -1,12 +1,13 @@
 import type {ReactNode} from 'react';
-import {ArrowLeftRight,ArrowUpRight,AudioLines,Bookmark,MonitorPlay,PanelLeftClose,PanelRightClose,RefreshCw,Settings2,Zap} from 'lucide-react';
+import {ArrowLeftRight,ArrowUpRight,AudioLines,Bookmark,Cable,PanelLeftClose,PanelRightClose,RefreshCw,Settings2,Zap} from 'lucide-react';
 import type {Devices,Mode} from '../../types';
 import type {DeviceKey} from '../../hooks/useCapture';
-import {CINEMA_DELAYS,type Backend,type Settings} from '../../lib/settings';
-import {Divider,IconButton,SectionLabel,TextButton} from '../atoms';
-import {CaptureButton,DeviceSelect,SelectField,ToggleField} from '../molecules';
+import type {Backend,Settings} from '../../lib/settings';
+import {IconButton,SectionLabel,TextButton} from '../atoms';
+import {CaptureButton,Collapsible,DeviceSelect,ToggleField} from '../molecules';
 import type {PanelSide} from '../templates/MainLayout';
 import {AdvancedSettings} from './AdvancedSettings';
+import {EffectSettings} from './EffectSettings';
 import {useT} from '../../i18n';
 
 type Props={side:PanelSide;onSwapSide():void;onCollapse():void;settings:Settings;change<K extends keyof Settings>(key:K,value:Settings[K]):void;devices:Devices;modes:Mode[];native:boolean;running:boolean;busy:boolean;canStart:boolean;needsPermission:boolean;presetPicker:ReactNode;onRefresh():void;onPermit():void;onSelectDevice(key:DeviceKey,value:string):void;onBackendChange(backend:Backend):void;onStart():void;onStop():void};
@@ -19,18 +20,17 @@ export function SettingsPanel({side,onSwapSide,onCollapse,settings:s,change,devi
    <div className="mb-[18px] flex items-center gap-[9px] text-[#c3d0dd]"><Settings2 size={18}/><h2 className="min-w-0 flex-1 truncate text-[16px] font-[550] min-[1800px]:text-[17px]">{t.title}</h2><IconButton size="sm" label={t.refresh} disabled={locked} onClick={onRefresh}><RefreshCw size={16}/></IconButton><IconButton size="sm" label={side==='right'?t.moveLeft:t.moveRight} className="max-[750px]:hidden" onClick={onSwapSide}><ArrowLeftRight size={16}/></IconButton><IconButton size="sm" label={t.collapse} onClick={onCollapse}>{side==='right'?<PanelRightClose size={16}/>:<PanelLeftClose size={16}/>}</IconButton></div>
    <SectionLabel icon={<Bookmark size={14}/>}>{t.preset}</SectionLabel>
    {presetPicker}
-   <Divider/>
-   <DeviceSelect label={t.card} value={s.video} items={devices.video} placeholder={t.selectDevice} disabled={locked} onChange={v=>onSelectDevice('video',v)}/>
-   {needsPermission&&<TextButton onClick={onPermit}>{t.permit} <ArrowUpRight size={13}/></TextButton>}
-   <SectionLabel icon={<AudioLines size={14}/>}>{t.audio}</SectionLabel>
-   <DeviceSelect label={t.audioInput} value={s.audio} items={devices.audio} placeholder={t.noAudio} disabled={locked} onChange={v=>onSelectDevice('audio',v)}/>
-   <DeviceSelect label={t.output} value={s.output} items={devices.output} placeholder={t.systemDefault} disabled={locked} onChange={v=>onSelectDevice('output',v)}/>
-   <SectionLabel icon={<MonitorPlay size={14}/>}>{t.display}</SectionLabel>
-   <ToggleField label={t.autoCinema} hint={t.autoCinemaHint} checked={s.autoFull} onChange={v=>change('autoFull',v)}/>
-   {s.autoFull&&<SelectField label={t.cinemaAfter} value={s.cinemaDelay} onChange={v=>change('cinemaDelay',v)} options={CINEMA_DELAYS.map(d=>({value:d,label:t.secondsIdle(d)}))}/>}   <Divider/>
-   <ToggleField label={t.autoConnect} hint={t.autoConnectHint} checked={s.auto} onChange={v=>change('auto',v)}/>   <AdvancedSettings settings={s} change={change} modes={modes} native={native} locked={locked} onBackendChange={onBackendChange}/>
+   <Collapsible icon={<Cable size={14}/>} title={t.io} defaultOpen>
+    <DeviceSelect label={t.card} value={s.video} items={devices.video} placeholder={t.selectDevice} disabled={locked} onChange={v=>onSelectDevice('video',v)}/>
+    {needsPermission&&<TextButton onClick={onPermit}>{t.permit} <ArrowUpRight size={13}/></TextButton>}
+    <SectionLabel icon={<AudioLines size={14}/>}>{t.audio}</SectionLabel>
+    <DeviceSelect label={t.audioInput} value={s.audio} items={devices.audio} placeholder={t.noAudio} disabled={locked} onChange={v=>onSelectDevice('audio',v)}/>
+    <DeviceSelect label={t.output} value={s.output} items={devices.output} placeholder={t.systemDefault} disabled={locked} onChange={v=>onSelectDevice('output',v)}/>
+   </Collapsible>
+   <EffectSettings settings={s} change={change}/>   <AdvancedSettings settings={s} change={change} modes={modes} native={native} locked={locked} onBackendChange={onBackendChange}/>
   </div>
   <div className="flex-none border-t border-line-soft bg-[#121921] px-5 py-3.5 min-[1800px]:px-6 min-[1800px]:py-4">
+   <ToggleField label={t.autoConnect} hint={t.autoConnectHint} checked={s.auto} onChange={v=>change('auto',v)}/>
    <CaptureButton running={running} busy={busy} canStart={canStart} onStart={onStart} onStop={onStop}/>
    <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[12px] text-[#8494a5]"><Zap size={13}/> {t.local}</p>
   </div>

@@ -14,7 +14,7 @@ Um visualizador local de placas de captura USB, feito para jogar numa janela do 
 6. Clique em **Iniciar captura**. No modo nativo, o vídeo renderizado por Direct3D aparece dentro do próprio painel, na área do monitor de captura.
 7. Se o modo nativo não funcionar com sua placa, pare a captura e selecione **Compatibilidade**. Nesse modo o vídeo aparece dentro do painel.
 
-F11 alterna a tela cheia no monitor inteiro; Esc sai da tela cheia e do modo cinema. Com “Modo cinema automático” ligado, após alguns segundos sem mexer o mouse durante a captura, os controles somem e o vídeo ocupa a janela; mexer o mouse traz os controles de volta. Na janela do painel, M silencia/restaura o áudio. O botão de alfinete controla Sempre no topo. Resolução, FPS e dispositivos são alterados com a captura parada. Ative “Conectar ao abrir” para reusar a última configuração.
+F11 alterna a tela cheia no monitor inteiro; Esc sai da tela cheia e do modo cinema. Com o modo cinema automático ligado (na setinha ao lado do botão Cinema), após alguns segundos sem mexer no teclado ou no mouse durante a captura, os controles somem e o vídeo ocupa a janela; mexer o mouse traz os controles de volta. Na janela do painel, M silencia/restaura o áudio. O botão de alfinete controla Sempre no topo. Resolução, FPS e dispositivos são alterados com a captura parada. Ative “Capturar ao abrir” para reusar a última configuração.
 
 O executável experimental não tem certificado de assinatura de código. Windows/SmartScreen pode indicar editor desconhecido.
 

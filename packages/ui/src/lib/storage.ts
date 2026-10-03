@@ -7,3 +7,5 @@ export const LAST_VOLUME_KEY='input-last-volume';
 export const PANEL_SIDE_KEY='input-panel-side';
 export const PANEL_COLLAPSED_KEY='input-panel-collapsed';
 export const LOCALE_KEY='input-locale';
+export const TELEMETRY_KEY='input-telemetry';
+export const TELEMETRY_ID_KEY='input-telemetry-id';

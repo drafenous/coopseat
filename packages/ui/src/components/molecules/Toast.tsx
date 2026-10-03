@@ -14,7 +14,7 @@ const variants:Record<Variant,string>={
 
 export function Toast({variant='info',icon,onClose,children,...rest}:Props){
  const t=useT();
- return <div className={`pointer-events-auto flex w-full items-start gap-2.5 rounded-[10px] border py-[13px] pr-2 pl-[15px] text-[14px] leading-[1.5] shadow-[0_12px_32px_#00000080] animate-toast-in motion-reduce:animate-none [&>svg]:mt-0.5 [&>svg]:flex-none ${variants[variant]}`} {...rest}>
+ return <div data-overlay className={`pointer-events-auto flex w-full items-start gap-2.5 rounded-[10px] border py-[13px] pr-2 pl-[15px] text-[14px] leading-[1.5] shadow-[0_12px_32px_#00000080] animate-toast-in motion-reduce:animate-none [&>svg]:mt-0.5 [&>svg]:flex-none ${variants[variant]}`} {...rest}>
   {icon}<span className="min-w-0 flex-1 wrap-anywhere">{children}</span>
   {onClose&&<IconButton size="xs" className="-mt-px" label={t.common.close} onClick={onClose}><X size={14}/></IconButton>}
  </div>;

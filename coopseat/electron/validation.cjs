@@ -6,9 +6,30 @@ function validateOpen(o) {
   if (!bounded(o.volume,0,1) || typeof o.vsync !== 'boolean' || typeof o.top !== 'boolean' || !Number.isInteger(o.smoothing) || !bounded(o.smoothing,0,2) || !Number.isInteger(o.effect) || !bounded(o.effect,0,7)) throw Error('Configuração inválida.');
   return {device:o.device,mode:o.mode,audio:o.audio,output:o.output,volume:o.volume,vsync:o.vsync,smoothing:o.smoothing,effect:o.effect,top:o.top};
 }
-function validateBounds(o) {
+const MAX_HOLES = 16;
+const rect = o => {
   if (!o || ![o.x,o.y].every(v=>Number.isInteger(v) && bounded(v,-32768,32767)) || ![o.width,o.height].every(v=>Number.isInteger(v) && bounded(v,0,16384))) throw Error('Área de vídeo inválida.');
   return {x:o.x,y:o.y,width:o.width,height:o.height};
+};
+/** `holes` are areas cut out of the video, relative to it, where page overlays show through; `dim` darkens it (0–1) under a backdrop. */
+function validateBounds(o) {
+  const r = rect(o);
+  if (o.holes !== undefined) {
+    if (!Array.isArray(o.holes) || o.holes.length > MAX_HOLES) throw Error('Área de vídeo inválida.');
+    r.holes = o.holes.map(h => {
+      const hole = rect(h);
+      if (h.radius !== undefined) {
+        if (!Number.isInteger(h.radius) || !bounded(h.radius,0,1024)) throw Error('Área de vídeo inválida.');
+        hole.radius = h.radius;
+      }
+      return hole;
+    });
+  }
+  if (o.dim !== undefined) {
+    if (!bounded(o.dim,0,1)) throw Error('Área de vídeo inválida.');
+    r.dim = o.dim;
+  }
+  return r;
 }
 
 const PROTOCOL = 'coopseat';
