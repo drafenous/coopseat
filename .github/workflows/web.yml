@@ -48,6 +48,19 @@ jobs:
       run:
         working-directory: coopseat-web
     steps:
+      - name: Database secrets are set
+        env:
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+          SQL_ADMIN_URL: ${{ secrets.SQL_ADMIN_URL }}
+        working-directory: .
+        run: |
+          missing=""
+          [ -n "$DIRECT_URL" ] || missing="$missing DIRECT_URL"
+          [ -n "$SQL_ADMIN_URL" ] || missing="$missing SQL_ADMIN_URL"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing secrets:$missing. Add them to the 'production' environment (Settings > Environments) or as repository secrets."
+            exit 1
+          fi
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
