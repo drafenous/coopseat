@@ -28,7 +28,7 @@ O botão **Entrar** no cabeçalho conecta o app à conta CoopSeat. Toda a comuni
 - **Permissões nas sessões**: assistir não exige conta. Chat e voz exigem e-mail confirmado, apelido e idade verificada (18+, ECA Digital). Criar salas também exige o 2FA confirmado na sessão, se ele estiver ativado.
 - **Deep links**: o app registra o protocolo `coopseat://` e roda em instância única. Só são aceitos `auth/callback`, `auth/linked`, `auth/confirmed` e `auth/verified`; o resto é ignorado. `auth:open` só abre o BFF e os domínios dos provedores de verificação de idade.
 
-Para apontar o app de desenvolvimento para um BFF local, defina `COOPSEAT_BFF_URL=http://localhost:3000` antes de `npm run dev`. O build empacotado sempre usa `https://coopseat.com`.
+O endereço fica em `electron/environments.json`, um por ambiente. `npm run dev` usa `development` (`http://localhost:3000`). O instalador usa `production` (`https://coopseat.com`) e ignora variáveis da máquina. Para testar outro ambiente: `COOPSEAT_ENV=production npm run dev`. Para um endereço avulso, como um preview: `COOPSEAT_BFF_URL=https://seu-preview.exemplo npm run dev`. Esse endereço precisa ser o mesmo `APP_URL` do site naquele ambiente.
 
 ## O que está implementado
 
