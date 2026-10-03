@@ -307,7 +307,7 @@ export const en = {
     acceptTermsRequired: 'You must accept the Terms of Use and the Privacy Policy.',
     acceptTerms: (terms: ReactNode, privacy: ReactNode): ReactNode => (
       <>
-        I'm 18 or older and accept the {terms} and the {privacy}.
+        I&apos;m 18 or older and accept the {terms} and the {privacy}.
       </>
     ),
     terms: 'Terms',
@@ -389,7 +389,7 @@ export const en = {
       {
         heading: "What we don't collect",
         body: (
-          <p>We don't record your streams, camera or controllers. Media travels peer-to-peer between participants.</p>
+          <p>We don&apos;t record your streams, camera or controllers. Media travels peer-to-peer between participants.</p>
         ) as ReactNode,
       },
       {
@@ -414,7 +414,7 @@ export const en = {
           <p>
             Only if you allow it, the app reports when it is opened and when a capture starts, with the app version, the capture mode
             and a random identifier that is not linked to your account. This data goes through our server before reaching Google
-            Analytics, so Google never receives your IP. You can turn it off in the app's Preferences, which deletes the identifier.
+            Analytics, so Google never receives your IP. You can turn it off in the app&apos;s Preferences, which deletes the identifier.
           </p>
         ) as ReactNode,
       },
