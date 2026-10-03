@@ -39,9 +39,25 @@ const smtp = process.env.SMTP_HOST
     }
   : {};
 
+// The free plan rejects the leaked-password check and, without custom SMTP, custom templates.
+const pro = process.env.SUPABASE_PLAN === 'pro';
+const customTemplates = Boolean(process.env.SMTP_HOST) || pro;
+const emailTemplates = customTemplates
+  ? {
+      mailer_subjects_confirmation: 'Confirme seu e-mail no CoopSeat',
+      mailer_subjects_recovery: 'Redefinição de senha do CoopSeat',
+      mailer_subjects_email_change: 'Confirme seu novo e-mail no CoopSeat',
+      mailer_subjects_magic_link: 'Seu link de acesso ao CoopSeat',
+      mailer_templates_confirmation_content: await tpl('confirmation'),
+      mailer_templates_recovery_content: await tpl('recovery'),
+      mailer_templates_email_change_content: await tpl('email-change'),
+      mailer_templates_magic_link_content: await tpl('magic-link'),
+    }
+  : {};
+
 const config = {
   site_url: appUrl,
-  uri_allow_list: [`${appUrl}/**`, 'http://localhost:3000/**'].join(','),
+  uri_allow_list: [...new Set([`${appUrl}/**`, 'https://coopseat.com/**', 'http://localhost:3000/**'])].join(','),
   disable_signup: false,
   mailer_autoconfirm: false,
   mailer_secure_email_change_enabled: true,
@@ -49,7 +65,7 @@ const config = {
   security_manual_linking_enabled: true,
   password_min_length: 8,
   password_required_characters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789',
-  password_hibp_enabled: true,
+  password_hibp_enabled: pro,
   security_refresh_token_reuse_interval: 10,
   jwt_exp: 3600,
   mfa_totp_enroll_enabled: true,
@@ -59,14 +75,7 @@ const config = {
   hook_custom_access_token_uri: 'pg-functions://postgres/public/custom_access_token_hook',
   // Captcha is verified by the BFF (Turnstile); GoTrue is only reachable through it.
   security_captcha_enabled: false,
-  mailer_subjects_confirmation: 'Confirme seu e-mail no CoopSeat',
-  mailer_subjects_recovery: 'Redefinição de senha do CoopSeat',
-  mailer_subjects_email_change: 'Confirme seu novo e-mail no CoopSeat',
-  mailer_subjects_magic_link: 'Seu link de acesso ao CoopSeat',
-  mailer_templates_confirmation_content: await tpl('confirmation'),
-  mailer_templates_recovery_content: await tpl('recovery'),
-  mailer_templates_email_change_content: await tpl('email-change'),
-  mailer_templates_magic_link_content: await tpl('magic-link'),
+  ...emailTemplates,
   ...provider('google', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'),
   ...provider('facebook', 'FACEBOOK_CLIENT_ID', 'FACEBOOK_CLIENT_SECRET'),
   ...provider('x', 'X_CLIENT_ID', 'X_CLIENT_SECRET'),
@@ -81,6 +90,14 @@ const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/config/auth
 });
 if (!res.ok) {
   console.error(`Management API ${res.status}: ${await res.text()}`);
-  process.exit(1);
+  process.exitCode = 1;
+} else {
+  console.log('Supabase Auth configured.');
+  if (!pro) console.warn('Free plan: leaked-password protection (HaveIBeenPwned) is off. Set SUPABASE_PLAN=pro after upgrading.');
+  if (!customTemplates) {
+    console.warn(
+      'Email templates skipped: configure SMTP_* to use the PT-BR templates. Until then Supabase sends its ' +
+        'default emails (only to members of your Supabase organization) and password reset links will not work.',
+    );
+  }
 }
-console.log('Supabase Auth configured.');

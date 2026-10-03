@@ -6,11 +6,20 @@ import { setSessionCookies } from '@/server/session';
 const TYPES = new Set(['signup', 'email', 'recovery', 'email_change', 'magiclink', 'invite']);
 
 export async function GET(req: NextRequest) {
-  const tokenHash = req.nextUrl.searchParams.get('token_hash');
-  const type = req.nextUrl.searchParams.get('type') ?? '';
-  const target = (path: string) => NextResponse.redirect(new URL(path, env.appUrl), 303);
+  const params = req.nextUrl.searchParams;
+  const tokenHash = params.get('token_hash');
+  const type = params.get('type') ?? '';
+  // The trailing "#" replaces any fragment GoTrue appended (it may carry tokens).
+  const target = (path: string) => NextResponse.redirect(`${new URL(path, env.appUrl)}#`, 303);
 
-  if (!tokenHash || !TYPES.has(type)) return target('/auth/confirmado?erro=link');
+  if (!tokenHash) {
+    // Supabase's default email template confirms on GoTrue's own /verify and only then
+    // redirects here (with ?flow=signup from our redirect_to, or ?error=... on failure).
+    if (params.has('error') || params.has('error_code')) return target('/auth/confirmado?erro=expirado');
+    if (params.get('flow') === 'signup') return target('/auth/confirmado?tipo=signup');
+    return target('/auth/confirmado?erro=link');
+  }
+  if (!TYPES.has(type)) return target('/auth/confirmado?erro=link');
 
   try {
     const result = await gotrue.verifyOtp(type, tokenHash);

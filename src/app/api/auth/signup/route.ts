@@ -23,7 +23,7 @@ export const POST = route(async (req) => {
   }
 
   const result = await auth(
-    gotrue.signUp(input.email, input.password, `${env.appUrl}/api/auth/confirm`, {
+    gotrue.signUp(input.email, input.password, `${env.appUrl}/api/auth/confirm?flow=signup`, {
       nickname: input.nickname,
       terms_version: TERMS_VERSION,
     }),

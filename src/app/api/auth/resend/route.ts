@@ -14,6 +14,6 @@ export const POST = route(async (req) => {
   const input = await readJson(req, forgotSchema);
   await rateLimit('forgot', input.email);
   await verifyCaptcha(input.captchaToken, ip);
-  await gotrue.resendSignup(input.email, `${env.appUrl}/api/auth/confirm`).catch(() => undefined);
+  await gotrue.resendSignup(input.email, `${env.appUrl}/api/auth/confirm?flow=signup`).catch(() => undefined);
   return NextResponse.json({ message: 'Se houver um cadastro pendente para esse e-mail, reenviamos o link.' });
 });
