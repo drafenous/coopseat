@@ -112,14 +112,16 @@ npm run dist:compat
 
 O workflow `.github/workflows/desktop.yml` (na raiz do repositório) recompila o núcleo com MSVC, executa os testes e publica o instalador como artifact do job.
 
-Para lançar uma versão, atualize `version` em `coopseat/package.json`, faça o commit e envie uma tag com o mesmo número:
+Para lançar uma versão, peça ao agente do Cursor para fazer o release (skill `.cursor/skills/semver-release`). Ele decide o número pela regra de semver, atualiza o `package.json` e o `CHANGELOG.md`, cria o commit e a tag `desktop-vX.Y.Z` e pede confirmação antes do push. Manualmente:
 
 ```powershell
-git tag v0.1.0
-git push origin v0.1.0
+node .cursor/skills/semver-release/scripts/release.mjs bump desktop minor
+# edite coopseat/CHANGELOG.md, faça o commit, depois:
+git tag -a desktop-v0.2.0 -m "desktop 0.2.0"
+git push origin main desktop-v0.2.0
 ```
 
-O workflow confere se a tag bate com o `package.json` e cria uma GitHub Release com o `CoopSeat-<versão>-Setup.exe` e notas geradas a partir dos commits. O instalador não é assinado, então o Windows SmartScreen exibe um aviso na primeira execução.
+O workflow confere se a tag bate com o `package.json` e cria uma GitHub Release com o `CoopSeat-<versão>-Setup.exe`, usando a seção da versão no `CHANGELOG.md` como texto, seguida das notas geradas a partir dos commits. O instalador não é assinado, então o Windows SmartScreen exibe um aviso na primeira execução.
 
 ## Estrutura
 

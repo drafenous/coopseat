@@ -2,7 +2,7 @@ name: Windows build
 on:
   push:
     branches: ['**']
-    tags: ['v*']
+    tags: ['desktop-v*']
     paths: ['coopseat/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/desktop.yml']
   pull_request:
     paths: ['coopseat/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/desktop.yml']
@@ -22,11 +22,11 @@ jobs:
           node-version: '22'
           cache: npm
       - name: Tag matches coopseat/package.json version
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
         shell: pwsh
         run: |
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-          if ("v$version" -ne "${{ github.ref_name }}") {
+          if ("desktop-v$version" -ne "${{ github.ref_name }}") {
             Write-Error "Tag ${{ github.ref_name }} does not match coopseat/package.json version $version"
             exit 1
           }
@@ -43,18 +43,28 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/desktop-v')
     needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: CoopSeat-Windows-x64
           path: dist
+      - name: Extract changelog section
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          version="${TAG#desktop-v}"
+          node .cursor/skills/semver-release/scripts/release.mjs notes desktop "$version" > notes.md
+          echo "VERSION=$version" >> "$GITHUB_ENV"
       - uses: softprops/action-gh-release@v2
         with:
+          name: CoopSeat ${{ env.VERSION }}
+          body_path: notes.md
           files: dist/*Setup.exe
           generate_release_notes: true
           fail_on_unmatched_files: true
