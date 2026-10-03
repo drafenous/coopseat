@@ -1,5 +1,5 @@
-import { config } from 'dotenv';
-config({ path: ['.env.local', '.env'], quiet: true });
+import { config as loadEnv } from 'dotenv';
+loadEnv({ path: ['.env.local', '.env'], quiet: true });
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import pg from 'pg';
