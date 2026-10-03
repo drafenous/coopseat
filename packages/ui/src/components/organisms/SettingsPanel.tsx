@@ -19,7 +19,7 @@ export function SettingsPanel({settings:s,change,devices,modes,native,running,bu
    {presetPicker}
    <Divider/>
    <DeviceSelect label="Placa de captura" value={s.video} items={devices.video} placeholder="Selecione um dispositivo" disabled={locked} onChange={v=>onSelectDevice('video',v)}/>
-   {needsPermission&&<TextButton onClick={onPermit}>Permitir câmera e buscar dispositivos <ArrowUpRight size={13}/></TextButton>}
+   {needsPermission&&<TextButton onClick={onPermit}>Permitir câmera e microfone <ArrowUpRight size={13}/></TextButton>}
    <SectionLabel icon={<AudioLines size={14}/>}>ÁUDIO</SectionLabel>
    <DeviceSelect label="Entrada de áudio da placa" value={s.audio} items={devices.audio} placeholder="Sem áudio" disabled={locked} onChange={v=>onSelectDevice('audio',v)}/>
    <DeviceSelect label="Tocar o som em" value={s.output} items={devices.output} placeholder="Padrão do Windows" disabled={locked} onChange={v=>onSelectDevice('output',v)}/>

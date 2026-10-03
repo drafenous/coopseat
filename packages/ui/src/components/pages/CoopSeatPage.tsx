@@ -46,7 +46,7 @@ export function CoopSeatPage(){
  const currentMode=modes.find(m=>m.index===s.mode);
  const formatLabel=s.backend==='native'?(currentMode?`${currentMode.width} × ${currentMode.height} · ${currentMode.fps.toFixed(0)} fps`:''):`${s.resolution.replace('x',' × ')} · ${s.fps} fps`;
  const canStart=loaded&&Boolean(s.video)&&(s.backend!=='native'||modes.length>0);
- const needsPermission=s.backend==='compat'&&!devices.video.length;
+ const needsPermission=s.backend==='compat'&&!devices.video.length,canPermit=needsPermission||(s.backend==='compat'&&capture.locked);
 
  return <MainLayout
   immersive={cinema.chromeHidden}
@@ -54,7 +54,7 @@ export function CoopSeatPage(){
   viewer={<CaptureViewer backend={s.backend} running={running} stats={stats} cinemaHint={cinema.cinemaHint} screenRef={capture.screenRef} videoRef={capture.videoRef} audioRef={capture.audioRef}
    emptyState={!running&&<ViewerEmptyState busy={busy} hasDevices={devices.video.length>0} videoName={videoName} audioName={audioName} formatLabel={formatLabel} needsPermission={needsPermission} canStart={canStart} onStart={start} onStop={stop} onPermit={permit}/>}
    transport={<TransportBar volume={s.volume} onVolume={v=>change('volume',v)} showStats={showStats} onToggleStats={()=>setShowStats(x=>!x)} top={top} canPin={Boolean(bridge())} onPin={()=>void pin()} cinemaActive={cinema.chromeHidden} canCinema={running} onCinema={cinema.enterCinema} onFullscreen={()=>void cinema.fullscreen()}/>}/>}
-  panel={<SettingsPanel settings={s} change={change} devices={devices} modes={modes} native={capture.native} running={running} busy={busy} canStart={canStart} needsPermission={needsPermission}
+  panel={<SettingsPanel settings={s} change={change} devices={devices} modes={modes} native={capture.native} running={running} busy={busy} canStart={canStart} needsPermission={canPermit}
    presetPicker={<PresetPicker presets={presets.presets} selected={presets.selectedPreset} defaultPreset={presets.defaultPreset} locked={running||busy} menuOpen={presetMenu} onMenuOpenChange={setPresetMenu} onApply={presets.applyPreset} onSaveNew={()=>setSaving(true)} onUpdate={presets.savePreset} onToggleDefault={presets.toggleDefaultPreset} onDelete={presets.deletePreset}/>}
    onRefresh={()=>void capture.refresh()} onPermit={permit} onSelectDevice={capture.selectDevice} onBackendChange={capture.changeBackend} onStart={start} onStop={stop}/>}
   toasts={<ToastStack countdown={cinema.countdown} onEnterCinema={cinema.enterCinema} onDisableAutoCinema={disableAutoCinema} error={error} onCloseError={()=>setError('')} notice={notice} onCloseNotice={()=>setNotice('')}/>}

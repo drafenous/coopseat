@@ -17,7 +17,7 @@ export function ViewerEmptyState({busy,hasDevices,videoName,audioName,formatLabe
    <p>Ligue o HDMI do console na placa de captura<br/>e a placa numa porta USB do computador.</p>
    <div className="connection"><span>CONSOLE</span><ChevronRight size={14}/><span>CAPTURA USB</span><ChevronRight size={14}/><span>COMPUTADOR</span></div>
   </>}
-  {needsPermission?<Button hero onClick={onPermit}><ArrowUpRight size={18}/> Permitir câmera e buscar placas</Button>
+  {needsPermission?<Button hero onClick={onPermit}><ArrowUpRight size={18}/> Permitir câmera e microfone</Button>
    :<CaptureButton hero running={false} busy={busy} canStart={canStart} onStart={onStart} onStop={onStop}/>}
  </div>;
 }

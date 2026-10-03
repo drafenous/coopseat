@@ -8,7 +8,7 @@ type Options={settings:Settings;setSettings:Dispatch<SetStateAction<Settings>>;t
 export type DeviceKey='video'|'audio'|'output';
 
 export function useCapture({settings:s,setSettings:setS,top,setError,setNotice}:Options){
- const [devices,setDevices]=useState<Devices>(emptyDevices),[modes,setModes]=useState<Mode[]>([]),[native,setNative]=useState(false),[loaded,setLoaded]=useState(false),[busy,setBusy]=useState(false),[running,setRunning]=useState(false),[stats,setStats]=useState<NativeEvent|null>(null);
+ const [devices,setDevices]=useState<Devices>(emptyDevices),[modes,setModes]=useState<Mode[]>([]),[native,setNative]=useState(false),[loaded,setLoaded]=useState(false),[busy,setBusy]=useState(false),[running,setRunning]=useState(false),[stats,setStats]=useState<NativeEvent|null>(null),[locked,setLocked]=useState(false);
  const videoRef=useRef<HTMLVideoElement>(null),audioRef=useRef<HTMLAudioElement>(null),screenRef=useRef<HTMLDivElement>(null),stream=useRef<MediaStream|null>(null),audioStream=useRef<MediaStream|null>(null),generation=useRef(0),autoDone=useRef(false),current=useRef(s),runningRef=useRef(false);
  current.current=s;runningRef.current=running;
 
@@ -20,7 +20,7 @@ export function useCapture({settings:s,setSettings:setS,top,setError,setNotice}:
 
  const refresh=useCallback(async()=>{setError('');try{
   let d:Devices;const backend=current.current.backend;
-  if(backend==='native') d=await bridge()!.devices();else {if(!navigator.mediaDevices)throw Error('Abra pelo aplicativo ou em localhost.');const all=await navigator.mediaDevices.enumerateDevices();const to=(kind:MediaDeviceKind)=>all.filter(x=>x.kind===kind&&x.deviceId).map((x,i)=>({id:x.deviceId,name:x.label||`Dispositivo ${i+1}`}));d={video:to('videoinput'),audio:to('audioinput'),output:to('audiooutput')};}
+  if(backend==='native') d=await bridge()!.devices();else {if(!navigator.mediaDevices)throw Error('Abra pelo aplicativo ou em localhost.');const all=await navigator.mediaDevices.enumerateDevices();const to=(kind:MediaDeviceKind)=>all.filter(x=>x.kind===kind&&x.deviceId).map((x,i)=>({id:x.deviceId,name:x.label||`Dispositivo ${i+1}`}));d={video:to('videoinput'),audio:to('audioinput'),output:to('audiooutput')};setLocked(all.some(x=>(x.kind==='videoinput'||x.kind==='audioinput')&&!x.deviceId));}
   if(current.current.backend!==backend)return;setDevices(d);setS(x=>({...x,video:d.video.some(v=>v.id===x.video)?x.video:(d.video.find(v=>/fifine|capture|usb video/i.test(v.name))||d.video[0])?.id||'',audio:d.audio.some(a=>a.id===x.audio)?x.audio:'',output:d.output.some(a=>a.id===x.output)?x.output:''}));
  }catch(e){setError(niceError(e));}},[]);
  useEffect(()=>{if(loaded)void refresh();},[s.backend,loaded,refresh]);
@@ -47,10 +47,16 @@ export function useCapture({settings:s,setSettings:setS,top,setError,setNotice}:
  useEffect(()=>{if(audioRef.current)audioRef.current.volume=s.volume;if(s.backend==='native'&&running)void bridge()?.control('volume',s.volume);},[s.volume,running,s.backend]);
  useEffect(()=>{if(s.backend==='native'&&running)void bridge()?.control('vsync',s.vsync);},[s.vsync,running,s.backend]);
 
- const permit=async()=>{try{const v=await navigator.mediaDevices.getUserMedia({video:true,audio:false});v.getTracks().forEach(t=>t.stop());await refresh();}catch(e){setError(niceError(e));}};
+ // Browsers hide device ids and labels until each kind is granted, so the card's audio input needs the microphone too.
+ const permit=async()=>{try{
+  let v:MediaStream;
+  try{v=await navigator.mediaDevices.getUserMedia({video:true,audio:true});}
+  catch(e){v=await navigator.mediaDevices.getUserMedia({video:true,audio:false});setNotice(`Câmera liberada, mas o microfone não: ${niceError(e)}`);}
+  v.getTracks().forEach(t=>t.stop());await refresh();
+ }catch(e){setError(niceError(e));}};
  const resetDevices=useCallback(()=>setDevices(emptyDevices),[]);
  const selectDevice=(key:DeviceKey,value:string)=>setS(x=>({...x,[key]:value,...(key==='video'?{mode:-1}:{})}));
  const changeBackend=(backend:Backend)=>{setDevices(emptyDevices);setS(x=>({...x,video:'',audio:'',output:'',backend}));};
 
- return {devices,modes,native,loaded,busy,running,stats,videoRef,audioRef,screenRef,start,stop,refresh,permit,resetDevices,selectDevice,changeBackend};
+ return {devices,modes,native,loaded,busy,running,stats,locked,videoRef,audioRef,screenRef,start,stop,refresh,permit,resetDevices,selectDevice,changeBackend};
 }
