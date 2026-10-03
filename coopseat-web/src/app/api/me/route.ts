@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { dictionaryFor } from '@/i18n/server';
 import { deleteMeSchema, TERMS_VERSION, updateMeSchema } from '@/lib/validation/account';
 import { accountSummary } from '@/server/account';
 import { auth } from '@/server/auth-errors';
@@ -27,7 +28,7 @@ export const PATCH = route(async (req) => {
   if (input.acceptTerms) await acceptTerms(session.claims.sub, TERMS_VERSION);
   if (input.email !== undefined) {
     await auth(gotrue.updateUser(session.token, { email: input.email }, `${env.appUrl}/api/auth/confirm`));
-    message = 'Enviamos um link de confirmação para o novo e-mail.';
+    message = dictionaryFor(req).messages.emailChangeSent;
   }
 
   const user = await auth(gotrue.getUser(session.token));
@@ -42,7 +43,7 @@ export const DELETE = route(async (req) => {
   const profile = await getProfile(session.claims.sub);
   const expected = profile?.nickname ?? session.claims.email ?? '';
   if (!expected || confirm.trim().toLowerCase() !== expected.toLowerCase()) {
-    throw new ApiError(400, 'confirm_mismatch', 'Digite seu apelido exatamente como aparece para confirmar.');
+    throw new ApiError(400, 'confirm_mismatch');
   }
 
   // Profile, verifications and identities are removed by ON DELETE CASCADE.

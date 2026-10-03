@@ -1,5 +1,5 @@
 /**
- * Watch-party permissions. Guests may watch anonymously; chat and voice need an
+ * Watch-party permissions. Guests may watch anonymously; chat needs an
  * age-verified account; hosting also needs a confirmed email, a nickname and,
  * when 2FA is enabled, an aal2 session.
  */
@@ -28,14 +28,8 @@ export function permissionsFor(input: GateInput) {
   return {
     watch: gate([]),
     chat: gate(base),
+    /** Voice chat isn't offered; kept because desktop 0.1 reads `permissions.voice` unguarded. */
     voice: gate(base),
     host: gate([...base, ['mfa', !input.mfaEnabled || input.aal === 'aal2']]),
   };
 }
-
-export const GATE_MESSAGES: Record<GateRequirement, string> = {
-  email: 'Confirme seu e-mail.',
-  nickname: 'Escolha um apelido.',
-  age: 'Verifique sua idade (18+).',
-  mfa: 'Confirme a autenticação em duas etapas.',
-};

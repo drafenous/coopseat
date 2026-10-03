@@ -18,7 +18,7 @@ export async function createIceServers(ttl = TURN_TTL_SECONDS): Promise<IceServe
   );
   if (!res.ok) {
     console.error('Cloudflare TURN error', res.status);
-    throw new ApiError(502, 'turn_unavailable', 'Não foi possível preparar a conexão agora. Tente novamente.');
+    throw new ApiError(502, 'turn_unavailable');
   }
   const { iceServers } = (await res.json()) as { iceServers: IceServer[] };
   return iceServers;

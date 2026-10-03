@@ -44,10 +44,10 @@ const pro = process.env.SUPABASE_PLAN === 'pro';
 const customTemplates = Boolean(process.env.SMTP_HOST) || pro;
 const emailTemplates = customTemplates
   ? {
-      mailer_subjects_confirmation: 'Confirme seu e-mail no CoopSeat',
-      mailer_subjects_recovery: 'Redefinição de senha do CoopSeat',
-      mailer_subjects_email_change: 'Confirme seu novo e-mail no CoopSeat',
-      mailer_subjects_magic_link: 'Seu link de acesso ao CoopSeat',
+      mailer_subjects_confirmation: 'Confirm your CoopSeat e-mail / Confirme seu e-mail no CoopSeat',
+      mailer_subjects_recovery: 'CoopSeat password reset / Redefinição de senha do CoopSeat',
+      mailer_subjects_email_change: 'Confirm your new CoopSeat e-mail / Confirme seu novo e-mail no CoopSeat',
+      mailer_subjects_magic_link: 'Your CoopSeat sign-in link / Seu link de acesso ao CoopSeat',
       mailer_templates_confirmation_content: await tpl('confirmation'),
       mailer_templates_recovery_content: await tpl('recovery'),
       mailer_templates_email_change_content: await tpl('email-change'),

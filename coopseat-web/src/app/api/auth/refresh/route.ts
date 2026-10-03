@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { localeFromRequest } from '@/i18n/server';
 import { auth } from '@/server/auth-errors';
 import { gotrue } from '@/server/gotrue';
-import { ApiError, route } from '@/server/http';
+import { ApiError, errorResponse, route } from '@/server/http';
 import { REFRESH_COOKIE, assertSameOrigin, clearSessionCookies, isDesktop, sessionResponse } from '@/server/session';
 
 const bodySchema = z.object({ refreshToken: z.string().min(1).max(512) });
@@ -15,14 +15,14 @@ export const POST = route(async (req) => {
   } else {
     refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
   }
-  if (!refreshToken) throw new ApiError(401, 'unauthenticated', 'Sua sessão expirou. Entre novamente.');
+  if (!refreshToken) throw new ApiError(401, 'unauthenticated');
 
   try {
     const tokens = await auth(gotrue.refreshGrant(refreshToken));
     return sessionResponse(req, tokens, { ok: true });
   } catch (err) {
     if (err instanceof ApiError && err.status === 401 && !isDesktop(req)) {
-      const res = NextResponse.json({ error: { code: err.code, message: err.message } }, { status: 401 });
+      const res = errorResponse(err, localeFromRequest(req));
       clearSessionCookies(res);
       return res;
     }

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { Field } from '@/components/ui';
+import { useT } from '@/i18n/client';
+import { errorMessage } from '@/i18n/dictionaries';
 import { nicknameSchema } from '@/lib/validation/account';
 
 type Remote = { value: string; available: boolean; reason?: string };
@@ -18,6 +20,7 @@ export function NicknameField({
   error?: string;
   current?: string | null;
 }) {
+  const t = useT();
   const [remote, setRemote] = useState<Remote>();
   const parsed = nicknameSchema.safeParse(value);
   const shouldCheck = Boolean(value) && value !== current && parsed.success;
@@ -42,22 +45,22 @@ export function NicknameField({
   }, [shouldCheck, candidate]);
 
   let formatError: string | undefined;
-  let hint: React.ReactNode = '3 a 20 caracteres: letras, números ou _.';
+  let hint: React.ReactNode = t.nickname.hint;
   if (value && value !== current) {
     if (!parsed.success) {
-      formatError = parsed.error.issues[0]?.message;
+      formatError = errorMessage(t, parsed.error.issues[0]?.message, 'invalid_input');
     } else if (remote?.value !== candidate) {
-      hint = 'Verificando…';
+      hint = t.nickname.checking;
     } else if (remote.available) {
-      hint = <span className="text-emerald-400">Disponível!</span>;
+      hint = <span className="text-emerald-400">{t.nickname.available}</span>;
     } else {
-      formatError = remote.reason ?? 'Indisponível.';
+      formatError = remote.reason ?? t.nickname.unavailable;
     }
   }
 
   return (
     <Field
-      label="Apelido"
+      label={t.nickname.label}
       name="nickname"
       autoComplete="username"
       value={value}

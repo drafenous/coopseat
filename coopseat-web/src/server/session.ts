@@ -24,7 +24,7 @@ export function assertSameOrigin(req: NextRequest): void {
   if (isDesktop(req) || req.method === 'GET' || req.method === 'HEAD') return;
   const origin = req.headers.get('origin');
   if (!origin || origin !== new URL(env.appUrl).origin) {
-    throw new ApiError(403, 'bad_origin', 'Origem da requisição não permitida.');
+    throw new ApiError(403, 'bad_origin');
   }
 }
 
@@ -44,12 +44,12 @@ export async function getAuth(req: NextRequest): Promise<AuthContext | null> {
 
 export async function requireAuth(req: NextRequest, opts: { aal2IfEnrolled?: boolean } = {}): Promise<AuthContext> {
   const auth = await getAuth(req);
-  if (!auth) throw new ApiError(401, 'unauthenticated', 'Sua sessão expirou. Entre novamente.');
+  if (!auth) throw new ApiError(401, 'unauthenticated');
   if (opts.aal2IfEnrolled && auth.claims.aal !== 'aal2') {
     const { gotrue } = await import('./gotrue');
     const user = await gotrue.getUser(auth.token);
     if (user.factors?.some((f) => f.status === 'verified')) {
-      throw new ApiError(403, 'mfa_required', 'Confirme o código de autenticação em duas etapas para continuar.');
+      throw new ApiError(403, 'mfa_required');
     }
   }
   return auth;

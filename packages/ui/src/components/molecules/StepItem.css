@@ -1,4 +1,0 @@
-.steps li{display:flex;gap:14px;align-items:flex-start}
-.steps li>span{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#b0f3d2;color:#16352a;font-weight:700;font-size:13px}
-.steps li div{font-size:14px;line-height:1.55;color:#a9b6c4}
-.steps li b{display:block;color:#e8eef4;font-weight:600;margin-bottom:2px}

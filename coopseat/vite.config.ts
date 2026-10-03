@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 
 const { resolveBff } = createRequire(import.meta.url)('./electron/bff.cjs') as {
   resolveBff(input?: { packaged?: boolean; dev?: boolean; envName?: string; override?: string }): string;
@@ -11,7 +12,7 @@ export default defineConfig(({ command }) => {
     ? resolveBff({ packaged: true })
     : resolveBff({ dev: true, envName: process.env.COOPSEAT_ENV, override: process.env.COOPSEAT_BFF_URL });
   return {
-    plugins: [react(), {
+    plugins: [react(), tailwindcss(), {
       name: 'bff-csp',
       transformIndexHtml(html: string) {
         const devConnect = command === 'serve' ? 'ws://127.0.0.1:5173 ' : '';

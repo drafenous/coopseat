@@ -1,6 +1,0 @@
-.text-input{width:100%;min-width:0;color:var(--cs-text-field);border:1px solid #304050;background:var(--cs-field);padding:0 10px;border-radius:7px;font-size:13px;height:40px}
-.text-input:hover{border-color:#3d5163}
-.text-input::placeholder{color:var(--cs-subtle)}
-.text-input[aria-invalid=true]{border-color:var(--cs-danger)}
-
-@media(min-width:1800px){.text-input{font-size:14px;height:44px}}

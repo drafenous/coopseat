@@ -10,13 +10,13 @@ export function signMockPayload(body: string): string {
   return hmacHex(secret(), body);
 }
 
-/** Development provider: /verificacao/mock lets the tester pick the outcome. */
+/** Development provider: /verification/mock lets the tester pick the outcome. */
 export const mockProvider: IdentityProvider = {
   id: 'mock',
 
   async createSession({ returnUrl }) {
     const sessionId = `mock_${randomToken(16)}`;
-    const url = new URL('/verificacao/mock', env.appUrl);
+    const url = new URL('/verification/mock', env.appUrl);
     url.searchParams.set('session', sessionId);
     url.searchParams.set('return', returnUrl);
     return { sessionId, url: url.toString() };

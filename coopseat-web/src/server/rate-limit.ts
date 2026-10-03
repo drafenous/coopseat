@@ -30,7 +30,7 @@ export async function rateLimit(bucket: keyof typeof LIMITS, subject: string): P
     .aggregate((a) => ({ total: a.count() }));
 
   if (total >= max) {
-    throw new ApiError(429, 'rate_limited', 'Muitas tentativas. Aguarde alguns minutos e tente de novo.', {
+    throw new ApiError(429, 'rate_limited', {
       retryAfter: windowSeconds,
     });
   }

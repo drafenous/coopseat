@@ -15,9 +15,9 @@ export const DELETE = route<Ctx>(async (req, ctx) => {
   const user = await auth(gotrue.getUser(session.token));
   const identities = user.identities ?? [];
   const identity = identities.find((i) => (i.identity_id ?? i.id) === id);
-  if (!identity) throw new ApiError(404, 'identity_not_found', 'Vínculo não encontrado.');
+  if (!identity) throw new ApiError(404, 'identity_not_found');
   if (identities.length < 2) {
-    throw new ApiError(400, 'single_identity_not_deletable', 'Você precisa manter pelo menos uma forma de login.');
+    throw new ApiError(400, 'single_identity_not_deletable');
   }
 
   await auth(gotrue.unlinkIdentity(session.token, identity.identity_id ?? identity.id));

@@ -9,7 +9,7 @@ export {MenuItem} from './MenuItem';
 export {MiniMonitor} from './MiniMonitor';
 export {MiniWindow} from './MiniWindow';
 export {SectionLabel} from './SectionLabel';
-export {Select} from './Select';
+export {Select,type SelectOption,type SelectProps,type SelectValue} from './Select';
 export {Switch} from './Switch';
 export {Tag} from './Tag';
 export {TextButton} from './TextButton';

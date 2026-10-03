@@ -1,17 +1,24 @@
 import type { Metadata } from 'next';
-import '@coopseat/ui/tokens.css';
+import { I18nProvider } from '@/i18n/client';
+import { getDictionary, getLocale } from '@/i18n/server';
 import './globals.css';
 
-export const metadata: Metadata = {
-  title: { default: 'CoopSeat', template: '%s · CoopSeat' },
-  description: 'Assista e jogue junto com seus amigos, com sua câmera, seu controle e sua tela.',
-  metadataBase: new URL(process.env['APP_URL'] ?? 'https://coopseat.com'),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getDictionary();
+  return {
+    title: { default: 'CoopSeat', template: '%s · CoopSeat' },
+    description: t.meta.description,
+    metadataBase: new URL(process.env['APP_URL'] ?? 'https://coopseat.com'),
+  };
+}
 
-export default function RootLayout({ children }: LayoutProps<'/'>) {
+export default async function RootLayout({ children }: LayoutProps<'/'>) {
+  const locale = await getLocale();
   return (
-    <html lang="pt-BR" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang={locale} className="h-full antialiased" data-scroll-behavior="smooth">
+      <body className="min-h-full flex flex-col">
+        <I18nProvider locale={locale}>{children}</I18nProvider>
+      </body>
     </html>
   );
 }

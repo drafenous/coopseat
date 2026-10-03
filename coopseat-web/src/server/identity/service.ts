@@ -17,7 +17,7 @@ export function documentFingerprint(country: string, number: string): string {
 export async function startVerification(profileId: string, returnUrl: string) {
   const profile = await ensureProfile(profileId);
   if (profile.ageStatus === 'VERIFIED') {
-    throw new ApiError(409, 'already_verified', 'Sua idade já foi verificada.');
+    throw new ApiError(409, 'already_verified');
   }
 
   const db = await adminDb();
@@ -33,10 +33,10 @@ export async function startVerification(profileId: string, returnUrl: string) {
     .aggregate((a) => ({ rejected: a.count() }));
 
   if (rejected >= MAX_REJECTIONS_TOTAL) {
-    throw new ApiError(403, 'kyc_locked', 'Limite de tentativas atingido. Fale com o suporte.');
+    throw new ApiError(403, 'kyc_locked');
   }
   if (recent >= MAX_ATTEMPTS_30_DAYS) {
-    throw new ApiError(429, 'kyc_attempts', 'Você atingiu o limite de 3 tentativas em 30 dias.');
+    throw new ApiError(429, 'kyc_attempts');
   }
 
   const provider = activeProvider();

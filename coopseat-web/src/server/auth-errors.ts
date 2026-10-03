@@ -1,43 +1,45 @@
+import type { ErrorCode } from '@/i18n/dictionaries';
 import { GoTrueError } from './gotrue';
 import { ApiError } from './http';
 
-const MESSAGES: Record<string, [number, string]> = {
-  invalid_credentials: [401, 'E-mail ou senha incorretos.'],
-  email_not_confirmed: [403, 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.'],
-  user_already_exists: [409, 'Esse e-mail já está em uso.'],
-  email_exists: [409, 'Esse e-mail já está em uso.'],
-  weak_password: [400, 'Senha fraca ou já vazada em outro serviço. Escolha outra.'],
-  same_password: [400, 'A nova senha precisa ser diferente da atual.'],
-  over_email_send_rate_limit: [429, 'Muitos e-mails enviados. Aguarde alguns minutos.'],
-  over_request_rate_limit: [429, 'Muitas tentativas. Aguarde alguns minutos.'],
-  otp_expired: [400, 'O link expirou ou já foi usado. Peça um novo.'],
-  mfa_verification_failed: [400, 'Código inválido. Confira o app autenticador e tente de novo.'],
-  mfa_challenge_expired: [400, 'O código expirou. Tente de novo.'],
-  mfa_factor_name_conflict: [409, 'Já existe um autenticador com esse nome.'],
-  identity_already_exists: [409, 'Essa conta do provedor já está vinculada a outro usuário.'],
-  single_identity_not_deletable: [400, 'Você precisa manter pelo menos uma forma de login.'],
-  manual_linking_disabled: [503, 'Vinculação de contas indisponível no momento.'],
-  insufficient_aal: [403, 'Confirme a autenticação em duas etapas para continuar.'],
-  reauthentication_needed: [403, 'Entre novamente para alterar a senha.'],
-  session_not_found: [401, 'Sua sessão expirou. Entre novamente.'],
-  refresh_token_not_found: [401, 'Sua sessão expirou. Entre novamente.'],
-  refresh_token_already_used: [401, 'Sua sessão expirou. Entre novamente.'],
-  bad_jwt: [401, 'Sua sessão expirou. Entre novamente.'],
-  user_not_found: [404, 'Conta não encontrada.'],
-  signup_disabled: [503, 'Cadastros temporariamente desativados.'],
+/** GoTrue error codes we surface, with their HTTP status. Messages live in the i18n dictionaries. */
+const STATUSES: Partial<Record<ErrorCode, number>> = {
+  invalid_credentials: 401,
+  email_not_confirmed: 403,
+  user_already_exists: 409,
+  email_exists: 409,
+  weak_password: 400,
+  same_password: 400,
+  over_email_send_rate_limit: 429,
+  over_request_rate_limit: 429,
+  otp_expired: 400,
+  mfa_verification_failed: 400,
+  mfa_challenge_expired: 400,
+  mfa_factor_name_conflict: 409,
+  identity_already_exists: 409,
+  single_identity_not_deletable: 400,
+  manual_linking_disabled: 503,
+  insufficient_aal: 403,
+  reauthentication_needed: 403,
+  session_not_found: 401,
+  refresh_token_not_found: 401,
+  refresh_token_already_used: 401,
+  bad_jwt: 401,
+  user_not_found: 404,
+  signup_disabled: 503,
 };
 
 export function toApiError(err: unknown): unknown {
   if (!(err instanceof GoTrueError)) return err;
-  const known = MESSAGES[err.code];
-  if (known) return new ApiError(known[0], err.code, known[1]);
-  if (err.status === 429) return new ApiError(429, 'rate_limited', 'Muitas tentativas. Aguarde alguns minutos.');
-  if (err.status === 401) return new ApiError(401, 'unauthenticated', 'Sua sessão expirou. Entre novamente.');
+  const status = STATUSES[err.code as ErrorCode];
+  if (status) return new ApiError(status, err.code as ErrorCode);
+  if (err.status === 429) return new ApiError(429, 'rate_limited');
+  if (err.status === 401) return new ApiError(401, 'unauthenticated');
   console.error('GoTrue error', err.status, err.code, err.message);
-  return new ApiError(502, 'auth_unavailable', 'Não foi possível concluir agora. Tente novamente.');
+  return new ApiError(502, 'auth_unavailable');
 }
 
-/** Wraps a GoTrue call, translating its errors to PT-BR ApiErrors. */
+/** Wraps a GoTrue call, translating its errors to ApiErrors. */
 export async function auth<T>(promise: Promise<T>): Promise<T> {
   try {
     return await promise;

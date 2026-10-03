@@ -22,7 +22,7 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    It sets: email confirmation on, secure email change, manual identity linking, password policy
    (8+ chars, letters and digits, leaked-password check), TOTP MFA, the Custom Access Token Hook
    (`public.custom_access_token_hook`), redirect allow list (`https://coopseat.com/**`),
-   PT-BR email templates from `supabase/templates/`, and any OAuth provider / SMTP whose env vars are present:
+   bilingual (English + pt-BR) email templates from `supabase/templates/`, and any OAuth provider / SMTP whose env vars are present:
 
    | Provider | Env vars | Callback URL to register at the provider |
    | --- | --- | --- |
@@ -44,14 +44,24 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
 
 With `KYC_PROVIDER=mock` on a dev/preview deployment:
 
-1. `/cadastro` with email and password → confirmation email → link opens `/auth/confirmado`.
-2. `/entrar` → `/conta` asks for a nickname if needed; a taken nickname (any casing) is refused.
-3. *Verificar idade* → `/verificacao/mock` → choose **Aprovado (18+)** → `/conta` shows age verified and
-   chat, voice and host unlocked. Repeat with a second account and the same document number: it must be rejected.
-4. Enable TOTP in `/conta`, sign out, sign in again: the 2FA step must appear.
-5. Link and unlink Google/Discord in `/conta`; unlinking the last login method must be refused.
-6. Desktop (`COOPSEAT_BFF_URL=<preview url> npm run dev` in `coopseat/`): *Entrar com Google* opens the
-   browser and returns via `coopseat://auth/callback`; email login, 2FA and *Minha conta* work in the app.
+1. `/signup` with email and password → confirmation email → link opens `/auth/confirmed`.
+2. `/login` → `/account` asks for a nickname if needed; a taken nickname (any casing) is refused.
+3. *Verify my age* → `/verification/mock` → choose **Approve (over 18)** → `/account` shows age verified and
+   chat and host unlocked. Repeat with a second account and the same document number: it must be rejected.
+4. Enable TOTP in `/account`, sign out, sign in again: the 2FA step must appear.
+5. Link and unlink Google/Discord in `/account`; unlinking the last login method must be refused.
+6. Desktop (`COOPSEAT_BFF_URL=<preview url> npm run dev` in `coopseat/`): *Continue with Google* opens the
+   browser and returns via `coopseat://auth/callback`; email login, 2FA and *My account* work in the app.
+7. Switch the language (footer on the site, the language icon in the app header) and repeat a step: pages, API errors
+   and the app follow the choice. The old Portuguese paths (`/entrar`, `/conta`, ...) redirect permanently.
+
+## Languages
+
+The site, the API and `@coopseat/ui` speak English (default) and Brazilian Portuguese. The site reads the
+`locale` cookie, then `Accept-Language`; the desktop app stores its choice locally and sends it as
+`Accept-Language`. Dictionaries live in `src/i18n/dictionaries/` and `packages/ui/src/i18n/`; a test keeps
+the pt-BR keys in sync with `en`. Supabase emails are bilingual (English first) because GoTrue renders one
+template for everyone.
 
 ## Why X users may have no email
 

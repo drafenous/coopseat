@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { dictionaryFor } from '@/i18n/server';
 import { forgotSchema } from '@/lib/validation/account';
 import { verifyCaptcha } from '@/server/captcha';
 import { env } from '@/server/env';
@@ -15,5 +16,5 @@ export const POST = route(async (req) => {
   await rateLimit('forgot', input.email);
   await verifyCaptcha(input.captchaToken, ip);
   await gotrue.resendSignup(input.email, `${env.appUrl}/api/auth/confirm?flow=signup`).catch(() => undefined);
-  return NextResponse.json({ message: 'Se houver um cadastro pendente para esse e-mail, reenviamos o link.' });
+  return NextResponse.json({ message: dictionaryFor(req).messages.resendSent });
 });

@@ -1,11 +1,7 @@
-import {Check,Radio} from 'lucide-react';
 import {DonateCallout} from '../molecules';
-import './AppFooter.css';
 
 export function AppFooter({onDonate}:{onDonate():void}){
- return <footer>
-  <span><Radio size={13}/> Preview local de vídeo e áudio</span>
+ return <footer className="flex items-center justify-center px-0.5 py-[clamp(10px,1.8vh,18px)] text-[12px] text-[#8494a5] immersive:hidden">
   <DonateCallout onDonate={onDonate}/>
-  <span><Check size={13}/> Nenhum dado enviado</span>
  </footer>;
 }

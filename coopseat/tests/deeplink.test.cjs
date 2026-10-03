@@ -18,7 +18,7 @@ test('finds the deep link among second-instance arguments',()=>{
 });
 test('opens only the BFF and known KYC vendors in the browser',()=>{
  assert.equal(validateExternalUrl('https://coopseat.com/api/auth/oauth/google?client=desktop',bff),'https://coopseat.com/api/auth/oauth/google?client=desktop');
- assert.ok(validateExternalUrl('http://localhost:3000/cadastro',bff));
+ assert.ok(validateExternalUrl('http://localhost:3000/signup',bff));
  assert.ok(validateExternalUrl('https://alchemy.veriff.me/v/abc',bff));
  for(const raw of ['https://coopseat.com.evil.io/','http://veriff.me/x','https://notveriff.me/','file:///C:/Windows/System32/calc.exe','javascript:alert(1)','ms-settings:','x'.repeat(5000),{}])assert.throws(()=>validateExternalUrl(raw,bff));
 });

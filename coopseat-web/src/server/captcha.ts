@@ -8,11 +8,11 @@ export async function verifyCaptcha(token: string | undefined, ip: string): Prom
     if (env.isProduction) throw new Error('TURNSTILE_SECRET_KEY é obrigatório em produção.');
     return;
   }
-  if (!token) throw new ApiError(400, 'captcha_required', 'Confirme que você não é um robô.');
+  if (!token) throw new ApiError(400, 'captcha_required');
 
   const body = new URLSearchParams({ secret, response: token });
   if (ip !== 'unknown') body.set('remoteip', ip);
   const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body });
   const data = (await res.json()) as { success?: boolean };
-  if (!data.success) throw new ApiError(400, 'captcha_failed', 'Não foi possível validar o captcha. Tente de novo.');
+  if (!data.success) throw new ApiError(400, 'captcha_failed');
 }

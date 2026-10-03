@@ -17,7 +17,7 @@ export const POST = route(async (req) => {
   await rateLimit('exchange', clientIp(req));
   const { ticket, verifier } = await readJson(req, bodySchema);
   const payload = await consumeTicket<Payload>(ticket, 'desktop_login', verifier);
-  if (!payload) throw new ApiError(400, 'ticket_invalid', 'O login expirou. Tente entrar de novo.');
+  if (!payload) throw new ApiError(400, 'ticket_invalid');
 
   if ('mfaRequired' in payload) {
     const tokens = unsealMfaToken(payload.mfaToken);

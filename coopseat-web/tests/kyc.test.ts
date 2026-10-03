@@ -9,7 +9,7 @@ const doc = { country: 'br', number: '123.456.789-09' };
 const approved = (sessionId: string) => ({ sessionId, status: 'approved' as const, isAdult: true, document: doc });
 
 async function start(profileId: string) {
-  const { url } = await startVerification(profileId, 'https://coopseat.com/conta');
+  const { url } = await startVerification(profileId, 'https://coopseat.com/account');
   const row = fake.current.data.IdentityVerification.at(-1)!;
   return { url, sessionId: String(row.providerSessionId) };
 }

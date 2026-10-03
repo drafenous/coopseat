@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useLocale } from '@/i18n/client';
 
 type TurnstileApi = {
   render(el: HTMLElement, opts: Record<string, unknown>): string;
@@ -31,6 +32,7 @@ function loadScript(): Promise<void> {
 export function Turnstile({ onToken, resetKey }: { onToken: (token: string | undefined) => void; resetKey?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const siteKey = process.env['NEXT_PUBLIC_TURNSTILE_SITE_KEY'];
+  const language = useLocale() === 'pt-BR' ? 'pt-br' : 'en';
 
   useEffect(() => {
     if (!siteKey || !ref.current) return;
@@ -41,7 +43,7 @@ export function Turnstile({ onToken, resetKey }: { onToken: (token: string | und
         if (cancelled || !ref.current || !window.turnstile) return;
         id = window.turnstile.render(ref.current, {
           sitekey: siteKey,
-          language: 'pt-br',
+          language,
           theme: 'dark',
           callback: (token: string) => onToken(token),
           'expired-callback': () => onToken(undefined),
@@ -53,7 +55,7 @@ export function Turnstile({ onToken, resetKey }: { onToken: (token: string | und
       cancelled = true;
       if (id && window.turnstile) window.turnstile.remove(id);
     };
-  }, [siteKey, onToken, resetKey]);
+  }, [siteKey, language, onToken, resetKey]);
 
   if (!siteKey) return null;
   return <div ref={ref} className="min-h-[65px]" />;

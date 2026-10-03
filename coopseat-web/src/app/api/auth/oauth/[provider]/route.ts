@@ -10,7 +10,7 @@ import { rateLimit } from '@/server/rate-limit';
 type Ctx = { params: Promise<{ provider: string }> };
 
 /**
- * Starts an OAuth sign-in. Web: `/api/auth/oauth/google?next=/conta`.
+ * Starts an OAuth sign-in. Web: `/api/auth/oauth/google?next=/account`.
  * Desktop: `/api/auth/oauth/google?client=desktop&challenge=<S256 of the app's verifier>`.
  */
 export async function GET(req: NextRequest, ctx: Ctx) {
@@ -34,7 +34,6 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     return res;
   } catch (err) {
     const res = errorResponse(err);
-    const message = encodeURIComponent('Não foi possível iniciar o login com esse provedor.');
-    return NextResponse.redirect(new URL(`/auth/erro?status=${res.status}&mensagem=${message}`, env.appUrl), 303);
+    return NextResponse.redirect(new URL(`/auth/error?status=${res.status}&code=oauth_start_failed`, env.appUrl), 303);
   }
 }

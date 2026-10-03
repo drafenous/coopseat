@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import type { ErrorCode } from '@/i18n/dictionaries';
 import { env } from '@/server/env';
 import { gotrue, type AuthTokens } from '@/server/gotrue';
 import {
@@ -17,11 +18,11 @@ function redirect(path: string) {
 }
 
 function openApp(deepLink: string) {
-  return redirect(`/auth/abrir-app?to=${encodeURIComponent(deepLink)}`);
+  return redirect(`/auth/open-app?to=${encodeURIComponent(deepLink)}`);
 }
 
-function errorPage(message: string) {
-  return redirect(`/auth/erro?mensagem=${encodeURIComponent(message)}`);
+function errorPage(code: ErrorCode) {
+  return redirect(`/auth/error?code=${code}`);
 }
 
 function avatarOf(tokens: AuthTokens): string | null {
@@ -37,24 +38,23 @@ export async function GET(req: NextRequest) {
   const state = readOAuthState(req);
   const finish = clearOAuthState;
 
-  if (!state) return finish(errorPage('O login expirou. Volte e tente de novo.'));
+  if (!state) return finish(errorPage('login_expired'));
 
   const providerError = params.get('error_description') ?? params.get('error');
   if (providerError) {
-    const message = /already linked|identity_already_exists/i.test(providerError)
-      ? 'Essa conta do provedor já está vinculada a outro usuário do CoopSeat.'
-      : 'O provedor recusou o login. Tente de novo.';
-    return finish(errorPage(message));
+    return finish(
+      errorPage(/already linked|identity_already_exists/i.test(providerError) ? 'provider_already_linked' : 'provider_refused'),
+    );
   }
 
   const code = params.get('code');
-  if (!code) return finish(errorPage('Resposta inválida do provedor.'));
+  if (!code) return finish(errorPage('provider_bad_response'));
 
   let tokens: AuthTokens;
   try {
     tokens = await gotrue.pkceGrant(code, state.verifier);
   } catch {
-    return finish(errorPage('Não foi possível concluir o login. Tente de novo.'));
+    return finish(errorPage('login_failed'));
   }
   await ensureProfile(tokens.user.id, avatarOf(tokens));
 
@@ -72,17 +72,17 @@ export async function GET(req: NextRequest) {
       return finish(openApp('coopseat://auth/linked'));
     }
     case 'link-web': {
-      const res = redirect('/conta?vinculado=1');
+      const res = redirect('/account?linked=1');
       setSessionCookies(res, tokens);
       return finish(res);
     }
     case 'web': {
       if (hasVerifiedFactor(tokens)) {
-        const res = redirect(`/entrar/2fa?next=${encodeURIComponent(state.next ?? '/conta')}`);
+        const res = redirect(`/login/2fa?next=${encodeURIComponent(state.next ?? '/account')}`);
         setMfaCookie(res, tokens);
         return finish(res);
       }
-      const res = redirect(state.next ?? '/conta');
+      const res = redirect(state.next ?? '/account');
       setSessionCookies(res, tokens);
       return finish(res);
     }

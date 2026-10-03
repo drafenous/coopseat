@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { dictionaryFor } from '@/i18n/server';
 import { forgotSchema } from '@/lib/validation/account';
 import { verifyCaptcha } from '@/server/captcha';
 import { env } from '@/server/env';
@@ -17,5 +18,5 @@ export const POST = route(async (req) => {
   await gotrue.recover(input.email, `${env.appUrl}/api/auth/confirm`).catch((err) => {
     console.warn('recover failed', err instanceof Error ? err.message : err);
   });
-  return NextResponse.json({ message: 'Se existir uma conta com esse e-mail, enviamos um link para redefinir a senha.' });
+  return NextResponse.json({ message: dictionaryFor(req).messages.resetLinkSent });
 });

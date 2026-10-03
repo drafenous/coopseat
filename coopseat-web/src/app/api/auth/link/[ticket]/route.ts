@@ -10,10 +10,10 @@ type Ctx = { params: Promise<{ ticket: string }> };
 export async function GET(_req: NextRequest, ctx: Ctx) {
   const { ticket } = await ctx.params;
   const payload = await consumeTicket<LinkPayload>(ticket, 'link');
-  const fail = (message: string) =>
-    NextResponse.redirect(new URL(`/auth/erro?mensagem=${encodeURIComponent(message)}`, env.appUrl), 303);
+  const fail = (code: 'link_expired' | 'link_failed') =>
+    NextResponse.redirect(new URL(`/auth/error?code=${code}`, env.appUrl), 303);
 
-  if (!payload) return fail('O link de vinculação expirou. Tente de novo pelo app.');
+  if (!payload) return fail('link_expired');
 
   const verifier = randomToken(48);
   try {
@@ -27,6 +27,6 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
     setOAuthState(res, { verifier, mode: payload.mode });
     return res;
   } catch {
-    return fail('Não foi possível iniciar a vinculação. Entre novamente e tente de novo.');
+    return fail('link_failed');
   }
 }

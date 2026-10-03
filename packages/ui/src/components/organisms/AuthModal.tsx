@@ -3,10 +3,14 @@ import type {Auth} from '../../hooks/useAuth';
 import {OAUTH_PROVIDERS,PROVIDER_LABELS} from '../../lib/api';
 import {errorText} from '../../lib/errors';
 import {Button,Divider,TextButton,TextInput} from '../atoms';
-import {Modal,ProviderButton} from '../molecules';
-import './Auth.css';
+import {Modal,ModalActions,ProviderButton} from '../molecules';
+import {authError,authProviders} from './authStyles';
+import {useT} from '../../i18n';
+
+const field='mb-3 grid gap-1.5 text-[12px] text-muted';
 
 export function AuthModal({auth,onClose}:{auth:Auth;onClose():void}){
+ const T=useT(),t=T.authModal;
  const [email,setEmail]=useState(''),[password,setPassword]=useState(''),[code,setCode]=useState('');
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
  useEffect(()=>{if(auth.status==='signedIn')onClose();},[auth.status,onClose]);
@@ -17,31 +21,31 @@ export function AuthModal({auth,onClose}:{auth:Auth;onClose():void}){
  if(auth.mfa){
   const submit=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();if(code.length===6)void run(()=>auth.submitMfa(code));};
   return <Modal small labelledBy="mfa-title" onClose={()=>{auth.cancelMfa();onClose();}} onSubmit={submit}>
-   <h2 id="mfa-title">Verificação em duas etapas</h2>
-   <p>Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
-   <TextInput className="code-input" autoFocus inputMode="numeric" autoComplete="one-time-code" aria-label="Código" maxLength={6} value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,''))}/>
-   {error&&<p className="auth-error" role="alert">{error}</p>}
-   <div className="modal-actions"><Button variant="secondary" onClick={auth.cancelMfa}>Voltar</Button><Button type="submit" disabled={busy||code.length!==6}>Confirmar</Button></div>
+   <h2 id="mfa-title">{t.mfaTitle}</h2>
+   <p>{t.mfaBody}</p>
+   <TextInput code autoFocus inputMode="numeric" autoComplete="one-time-code" aria-label={t.code} maxLength={6} value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,''))}/>
+   {error&&<p className={authError} role="alert">{error}</p>}
+   <ModalActions><Button variant="secondary" onClick={auth.cancelMfa}>{T.common.back}</Button><Button type="submit" inline disabled={busy||code.length!==6}>{T.common.confirm}</Button></ModalActions>
   </Modal>;
  }
 
  const submit=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();if(email&&password)void run(()=>auth.loginWithPassword(email.trim(),password));};
  return <Modal small closeButton labelledBy="auth-title" onClose={()=>{auth.cancelOAuth();onClose();}} onSubmit={submit}>
-  <h2 id="auth-title">Entrar no CoopSeat</h2>
-  <p>Sua conta libera o chat e a voz nas sessões e permite criar salas.</p>
-  <div className="auth-providers">
-   {OAUTH_PROVIDERS.map(p=><ProviderButton key={p} provider={p} compact disabled={busy} onClick={()=>void run(()=>auth.startOAuth(p))}/>)}
+  <h2 id="auth-title">{t.title}</h2>
+  <p>{t.pitch}</p>
+  <div className={authProviders}>
+   {OAUTH_PROVIDERS.map(p=><ProviderButton key={p} provider={p} action={T.providers.continueWith} compact disabled={busy} onClick={()=>void run(()=>auth.startOAuth(p))}/>)}
   </div>
-  {auth.waiting&&<div className="auth-waiting" role="status"><p>Continue no navegador com {PROVIDER_LABELS[auth.waiting]}. O app volta sozinho quando terminar.</p><Button variant="secondary" onClick={auth.cancelOAuth}>Cancelar</Button></div>}
-  <Divider label="ou com e-mail"/>
-  <label className="auth-field">E-mail<TextInput type="email" autoComplete="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)}/></label>
-  <label className="auth-field">Senha<TextInput type="password" autoComplete="current-password" required maxLength={72} value={password} onChange={e=>setPassword(e.target.value)}/></label>
-  {error&&<p className="auth-error" role="alert">{error}</p>}
-  <Button type="submit" disabled={busy||!email||!password}>{busy?'Entrando…':'Entrar'}</Button>
-  <div className="auth-links">
-   <TextButton onClick={()=>web('/esqueci-senha')}>Esqueci minha senha</TextButton>
-   <TextButton onClick={()=>web('/cadastro')}>Criar conta</TextButton>
+  {auth.waiting&&<div className="mt-3.5 flex items-center justify-between gap-3 rounded-lg border border-dashed border-line p-3" role="status"><p>{t.continueIn(PROVIDER_LABELS[auth.waiting])}</p><Button variant="secondary" onClick={auth.cancelOAuth}>{T.common.cancel}</Button></div>}
+  <Divider label={t.orWithEmail}/>
+  <label className={field}>{t.email}<TextInput type="email" autoComplete="email" required maxLength={254} value={email} onChange={e=>setEmail(e.target.value)}/></label>
+  <label className={field}>{t.password}<TextInput type="password" autoComplete="current-password" required maxLength={72} value={password} onChange={e=>setPassword(e.target.value)}/></label>
+  {error&&<p className={authError} role="alert">{error}</p>}
+  <Button type="submit" disabled={busy||!email||!password}>{busy?t.signingIn:t.signIn}</Button>
+  <div className="mt-3.5 flex justify-between gap-3">
+   <TextButton flush onClick={()=>web('/forgot-password')}>{t.forgot}</TextButton>
+   <TextButton flush onClick={()=>web('/signup')}>{t.createAccount}</TextButton>
   </div>
-  <p className="auth-fine">Contas são só para maiores de 18 anos. Para assistir como convidado você não precisa de conta.</p>
+  <p className="mt-4 text-[12px] text-subtle">{t.adultsOnly}</p>
  </Modal>;
 }

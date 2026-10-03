@@ -2,11 +2,14 @@
 #include "common.hpp"
 #include <mmdeviceapi.h>
 #include <audioclient.h>
+#include <devicetopology.h>
 #include <initguid.h>
 #include <functiondiscoverykeys_devpkey.h>
 #include <avrt.h>
 #include <deque>
-inline json audioDevices(EDataFlow flow){ComPtr<IMMDeviceEnumerator> e;check(CoCreateInstance(__uuidof(MMDeviceEnumerator),nullptr,CLSCTX_ALL,IID_PPV_ARGS(&e)),"Audio enumerator");ComPtr<IMMDeviceCollection> list;check(e->EnumAudioEndpoints(flow,DEVICE_STATE_ACTIVE,&list),"Audio devices");UINT count=0;check(list->GetCount(&count),"Audio count");json out=json::array();for(UINT i=0;i<count;i++){ComPtr<IMMDevice>d;check(list->Item(i,&d),"Audio endpoint");LPWSTR id=nullptr;check(d->GetId(&id),"Audio ID");std::string sid=utf8(id);CoTaskMemFree(id);ComPtr<IPropertyStore> props;check(d->OpenPropertyStore(STGM_READ,&props),"Audio properties");PROPVARIANT name;PropVariantInit(&name);HRESULT hr=props->GetValue(PKEY_Device_FriendlyName,&name);std::string label=SUCCEEDED(hr)&&name.vt==VT_LPWSTR?utf8(name.pwszVal):sid;PropVariantClear(&name);out.push_back({{"id",sid},{"name",label}});}return out;}
+// Device id of the adapter behind the endpoint (e.g. a USB interface path with vid_/pid_), used to pair capture cards with their audio.
+inline std::string audioHardware(IMMDevice* d){ComPtr<IDeviceTopology> t;if(FAILED(d->Activate(__uuidof(IDeviceTopology),CLSCTX_ALL,nullptr,reinterpret_cast<void**>(t.GetAddressOf()))))return "";ComPtr<IConnector> c;if(FAILED(t->GetConnector(0,&c)))return "";LPWSTR to=nullptr;if(FAILED(c->GetDeviceIdConnectedTo(&to))||!to)return "";std::string s=utf8(to);CoTaskMemFree(to);return s;}
+inline json audioDevices(EDataFlow flow){ComPtr<IMMDeviceEnumerator> e;check(CoCreateInstance(__uuidof(MMDeviceEnumerator),nullptr,CLSCTX_ALL,IID_PPV_ARGS(&e)),"Audio enumerator");ComPtr<IMMDeviceCollection> list;check(e->EnumAudioEndpoints(flow,DEVICE_STATE_ACTIVE,&list),"Audio devices");UINT count=0;check(list->GetCount(&count),"Audio count");json out=json::array();for(UINT i=0;i<count;i++){ComPtr<IMMDevice>d;check(list->Item(i,&d),"Audio endpoint");LPWSTR id=nullptr;check(d->GetId(&id),"Audio ID");std::string sid=utf8(id);CoTaskMemFree(id);ComPtr<IPropertyStore> props;check(d->OpenPropertyStore(STGM_READ,&props),"Audio properties");PROPVARIANT name;PropVariantInit(&name);HRESULT hr=props->GetValue(PKEY_Device_FriendlyName,&name);std::string label=SUCCEEDED(hr)&&name.vt==VT_LPWSTR?utf8(name.pwszVal):sid;PropVariantClear(&name);out.push_back({{"id",sid},{"name",label},{"hardware",audioHardware(d.Get())}});}return out;}
 class Audio {
  std::thread worker;std::atomic<bool> stopped{false};std::atomic<float> volume{.75f};
  Handle stopEvent{CreateEvent(nullptr,TRUE,FALSE,nullptr)};

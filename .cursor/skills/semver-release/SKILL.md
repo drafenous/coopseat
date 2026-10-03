@@ -72,7 +72,7 @@ From 1.0.0 on: breaking → major, new user-visible capability → minor, fix or
 Breaking means:
 - **desktop**: removes a feature or setting, raises the minimum Windows version, changes the `coopseat://` deep links, or stops reading settings saved by older versions.
 - **web**: changes or removes a BFF route, field or auth flow that already-installed desktop versions call (they keep running old code), or ships a destructive database migration.
-- **ui**: removes or renames an export, a prop, or a CSS token from `src/index.ts`, `src/design.ts`, `base.css` or `tokens.css`.
+- **ui**: removes or renames an export, a prop, or a CSS token from `src/index.ts`, `src/design.ts`, `base.css` or `theme.css`.
 
 Changes only to tests, CI, docs or tooling do not need a release. Mention them and skip unless the user insists.
 

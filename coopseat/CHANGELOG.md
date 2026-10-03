@@ -4,6 +4,22 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-03
+
+### Added
+- English interface, alongside Portuguese, with a language menu in the header.
+- Screen effects in native mode: retro CRT (curved or flat), handheld LCD, vivid colors and color-blindness filters (protanopia, deuteranopia, tritanopia).
+- Optional edge smoothing (light or strong) to soften jagged pixels.
+- Picture in Picture in compatibility mode, to keep the game in a floating window.
+- Troubleshooting guide with step-by-step fixes for common capture card problems.
+- The settings panel can be moved to the left or right side and collapsed.
+
+### Changed
+- When you pick a capture card, its own audio input is selected automatically when it can be identified.
+- The account screen and sign-in now only mention chat; voice chat is not offered.
+- Refreshed interface styling.
+- New CoopSeat app icon for the installer, the shortcut and the window.
+
 ## [0.1.0] - 2026-10-03
 
 First experimental release for Windows 10/11 x64. Native capture, real audio and end-to-end latency still need testing on more capture cards.

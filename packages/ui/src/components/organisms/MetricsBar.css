@@ -1,9 +1,0 @@
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #2a3542;border-radius:12px;padding:16px 0;background:#0e151d;margin-top:clamp(12px,1.8vh,20px)}
-.metrics>div{padding:0 22px;border-right:1px solid #2a3542}
-.metrics>div:last-child{border:0}
-.metrics span{font-size:11px;font-weight:600;letter-spacing:1.1px;color:#8d9fb1}
-.metrics strong{display:block;font-size:22px;font-weight:500;letter-spacing:-.4px;margin-top:8px;color:#e1eaf2;font-variant-numeric:tabular-nums}
-.metrics small{display:block;font-size:12px;font-weight:400;letter-spacing:0;color:#8494a5;margin-top:4px}
-
-@media(max-width:1000px){.metrics>div{padding:0 14px}}
-@media(max-width:750px){.metrics{grid-template-columns:1fr 1fr 1fr}.metrics>div{padding:0 12px}}

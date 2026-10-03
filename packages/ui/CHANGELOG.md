@@ -4,6 +4,20 @@ All notable changes to `@coopseat/ui` are documented here. The format is based o
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-03
+
+### Added
+- Internationalization exports: `I18nProvider`, `useT`, `useLocale`, `getLocale`, `setLocale`, `isUiLocale` and `UI_LOCALES`, with English and Portuguese.
+- `theme.css` with the design tokens as Tailwind CSS v4 theme variables.
+- Screen effects, edge smoothing, Picture in Picture, troubleshooting guide and a movable, collapsible settings panel in `CoopSeatPage`.
+
+### Changed
+- Components are styled with Tailwind CSS instead of per-component stylesheets. Apps must import `tailwindcss` and then `@coopseat/ui/theme.css`.
+- The account permissions list no longer shows voice.
+
+### Removed
+- **Breaking:** `@coopseat/ui/tokens.css`. Use `@coopseat/ui/theme.css` instead.
+
 ## [0.1.0] - 2026-10-03
 
 ### Added

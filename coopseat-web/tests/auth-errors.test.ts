@@ -1,13 +1,20 @@
 import { describe, expect, it, vi } from 'vitest';
 import { auth, toApiError } from '@/server/auth-errors';
 import { GoTrueError } from '@/server/gotrue';
-import { ApiError } from '@/server/http';
+import { ApiError, errorResponse } from '@/server/http';
 
 describe('GoTrue error mapping', () => {
-  it('translates known codes to PT-BR with the right status', async () => {
+  it('maps known codes to the right status', async () => {
     const err = await auth(Promise.reject(new GoTrueError(400, 'invalid_credentials', 'Invalid login credentials'))).catch((e) => e);
     expect(err).toBeInstanceOf(ApiError);
-    expect(err).toMatchObject({ status: 401, code: 'invalid_credentials', message: 'E-mail ou senha incorretos.' });
+    expect(err).toMatchObject({ status: 401, code: 'invalid_credentials' });
+  });
+
+  it('localizes the message per request locale', async () => {
+    const err = toApiError(new GoTrueError(400, 'invalid_credentials', 'x')) as ApiError;
+    const body = async (res: Response) => (await res.json()).error.message;
+    expect(await body(errorResponse(err))).toBe('Incorrect e-mail or password.');
+    expect(await body(errorResponse(err, 'pt-BR'))).toBe('E-mail ou senha incorretos.');
   });
 
   it('falls back by status and hides unknown upstream details', () => {

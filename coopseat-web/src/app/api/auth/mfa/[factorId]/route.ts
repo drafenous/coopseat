@@ -10,7 +10,7 @@ type Ctx = { params: Promise<{ factorId: string }> };
 export const DELETE = route<Ctx>(async (req, ctx) => {
   const session = await requireAuth(req);
   if (session.claims.aal !== 'aal2') {
-    throw new ApiError(403, 'mfa_required', 'Confirme um código do autenticador antes de removê-lo.');
+    throw new ApiError(403, 'mfa_required');
   }
   await rateLimit('mfa', session.claims.sub);
   const { factorId } = await ctx.params;

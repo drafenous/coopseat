@@ -1,3 +1,6 @@
+import { DEFAULT_LOCALE, isLocale } from '@/i18n/config';
+import { dictionaries } from '@/i18n/dictionaries';
+
 export class ApiClientError extends Error {
   constructor(
     message: string,
@@ -23,7 +26,8 @@ export async function api<T = Record<string, unknown>>(
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
     const err = (data['error'] ?? {}) as { message?: string; code?: string; fields?: Record<string, string[]> };
-    throw new ApiClientError(err.message ?? 'Algo deu errado. Tente novamente.', res.status, err.code ?? 'error', err.fields);
+    const fallback = dictionaries[isLocale(document.documentElement.lang) ? document.documentElement.lang : DEFAULT_LOCALE].common.genericError;
+    throw new ApiClientError(err.message ?? fallback, res.status, err.code ?? 'error', err.fields);
   }
   return data as T;
 }

@@ -1,16 +1,28 @@
-@import './tokens.css';
-:root{font-family:var(--cs-font);color:var(--cs-text);background:var(--cs-bg);font-synthesis:none;color-scheme:dark;font-weight:400;font-size:14px}
-*{box-sizing:border-box}
-body{margin:0}
-button,select,input{font:inherit}
-button,select{cursor:pointer}
-button:disabled,select:disabled{cursor:default;opacity:.45}
-button:focus-visible,select:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #8bf5ca;outline-offset:3px}
-button{color:inherit}
-i{display:inline-block;width:7px;height:7px;background:#7d8ea0;border-radius:100%}
-p{color:var(--cs-muted);font-size:14px;line-height:1.6;margin:0}
-select{width:100%;min-width:0;color:var(--cs-text-field);border:1px solid #304050;background:var(--cs-field);padding:0 10px;border-radius:7px;font-size:13px;height:40px}
-select:hover:not(:disabled){border-color:#3d5163}
-@keyframes fade-in{from{opacity:0}}
+/* Element defaults for the capture app only; the site keeps Tailwind's plain preflight. */
+@layer base {
+  html {
+    color-scheme: dark;
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-synthesis: none;
+  }
+  body {
+    font-size: 14px;
+    line-height: normal;
+  }
+  button, select { cursor: pointer; }
+  button:disabled, select:disabled { cursor: default; opacity: 0.45; }
+  button:focus-visible, select:focus-visible, a:focus-visible, input:focus-visible {
+    outline: 2px solid #8bf5ca;
+    outline-offset: 3px;
+  }
+  p {
+    color: var(--color-muted);
+    font-size: 14px;
+    line-height: 1.6;
+  }
 
-@media(min-width:1800px){:root{font-size:15px}select{font-size:14px;height:44px}}
+  @media (min-width: 1800px) {
+    body { font-size: 15px; }
+  }
+}

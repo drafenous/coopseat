@@ -1,0 +1,44 @@
+/* Design tokens for Tailwind. Import after `tailwindcss` in every app that renders @coopseat/ui components. */
+@source "..";
+
+@custom-variant short (@media (max-height: 780px));
+/* Cinema mode: set by MainLayout while the controls are hidden. */
+@custom-variant immersive (&:where([data-immersive] *));
+
+@theme {
+  --font-sans: Inter, "Segoe UI", Arial, sans-serif;
+
+  --color-background: #0b1016;
+  --color-surface: #131c26;
+  --color-field: #0d141c;
+  --color-line: #33465a;
+  --color-line-soft: #25313d;
+  --color-line-strong: #3a4b5c;
+  --color-foreground: #e8edf3;
+  --color-strong: #f3f6f8;
+  --color-field-text: #dbe4ed;
+  --color-muted: #a2afbd;
+  --color-subtle: #6f8193;
+  --color-accent: #b0f3d2;
+  --color-accent-hover: #cafee3;
+  --color-accent-border: #baf9dc;
+  --color-accent-ink: #16352a;
+  --color-ok: #9ad9bd;
+  --color-warn: #f3c97a;
+  --color-danger: #ff9d9d;
+
+  --animate-fade-in: fade-in 0.15s ease-out;
+  --animate-fade-in-slow: fade-in 0.2s ease-out;
+  --animate-modal-in: modal-in 0.18s ease-out;
+  --animate-toast-in: toast-in 0.22s ease-out;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+  @keyframes modal-in {
+    from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(10px); }
+  }
+}

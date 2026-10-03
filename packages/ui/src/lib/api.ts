@@ -1,3 +1,4 @@
+import {getLocale,getT} from '../i18n';
 import {bridge,platform} from '../platform';
 
 export type Session={accessToken:string;refreshToken:string;expiresAt:number};
@@ -10,7 +11,7 @@ export type Account={
  ageStatus:AgeStatus;ageVerifiedAt:string|null;termsVersion:string|null;
  identities:{id:string;provider:string;email:string|null}[];
  mfa:{enabled:boolean;factors:{id:string;name:string}[];level:'aal1'|'aal2'};
- permissions:{watch:Gate;chat:Gate;voice:Gate;host:Gate};
+ permissions:{watch:Gate;chat:Gate;host:Gate};
  message?:string;
 };
 export type MfaPending={mfaRequired:true;mfaToken:string;factors:{id:string;name:string}[]};
@@ -21,10 +22,7 @@ export class ApiError extends Error{
 }
 
 export const DEFAULT_BFF='https://coopseat.com';
-export const OAUTH_PROVIDERS=['google','discord','x','facebook'] as const;
-export type OAuthProvider=typeof OAUTH_PROVIDERS[number];
-export const PROVIDER_LABELS:Record<string,string>={google:'Google',discord:'Discord',x:'X',twitter:'X',facebook:'Facebook',email:'E-mail'};
-export const GATE_MESSAGES:Record<GateRequirement,string>={email:'Confirme seu e-mail.',nickname:'Escolha um apelido.',age:'Verifique sua idade (18+).',mfa:'Confirme a autenticação em duas etapas.'};
+export {OAUTH_PROVIDERS,PROVIDER_LABELS,type OAuthProvider} from './providers';
 
 let bff:Promise<string>|null=null;
 export const bffUrl=()=>{
@@ -53,13 +51,14 @@ type Options={method?:string;body?:unknown;auth?:boolean};
 async function send<T>(path:string,{method='GET',body}:Options,token?:string):Promise<T>{
  const cookies=cookieSession();
  const headers:Record<string,string>=cookies?{}:{'x-coopseat-client':'desktop'};
+ headers['accept-language']=getLocale();
  if(body!==undefined)headers['content-type']='application/json';
  if(token)headers.authorization=`Bearer ${token}`;
  let res:Response;
  try{res=await fetch(`${await bffUrl()}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body),credentials:cookies?'same-origin':'omit'});}
- catch{throw new ApiError(0,'network','Não foi possível falar com o CoopSeat. Confira sua internet.');}
+ catch{throw new ApiError(0,'network',getT().api.network);}
  const data=await res.json().catch(()=>({}));
- if(!res.ok){const e=data?.error??{};throw new ApiError(res.status,e.code??'error',e.message??'Algo deu errado. Tente novamente.',e.fields);}
+ if(!res.ok){const e=data?.error??{};throw new ApiError(res.status,e.code??'error',e.message??getT().api.generic,e.fields);}
  return data as T;
 }
 

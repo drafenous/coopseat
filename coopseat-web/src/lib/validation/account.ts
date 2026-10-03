@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+// Messages are error codes, resolved against the i18n dictionaries (`errors`).
+
 export const NICKNAME_PATTERN = /^[a-zA-Z0-9_]{3,20}$/;
 
 export const RESERVED_NICKNAMES = new Set([
@@ -32,23 +34,23 @@ export function isReservedNickname(nickname: string): boolean {
 }
 
 export const nicknameSchema = z
-  .string({ error: 'Informe um apelido.' })
+  .string({ error: 'nickname_required' })
   .trim()
-  .regex(NICKNAME_PATTERN, 'O apelido deve ter de 3 a 20 caracteres: letras, números ou _.')
-  .refine((n) => !isReservedNickname(n), 'Esse apelido é reservado.');
+  .regex(NICKNAME_PATTERN, 'nickname_format')
+  .refine((n) => !isReservedNickname(n), 'nickname_reserved');
 
 export const emailSchema = z
-  .string({ error: 'Informe um e-mail.' })
+  .string({ error: 'email_required' })
   .trim()
   .toLowerCase()
-  .max(254, 'E-mail muito longo.')
-  .pipe(z.email({ error: 'E-mail inválido.' }));
+  .max(254, 'email_too_long')
+  .pipe(z.email({ error: 'email_invalid' }));
 
 export const passwordSchema = z
-  .string({ error: 'Informe uma senha.' })
-  .min(8, 'A senha deve ter pelo menos 8 caracteres.')
-  .max(72, 'A senha deve ter no máximo 72 caracteres.')
-  .refine((p) => /[a-zA-Z]/.test(p) && /\d/.test(p), 'A senha deve ter letras e números.');
+  .string({ error: 'password_required' })
+  .min(8, 'password_too_short')
+  .max(72, 'password_too_long')
+  .refine((p) => /[a-zA-Z]/.test(p) && /\d/.test(p), 'password_weak');
 
 export const captchaSchema = z.string().max(4096).optional();
 
@@ -58,14 +60,14 @@ export const signupSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   nickname: nicknameSchema,
-  acceptTerms: z.literal(true, { error: 'É preciso aceitar os Termos de Uso e a Política de Privacidade.' }),
-  confirmAdult: z.literal(true, { error: 'O CoopSeat é exclusivo para maiores de 18 anos.' }),
+  acceptTerms: z.literal(true, { error: 'terms_required' }),
+  confirmAdult: z.literal(true, { error: 'adult_required' }),
   captchaToken: captchaSchema,
 });
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, 'Informe sua senha.').max(72),
+  password: z.string().min(1, 'password_required').max(72),
   captchaToken: captchaSchema,
 });
 
@@ -81,13 +83,13 @@ export const updateMeSchema = z
     email: emailSchema.optional(),
     acceptTerms: z.literal(true).optional(),
   })
-  .refine((v) => Object.keys(v).length > 0, 'Nada para atualizar.');
+  .refine((v) => Object.keys(v).length > 0, 'nothing_to_update');
 
-export const deleteMeSchema = z.object({ confirm: z.string().min(1, 'Digite seu apelido para confirmar.') });
+export const deleteMeSchema = z.object({ confirm: z.string().min(1, 'confirm_required') });
 
 export const OAUTH_PROVIDERS = ['google', 'facebook', 'x', 'discord'] as const;
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
-export const oauthProviderSchema = z.enum(OAUTH_PROVIDERS, { error: 'Provedor não suportado.' });
+export const oauthProviderSchema = z.enum(OAUTH_PROVIDERS, { error: 'provider_unsupported' });
 
 export const PROVIDER_LABELS: Record<OAuthProvider, string> = {
   google: 'Google',
@@ -96,7 +98,7 @@ export const PROVIDER_LABELS: Record<OAuthProvider, string> = {
   discord: 'Discord',
 };
 
-export const pkceChallengeSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/, 'Desafio PKCE inválido.');
-export const pkceVerifierSchema = z.string().regex(/^[A-Za-z0-9._~-]{43,128}$/, 'Verificador PKCE inválido.');
+export const pkceChallengeSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/, 'pkce_challenge_invalid');
+export const pkceVerifierSchema = z.string().regex(/^[A-Za-z0-9._~-]{43,128}$/, 'pkce_verifier_invalid');
 
-export const totpCodeSchema = z.string().trim().regex(/^\d{6}$/, 'O código tem 6 dígitos.');
+export const totpCodeSchema = z.string().trim().regex(/^\d{6}$/, 'totp_format');

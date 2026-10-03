@@ -1,3 +1,4 @@
+export {AccountCta} from './AccountCta';
 export {AccountModal} from './AccountModal';
 export {AdvancedSettings} from './AdvancedSettings';
 export {AppFooter} from './AppFooter';
@@ -12,4 +13,5 @@ export {SavePresetModal} from './SavePresetModal';
 export {SettingsPanel} from './SettingsPanel';
 export {ToastStack} from './ToastStack';
 export {TransportBar} from './TransportBar';
+export {TroubleshootModal} from './TroubleshootModal';
 export {ViewerEmptyState} from './ViewerEmptyState';

@@ -2,6 +2,7 @@ import {useCallback,useEffect,useRef,useState} from 'react';
 import {api,ApiError,bffUrl,loadSession,refreshSession,saveSession,type Account,type LoginResult,type MfaPending,type OAuthProvider,type Session} from '../lib/api';
 import {errorText} from '../lib/errors';
 import {challengeFor,createVerifier} from '../lib/pkce';
+import {useT} from '../i18n';
 import {bridge,platform} from '../platform';
 import type {AuthDeepLink} from '../types';
 
@@ -10,6 +11,7 @@ export type TotpEnrollment={factorId:string;qrCode:string;secret:string;uri:stri
 type Props={setError(message:string):void;setNotice(message:string):void};
 
 export function useAuth({setError,setNotice}:Props){
+ const t=useT();
  const [status,setStatus]=useState<AuthStatus>('loading');
  const [account,setAccount]=useState<Account|null>(null);
  const [mfa,setMfa]=useState<MfaPending|null>(null);
@@ -41,13 +43,13 @@ export function useAuth({setError,setNotice}:Props){
   try{
    if(link.kind==='callback'){
     const v=verifier.current;verifier.current=null;setWaiting(null);
-    if(!v){setError('Esse login não foi iniciado neste app. Tente entrar de novo.');return;}
-    if(await finishLogin(await api<LoginResult>('/api/auth/desktop/exchange',{method:'POST',body:{ticket:link.ticket,verifier:v},auth:false})))setNotice('Você entrou no CoopSeat.');
-   }else if(link.kind==='linked'){await loadAccount();setNotice('Conta vinculada.');}
-   else if(link.kind==='verified'){await refreshSession();await loadAccount();setNotice('Verificação de idade enviada. Seu status foi atualizado.');}
-   else{setNotice('E-mail confirmado.');if(await loadSession())await loadAccount();}
+    if(!v){setError(t.auth.notStartedHere);return;}
+    if(await finishLogin(await api<LoginResult>('/api/auth/desktop/exchange',{method:'POST',body:{ticket:link.ticket,verifier:v},auth:false})))setNotice(t.auth.signedIn);
+   }else if(link.kind==='linked'){await loadAccount();setNotice(t.auth.linked);}
+   else if(link.kind==='verified'){await refreshSession();await loadAccount();setNotice(t.auth.ageSubmitted);}
+   else{setNotice(t.auth.emailConfirmed);if(await loadSession())await loadAccount();}
   }catch(e){setError(errorText(e));}
- },[finishLogin,loadAccount,setError,setNotice]);
+ },[finishLogin,loadAccount,setError,setNotice,t]);
 
  useEffect(()=>{
   const links=bridge()?.auth;if(!links)return;
@@ -60,7 +62,7 @@ export function useAuth({setError,setNotice}:Props){
  const open=async(url:string)=>{
   const b=bridge();
   if(b){await b.auth.open(url);return;}
-  if(!available)throw Error('Disponível apenas no aplicativo.');
+  if(!available)throw Error(t.auth.appOnly);
   window.open(url,'_blank','noopener');
  };
  const openWeb=async(path:string)=>open(`${await bffUrl()}${path}`);
@@ -68,7 +70,8 @@ export function useAuth({setError,setNotice}:Props){
  return {
   available,web,status,account,mfa,waiting,
   /** Web sign-in uses the site's own pages (Turnstile only runs there). */
-  openSignIn:()=>{location.assign(`/entrar?next=${encodeURIComponent(location.pathname)}`);},
+  openSignIn:()=>{location.assign(`/login?next=${encodeURIComponent(location.pathname)}`);},
+  openSignUp:async()=>{if(web)location.assign('/signup');else await openWeb('/signup');},
   loginWithPassword:async(email:string,password:string)=>finishLogin(await api<LoginResult>('/api/auth/login',{method:'POST',body:{email,password},auth:false})),
   startOAuth:async(provider:OAuthProvider)=>{
    const v=createVerifier();verifier.current=v;setWaiting(provider);

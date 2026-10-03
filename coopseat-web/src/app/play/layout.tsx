@@ -1,16 +1,21 @@
 import type { Metadata } from 'next';
-import '@coopseat/ui/base.css';
+import { getDictionary, getLocale } from '@/i18n/server';
+import './play.css';
 
-export const metadata: Metadata = {
-  title: 'Jogar · CoopSeat',
-  description: 'Jogue o console numa aba do navegador pela placa de captura USB.',
-  metadataBase: new URL(process.env['APP_URL'] ?? 'https://coopseat.com'),
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getDictionary();
+  return {
+    title: `${t.meta.play} · CoopSeat`,
+    description: t.meta.playDescription,
+    metadataBase: new URL(process.env['APP_URL'] ?? 'https://coopseat.com'),
+  };
+}
 
-/** Separate root layout: the app's global styles must not mix with the site's Tailwind. */
-export default function PlayLayout({ children }: { children: React.ReactNode }) {
+/** Separate root layout: the app's element defaults (base.css) must not leak into the site. */
+export default async function PlayLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="pt-BR">
+    <html lang={locale}>
       <body>{children}</body>
     </html>
   );

@@ -68,7 +68,7 @@ function query(request) {
 }
 app.whenReady().then(()=>{
   if(!gotLock) return;
-  win = new BrowserWindow({width:1240,height:820,minWidth:860,minHeight:650,backgroundColor:'#0b1016',autoHideMenuBar:true,title:'CoopSeat',webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
+  win = new BrowserWindow({width:1240,height:820,minWidth:860,minHeight:650,backgroundColor:'#0b1016',autoHideMenuBar:true,title:'CoopSeat',icon:path.join(__dirname,dev?'../public/icon.png':'../dist/icon.png'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
   session.defaultSession.setPermissionRequestHandler((wc,permission,cb,details)=>cb(wc===win.webContents && trusted(wc.getURL()) && ['media','speaker-selection'].includes(permission) && (!details.requestingUrl || trusted(details.requestingUrl))));
   session.defaultSession.setPermissionCheckHandler((wc,permission)=>wc===win.webContents && trusted(wc.getURL()) && ['media','speaker-selection'].includes(permission));
   if(!dev)win.removeMenu();
@@ -93,7 +93,7 @@ app.whenReady().then(()=>{
   handle('native:stop',()=>stop());
   handle('donate',()=>shell.openExternal(DONATE_URL));
   handle('pointer:watch',on=>watchPointer(on===true));
-  handle('native:control',({key,value})=>{if(!['volume','vsync','top','fullscreen'].includes(key))throw Error('Comando inválido');if(key==='volume'?!bounded(value,0,1):typeof value!=='boolean')throw Error('Valor inválido');core?.stdin.write(JSON.stringify({cmd:key,value})+'\n');});
+  handle('native:control',({key,value})=>{const levels={smoothing:2,effect:7};if(!['volume','vsync','smoothing','effect','top','fullscreen'].includes(key))throw Error('Comando inválido');if(key==='volume'?!bounded(value,0,1):key in levels?!(Number.isInteger(value)&&bounded(value,0,levels[key])):typeof value!=='boolean')throw Error('Valor inválido');core?.stdin.write(JSON.stringify({cmd:key,value})+'\n');});
   handle('window',action=>{if(action==='fullscreen'){win.setFullScreen(!win.isFullScreen());return win.isFullScreen();}else if(action==='exitFullscreen')win.setFullScreen(false);else if(action==='top'){win.setAlwaysOnTop(!win.isAlwaysOnTop());return win.isAlwaysOnTop();}});
   win.webContents.on('did-start-loading',()=>{rendererReady=false;});
   if(dev) console.log(`Ambiente: ${process.env.COOPSEAT_BFF_URL ? 'COOPSEAT_BFF_URL' : (process.env.COOPSEAT_ENV || 'development')} | BFF: ${bffUrl}`);

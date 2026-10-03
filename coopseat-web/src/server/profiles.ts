@@ -43,13 +43,13 @@ export async function setNickname(profileId: string, nickname: string, opts: { e
   if (opts.enforceCooldown && profile.nickname && profile.nicknameChangedAt) {
     const nextChange = Date.parse(profile.nicknameChangedAt) + NICKNAME_COOLDOWN_DAYS * 86_400_000;
     if (Date.now() < nextChange) {
-      throw new ApiError(429, 'nickname_cooldown', 'Você só pode trocar de apelido uma vez a cada 30 dias.', {
+      throw new ApiError(429, 'nickname_cooldown', {
         nextChangeAt: new Date(nextChange).toISOString(),
       });
     }
   }
   if (!(await isNicknameAvailable(nickname, profileId))) {
-    throw new ApiError(409, 'nickname_taken', 'Esse apelido já está em uso.');
+    throw new ApiError(409, 'nickname_taken');
   }
 
   const db = await adminDb();
@@ -61,7 +61,7 @@ export async function setNickname(profileId: string, nickname: string, opts: { e
     });
     return updated!;
   } catch (err) {
-    if (isUniqueViolation(err)) throw new ApiError(409, 'nickname_taken', 'Esse apelido já está em uso.');
+    if (isUniqueViolation(err)) throw new ApiError(409, 'nickname_taken');
     throw err;
   }
 }

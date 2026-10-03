@@ -3,8 +3,8 @@ function validateOpen(o) {
   if (!o || typeof o.device !== 'string' || !o.device || o.device.length > 8192) throw Error('Dispositivo inválido.');
   if (!Number.isInteger(o.mode) || !bounded(o.mode,0,65535)) throw Error('Modo inválido.');
   for (const key of ['audio','output']) if (typeof o[key] !== 'string' || o[key].length > 8192) throw Error('Áudio inválido.');
-  if (!bounded(o.volume,0,1) || typeof o.vsync !== 'boolean' || typeof o.top !== 'boolean') throw Error('Configuração inválida.');
-  return {device:o.device,mode:o.mode,audio:o.audio,output:o.output,volume:o.volume,vsync:o.vsync,top:o.top};
+  if (!bounded(o.volume,0,1) || typeof o.vsync !== 'boolean' || typeof o.top !== 'boolean' || !Number.isInteger(o.smoothing) || !bounded(o.smoothing,0,2) || !Number.isInteger(o.effect) || !bounded(o.effect,0,7)) throw Error('Configuração inválida.');
+  return {device:o.device,mode:o.mode,audio:o.audio,output:o.output,volume:o.volume,vsync:o.vsync,smoothing:o.smoothing,effect:o.effect,top:o.top};
 }
 function validateBounds(o) {
   if (!o || ![o.x,o.y].every(v=>Number.isInteger(v) && bounded(v,-32768,32767)) || ![o.width,o.height].every(v=>Number.isInteger(v) && bounded(v,0,16384))) throw Error('Área de vídeo inválida.');

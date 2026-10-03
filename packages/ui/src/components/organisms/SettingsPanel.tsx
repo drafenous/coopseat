@@ -1,38 +1,38 @@
 import type {ReactNode} from 'react';
-import {ArrowUpRight,AudioLines,Bookmark,MonitorPlay,RefreshCw,Settings2,Zap} from 'lucide-react';
+import {ArrowLeftRight,ArrowUpRight,AudioLines,Bookmark,MonitorPlay,PanelLeftClose,PanelRightClose,RefreshCw,Settings2,Zap} from 'lucide-react';
 import type {Devices,Mode} from '../../types';
 import type {DeviceKey} from '../../hooks/useCapture';
 import {CINEMA_DELAYS,type Backend,type Settings} from '../../lib/settings';
 import {Divider,IconButton,SectionLabel,TextButton} from '../atoms';
 import {CaptureButton,DeviceSelect,SelectField,ToggleField} from '../molecules';
+import type {PanelSide} from '../templates/MainLayout';
 import {AdvancedSettings} from './AdvancedSettings';
-import './SettingsPanel.css';
+import {useT} from '../../i18n';
 
-type Props={settings:Settings;change<K extends keyof Settings>(key:K,value:Settings[K]):void;devices:Devices;modes:Mode[];native:boolean;running:boolean;busy:boolean;canStart:boolean;needsPermission:boolean;presetPicker:ReactNode;onRefresh():void;onPermit():void;onSelectDevice(key:DeviceKey,value:string):void;onBackendChange(backend:Backend):void;onStart():void;onStop():void};
+type Props={side:PanelSide;onSwapSide():void;onCollapse():void;settings:Settings;change<K extends keyof Settings>(key:K,value:Settings[K]):void;devices:Devices;modes:Mode[];native:boolean;running:boolean;busy:boolean;canStart:boolean;needsPermission:boolean;presetPicker:ReactNode;onRefresh():void;onPermit():void;onSelectDevice(key:DeviceKey,value:string):void;onBackendChange(backend:Backend):void;onStart():void;onStop():void};
 
-export function SettingsPanel({settings:s,change,devices,modes,native,running,busy,canStart,needsPermission,presetPicker,onRefresh,onPermit,onSelectDevice,onBackendChange,onStart,onStop}:Props){
+export function SettingsPanel({side,onSwapSide,onCollapse,settings:s,change,devices,modes,native,running,busy,canStart,needsPermission,presetPicker,onRefresh,onPermit,onSelectDevice,onBackendChange,onStart,onStop}:Props){
  const locked=running||busy;
- return <aside>
-  <div className="aside-body">
-   <div className="panel-title"><Settings2 size={18}/><h2>Configurar entrada</h2><IconButton label="Atualizar dispositivos" disabled={locked} onClick={onRefresh}><RefreshCw size={16}/></IconButton></div>
-   <SectionLabel icon={<Bookmark size={14}/>}>PRESET</SectionLabel>
+ const t=useT().settings;
+ return <aside className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#121921] immersive:hidden max-[750px]:overflow-visible">
+  <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-[18px] pb-2 [scrollbar-color:#2a3846_transparent] [scrollbar-width:thin] min-[1800px]:px-6 min-[1800px]:pt-[22px] max-[750px]:overflow-visible">
+   <div className="mb-[18px] flex items-center gap-[9px] text-[#c3d0dd]"><Settings2 size={18}/><h2 className="min-w-0 flex-1 truncate text-[16px] font-[550] min-[1800px]:text-[17px]">{t.title}</h2><IconButton size="sm" label={t.refresh} disabled={locked} onClick={onRefresh}><RefreshCw size={16}/></IconButton><IconButton size="sm" label={side==='right'?t.moveLeft:t.moveRight} className="max-[750px]:hidden" onClick={onSwapSide}><ArrowLeftRight size={16}/></IconButton><IconButton size="sm" label={t.collapse} onClick={onCollapse}>{side==='right'?<PanelRightClose size={16}/>:<PanelLeftClose size={16}/>}</IconButton></div>
+   <SectionLabel icon={<Bookmark size={14}/>}>{t.preset}</SectionLabel>
    {presetPicker}
    <Divider/>
-   <DeviceSelect label="Placa de captura" value={s.video} items={devices.video} placeholder="Selecione um dispositivo" disabled={locked} onChange={v=>onSelectDevice('video',v)}/>
-   {needsPermission&&<TextButton onClick={onPermit}>Permitir câmera e microfone <ArrowUpRight size={13}/></TextButton>}
-   <SectionLabel icon={<AudioLines size={14}/>}>ÁUDIO</SectionLabel>
-   <DeviceSelect label="Entrada de áudio da placa" value={s.audio} items={devices.audio} placeholder="Sem áudio" disabled={locked} onChange={v=>onSelectDevice('audio',v)}/>
-   <DeviceSelect label="Tocar o som em" value={s.output} items={devices.output} placeholder="Padrão do Windows" disabled={locked} onChange={v=>onSelectDevice('output',v)}/>
-   <SectionLabel icon={<MonitorPlay size={14}/>}>EXIBIÇÃO</SectionLabel>
-   <ToggleField label="Modo cinema automático" hint="Esconde os controles e amplia o vídeo na janela quando você fica parado. Mexa o mouse para voltar." checked={s.autoFull} onChange={v=>change('autoFull',v)}/>
-   {s.autoFull&&<SelectField label="Entrar no modo cinema após" value={s.cinemaDelay} onChange={e=>change('cinemaDelay',Number(e.target.value))}>{CINEMA_DELAYS.map(d=><option key={d} value={d}>{d} segundos parado</option>)}</SelectField>}
-   <Divider/>
-   <ToggleField label="Conectar ao abrir" hint="Inicia a captura assim que o app abre" checked={s.auto} onChange={v=>change('auto',v)}/>
-   <AdvancedSettings settings={s} change={change} modes={modes} native={native} locked={locked} onBackendChange={onBackendChange}/>
+   <DeviceSelect label={t.card} value={s.video} items={devices.video} placeholder={t.selectDevice} disabled={locked} onChange={v=>onSelectDevice('video',v)}/>
+   {needsPermission&&<TextButton onClick={onPermit}>{t.permit} <ArrowUpRight size={13}/></TextButton>}
+   <SectionLabel icon={<AudioLines size={14}/>}>{t.audio}</SectionLabel>
+   <DeviceSelect label={t.audioInput} value={s.audio} items={devices.audio} placeholder={t.noAudio} disabled={locked} onChange={v=>onSelectDevice('audio',v)}/>
+   <DeviceSelect label={t.output} value={s.output} items={devices.output} placeholder={t.systemDefault} disabled={locked} onChange={v=>onSelectDevice('output',v)}/>
+   <SectionLabel icon={<MonitorPlay size={14}/>}>{t.display}</SectionLabel>
+   <ToggleField label={t.autoCinema} hint={t.autoCinemaHint} checked={s.autoFull} onChange={v=>change('autoFull',v)}/>
+   {s.autoFull&&<SelectField label={t.cinemaAfter} value={s.cinemaDelay} onChange={v=>change('cinemaDelay',v)} options={CINEMA_DELAYS.map(d=>({value:d,label:t.secondsIdle(d)}))}/>}   <Divider/>
+   <ToggleField label={t.autoConnect} hint={t.autoConnectHint} checked={s.auto} onChange={v=>change('auto',v)}/>   <AdvancedSettings settings={s} change={change} modes={modes} native={native} locked={locked} onBackendChange={onBackendChange}/>
   </div>
-  <div className="aside-foot">
+  <div className="flex-none border-t border-line-soft bg-[#121921] px-5 py-3.5 min-[1800px]:px-6 min-[1800px]:py-4">
    <CaptureButton running={running} busy={busy} canStart={canStart} onStart={onStart} onStop={onStop}/>
-   <p className="panel-foot"><Zap size={13}/> A captura fica no seu PC. Nada é gravado.</p>
+   <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[12px] text-[#8494a5]"><Zap size={13}/> {t.local}</p>
   </div>
  </aside>;
 }

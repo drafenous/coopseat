@@ -1,7 +1,7 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');const {validateOpen,validateBounds}=require('../electron/validation.cjs');
-const valid={device:'usb camera',mode:3,audio:'usb audio',output:'',volume:.5,vsync:false,top:false};
+const valid={device:'usb camera',mode:3,audio:'usb audio',output:'',volume:.5,vsync:false,smoothing:1,effect:4,top:false};
 test('accepts explicit device and silent capture',()=>{assert.deepEqual(validateOpen(valid),valid);assert.equal(validateOpen({...valid,audio:''}).audio,'');});
-test('rejects renderer input outside native protocol limits',()=>{for(const change of [{mode:-1},{mode:1.5},{volume:NaN},{volume:2},{device:''},{device:'x'.repeat(8193)},{vsync:'false'},{audio:null}])assert.throws(()=>validateOpen({...valid,...change}));});
+test('rejects renderer input outside native protocol limits',()=>{for(const change of [{mode:-1},{mode:1.5},{volume:NaN},{volume:2},{device:''},{device:'x'.repeat(8193)},{vsync:'false'},{smoothing:3},{smoothing:1.5},{smoothing:undefined},{effect:8},{effect:-1},{effect:'crt'},{audio:null}])assert.throws(()=>validateOpen({...valid,...change}));});
 test('removes unsupported fields before forwarding to native code',()=>{assert.equal(validateOpen({...valid,executable:'C:\\malicious.exe'}).executable,undefined);});
 test('accepts embedded video bounds and strips the parent window field',()=>{const rect={x:40,y:-12,width:1280,height:720};assert.deepEqual(validateBounds({...rect,parent:'123'}),rect);assert.deepEqual(validateBounds({x:0,y:0,width:0,height:0}),{x:0,y:0,width:0,height:0});});
 test('rejects embedded video bounds outside window limits',()=>{const rect={x:0,y:0,width:640,height:360};for(const change of [{x:1.5},{y:NaN},{width:-1},{height:16385},{x:40000},{width:'640'}])assert.throws(()=>validateBounds({...rect,...change}));assert.throws(()=>validateBounds(null));});

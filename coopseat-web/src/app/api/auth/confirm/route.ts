@@ -15,22 +15,22 @@ export async function GET(req: NextRequest) {
   if (!tokenHash) {
     // Supabase's default email template confirms on GoTrue's own /verify and only then
     // redirects here (with ?flow=signup from our redirect_to, or ?error=... on failure).
-    if (params.has('error') || params.has('error_code')) return target('/auth/confirmado?erro=expirado');
-    if (params.get('flow') === 'signup') return target('/auth/confirmado?tipo=signup');
-    return target('/auth/confirmado?erro=link');
+    if (params.has('error') || params.has('error_code')) return target('/auth/confirmed?error=expired');
+    if (params.get('flow') === 'signup') return target('/auth/confirmed?type=signup');
+    return target('/auth/confirmed?error=link');
   }
-  if (!TYPES.has(type)) return target('/auth/confirmado?erro=link');
+  if (!TYPES.has(type)) return target('/auth/confirmed?error=link');
 
   try {
     const result = await gotrue.verifyOtp(type, tokenHash);
     const res =
       type === 'recovery'
-        ? target('/redefinir-senha')
-        : target(`/auth/confirmado?tipo=${encodeURIComponent(type)}`);
+        ? target('/reset-password')
+        : target(`/auth/confirmed?type=${encodeURIComponent(type)}`);
     // Secure email change needs both addresses confirmed; the first click returns no session.
     if (result && 'access_token' in result && result.access_token) setSessionCookies(res, result);
     return res;
   } catch {
-    return target('/auth/confirmado?erro=expirado');
+    return target('/auth/confirmed?error=expired');
   }
 }

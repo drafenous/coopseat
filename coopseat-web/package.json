@@ -1,7 +1,7 @@
 {
   "name": "coopseat-web",
   "type": "module",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "scripts": {
     "predev": "prisma contract emit",
@@ -20,12 +20,13 @@
     "supabase:configure": "node scripts/configure-supabase.mjs"
   },
   "dependencies": {
-    "@coopseat/ui": "0.1.0",
+    "@coopseat/ui": "0.2.0",
     "@prisma/orm-extension-supabase": "8.0.0-rc.13",
     "@prisma/orm-postgres": "8.0.0-rc.13",
     "@prisma/orm-target-postgres": "8.0.0-rc.13",
     "dotenv": "^18.0.5",
     "jose": "6.2.12",
+    "lucide-react": "^0.468.0",
     "next": "16.3.8",
     "pg": "8.22.0",
     "react": "19.2.8",

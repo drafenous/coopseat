@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { dictionaryFor } from '@/i18n/server';
 import { signupSchema, TERMS_VERSION } from '@/lib/validation/account';
 import { auth } from '@/server/auth-errors';
 import { verifyCaptcha } from '@/server/captcha';
@@ -9,17 +10,16 @@ import { acceptTerms, isNicknameAvailable, setNickname } from '@/server/profiles
 import { rateLimit } from '@/server/rate-limit';
 import { assertSameOrigin } from '@/server/session';
 
-const SENT = { status: 'confirmation_sent', message: 'Enviamos um link de confirmação para o seu e-mail.' };
-
 export const POST = route(async (req) => {
   assertSameOrigin(req);
+  const SENT = { status: 'confirmation_sent', message: dictionaryFor(req).messages.confirmationSent };
   const ip = clientIp(req);
   await rateLimit('signup', ip);
   const input = await readJson(req, signupSchema);
   await verifyCaptcha(input.captchaToken, ip);
 
   if (!(await isNicknameAvailable(input.nickname))) {
-    throw new ApiError(409, 'nickname_taken', 'Esse apelido já está em uso.');
+    throw new ApiError(409, 'nickname_taken');
   }
 
   const result = await auth(

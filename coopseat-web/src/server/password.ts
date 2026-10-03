@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { dictionaryFor } from '@/i18n/server';
 import { setPasswordSchema } from '@/lib/validation/account';
 import { auth } from './auth-errors';
 import { gotrue } from './gotrue';
@@ -12,5 +13,5 @@ export async function changePassword(req: NextRequest): Promise<NextResponse> {
   await rateLimit('account', session.claims.sub);
   const { password } = await readJson(req, setPasswordSchema);
   await auth(gotrue.updateUser(session.token, { password }));
-  return NextResponse.json({ ok: true, message: 'Senha atualizada.' });
+  return NextResponse.json({ ok: true, message: dictionaryFor(req).messages.passwordUpdated });
 }

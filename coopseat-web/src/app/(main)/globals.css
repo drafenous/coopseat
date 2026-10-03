@@ -1,18 +1,41 @@
 @import "tailwindcss";
+@import "@coopseat/ui/theme.css";
 
-/* Colors and font come from the shared design system (@coopseat/ui/tokens.css, imported by the layout). */
-@theme inline {
-  --color-background: var(--cs-bg);
-  --color-foreground: var(--cs-text);
-  --color-surface: var(--cs-surface);
-  --color-muted: var(--cs-muted);
-  --color-accent: var(--cs-accent);
-  --color-accent-ink: var(--cs-accent-ink);
-  --font-sans: var(--cs-font);
+@theme {
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-delayed: float 8s ease-in-out 1.5s infinite;
+  --animate-glow: glow 7s ease-in-out infinite;
+  --animate-scan: scan 5s linear infinite;
+  --animate-road: road 0.9s linear infinite;
+  --animate-rise: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes glow {
+    0%, 100% { opacity: 0.55; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.06); }
+  }
+  @keyframes scan {
+    from { transform: translateY(-100%); }
+    to { transform: translateY(400%); }
+  }
+  @keyframes road {
+    from { background-position: 0 0; }
+    to { background-position: 0 48px; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(14px); }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html { scroll-behavior: smooth; }
 }
 
 body {
-  background: var(--cs-bg);
-  color: var(--cs-text);
-  font-family: var(--cs-font);
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
 }

@@ -4,6 +4,18 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-03
+
+### Added
+- New landing page explaining CoopSeat in plain language, with features, a three-step guide, the upcoming watch party and an FAQ.
+- English version of the whole site, chosen from the browser language or the language menu. API error messages follow the same language.
+- CoopSeat favicon and app icons, a web app manifest and a link preview image for sharing.
+
+### Changed
+- Terms of Use and Privacy Policy now share the site header and footer and have a table of contents.
+- Pages moved to English addresses (for example `/login`, `/signup`, `/account`, `/privacy`, `/terms`). The old Portuguese addresses redirect to the new ones.
+- Voice chat is no longer mentioned; age verification now unlocks chat and creating rooms.
+
 ## [0.1.0] - 2026-10-03
 
 ### Added

@@ -94,7 +94,10 @@ describe('POST /api/auth/login', () => {
     vi.mocked(gotrue.passwordGrant).mockRejectedValue(new GoTrueError(400, 'invalid_credentials', 'Invalid login credentials'));
     const res = await login(request('/api/auth/login', { body: credentials, headers: desktop }), ctx);
     expect(res.status).toBe(401);
-    expect((await res.json()).error.message).toBe('E-mail ou senha incorretos.');
+    expect((await res.json()).error.message).toBe('Incorrect e-mail or password.');
+
+    const pt = await login(request('/api/auth/login', { body: credentials, headers: { ...desktop, 'accept-language': 'pt-BR,pt;q=0.9' } }), ctx);
+    expect((await pt.json()).error.message).toBe('E-mail ou senha incorretos.');
 
     const invalid = await login(request('/api/auth/login', { body: { email: 'x', password: '' }, headers: desktop }), ctx);
     expect(invalid.status).toBe(400);
