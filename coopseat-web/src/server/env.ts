@@ -20,6 +20,12 @@ export const env = {
   get appUrl() {
     return (process.env['APP_URL'] ?? 'http://localhost:3000').replace(/\/$/, '');
   },
+  get googleClientId() {
+    return required('GOOGLE_CLIENT_ID');
+  },
+  get googleClientSecret() {
+    return required('GOOGLE_CLIENT_SECRET');
+  },
   get ticketKey() {
     return required('TICKET_ENCRYPTION_KEY');
   },

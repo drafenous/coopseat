@@ -23,7 +23,7 @@ export function AccountModal({auth,onClose,onNickname}:{auth:Auth;onClose():void
  if(!a)return null;
 
  const run=async(fn:()=>Promise<unknown>)=>{setBusy(true);setError('');try{await fn();}catch(e){setError(errorText(e));}finally{setBusy(false);}};
- const linked=new Set(a.identities.map(i=>i.provider==='twitter'?'x':i.provider));
+ const linked=new Set(a.identities.map(i=>i.provider));
  const canVerifyAge=a.emailConfirmed&&Boolean(a.nickname);
  const confirmTotp=(e:FormEvent<HTMLFormElement>)=>{e.preventDefault();if(enrollment&&code.length===6)void run(async()=>{await auth.verifyTotp(enrollment.factorId,code);setEnrollment(null);setCode('');});};
 

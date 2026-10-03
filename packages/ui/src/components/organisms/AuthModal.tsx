@@ -34,7 +34,7 @@ export function AuthModal({auth,onClose}:{auth:Auth;onClose():void}){
   <h2 id="auth-title">{t.title}</h2>
   <p>{t.pitch}</p>
   <div className={authProviders}>
-   {OAUTH_PROVIDERS.map(p=><ProviderButton key={p} provider={p} action={T.providers.continueWith} compact disabled={busy} onClick={()=>void run(()=>auth.startOAuth(p))}/>)}
+   {OAUTH_PROVIDERS.map(p=><ProviderButton key={p} provider={p} action={T.providers.continueWith} disabled={busy} onClick={()=>void run(()=>auth.startOAuth(p))}/>)}
   </div>
   {auth.waiting&&<div className="mt-3.5 flex items-center justify-between gap-3 rounded-lg border border-dashed border-line p-3" role="status"><p>{t.continueIn(PROVIDER_LABELS[auth.waiting])}</p><Button variant="secondary" onClick={auth.cancelOAuth}>{T.common.cancel}</Button></div>}
   <Divider label={t.orWithEmail}/>

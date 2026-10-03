@@ -36,7 +36,7 @@ O site, as mensagens da API e o `@coopseat/ui` estão em inglês (padrão) e por
 
 ## Contas
 
-- **Cadastro**: e-mail e senha (com confirmação por e-mail) ou Google, Facebook, X e Discord. Os provedores podem ser vinculados e desvinculados depois em `/account`, desde que reste pelo menos uma forma de login.
+- **Cadastro**: e-mail e senha (com confirmação por e-mail) ou Google. O Google pode ser vinculado e desvinculado depois em `/account`, desde que reste pelo menos uma forma de login.
 - **Unicidade**: e-mail é único no Supabase Auth; o apelido é único sem diferenciar maiúsculas (coluna `nicknameKey` = `lower(nickname)` com índice único e check constraint).
 - **Maioridade (ECA Digital)**: só maiores de 18 anos. O cadastro exige a declaração, e chat e salas exigem a verificação de idade por um provedor de KYC plugável (`src/server/identity`). Guardamos só o resultado, a data e uma impressão HMAC do documento para impedir reuso. Nenhuma imagem é armazenada.
 - **2FA**: TOTP opcional. Com ele ativo, ações sensíveis (e-mail, vínculos, exclusão, verificação, criar salas) exigem sessão `aal2`.

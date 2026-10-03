@@ -106,11 +106,19 @@ export const gotrue = {
       query: { grant_type: 'refresh_token' },
     });
   },
-  pkceGrant(authCode: string, codeVerifier: string) {
+  /** Signs in with a provider's OpenID id_token. With `linkTo` (a user access token) the identity is linked instead. */
+  idTokenGrant(opts: { provider: string; idToken: string; accessToken?: string; nonce: string; linkTo?: string }) {
     return call<AuthTokens>('/token', {
       method: 'POST',
-      body: { auth_code: authCode, code_verifier: codeVerifier },
-      query: { grant_type: 'pkce' },
+      token: opts.linkTo,
+      body: {
+        provider: opts.provider,
+        id_token: opts.idToken,
+        access_token: opts.accessToken,
+        nonce: opts.nonce,
+        link_identity: Boolean(opts.linkTo),
+      },
+      query: { grant_type: 'id_token' },
     });
   },
   recover(email: string, redirectTo: string) {
@@ -127,29 +135,6 @@ export const gotrue = {
   },
   logout(token: string) {
     return call<unknown>('/logout', { method: 'POST', token, query: { scope: 'local' } });
-  },
-  /** URL that starts an OAuth sign-in with PKCE. */
-  authorizeUrl(provider: string, redirectTo: string, codeChallenge: string, scopes?: string) {
-    const url = new URL(`${env.supabaseUrl}/auth/v1/authorize`);
-    url.searchParams.set('provider', provider);
-    url.searchParams.set('redirect_to', redirectTo);
-    url.searchParams.set('code_challenge', codeChallenge);
-    url.searchParams.set('code_challenge_method', 's256');
-    if (scopes) url.searchParams.set('scopes', scopes);
-    return url.toString();
-  },
-  linkIdentityUrl(token: string, provider: string, redirectTo: string, codeChallenge: string, scopes?: string) {
-    return call<{ url: string }>('/user/identities/authorize', {
-      token,
-      query: {
-        provider,
-        redirect_to: redirectTo,
-        code_challenge: codeChallenge,
-        code_challenge_method: 's256',
-        scopes,
-        skip_http_redirect: 'true',
-      },
-    });
   },
   unlinkIdentity(token: string, identityId: string) {
     return call<unknown>(`/user/identities/${encodeURIComponent(identityId)}`, { method: 'DELETE', token });

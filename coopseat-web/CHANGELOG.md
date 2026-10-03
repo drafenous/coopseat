@@ -4,6 +4,12 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+### Changed
+- The Google sign-in screen now shows the CoopSeat address instead of the Supabase one.
+
+### Removed
+- Sign-in with Facebook, X and Discord. Google and email and password are the only ways to sign in.
+
 ## [0.1.1] - 2026-10-03
 
 ### Added

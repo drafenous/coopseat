@@ -135,7 +135,7 @@ export const ptBR: Dictionary = {
       },
       {
         title: 'Conta segura',
-        body: 'Entre com Google, Discord, X ou Facebook e, se quiser, ative uma proteção extra com um código no celular.',
+        body: 'Entre com Google ou e-mail e, se quiser, ative uma proteção extra com um código no celular.',
       },
       {
         title: 'Verificação de idade sem exposição',
@@ -362,7 +362,7 @@ export const ptBR: Dictionary = {
         heading: 'O que coletamos',
         body: (
           <ul className="list-disc space-y-1 pl-5">
-            <li>Conta: e-mail, apelido, foto de perfil do provedor (quando você entra com Google, Facebook, X ou Discord).</li>
+            <li>Conta: e-mail, apelido, foto de perfil do provedor (quando você entra com Google).</li>
             <li>Segurança: registros de acesso e tentativas, para evitar abuso (retidos por até 30 dias).</li>
             <li>
               Verificação de idade: apenas o resultado (maior de idade ou não), a data e uma impressão criptográfica irreversível do

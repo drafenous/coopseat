@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import type { ErrorCode } from '@/i18n/dictionaries';
+import { safeEqual } from '@/server/crypto';
 import { env } from '@/server/env';
-import { gotrue, type AuthTokens } from '@/server/gotrue';
+import { googleExchangeCode } from '@/server/google';
+import { GoTrueError, gotrue, type AuthTokens } from '@/server/gotrue';
 import {
   clearOAuthState,
   hasVerifiedFactor,
@@ -38,23 +40,34 @@ export async function GET(req: NextRequest) {
   const state = readOAuthState(req);
   const finish = clearOAuthState;
 
-  if (!state) return finish(errorPage('login_expired'));
+  if (!state || !safeEqual(params.get('state') ?? '', state.state)) return finish(errorPage('login_expired'));
 
-  const providerError = params.get('error_description') ?? params.get('error');
-  if (providerError) {
-    return finish(
-      errorPage(/already linked|identity_already_exists/i.test(providerError) ? 'provider_already_linked' : 'provider_refused'),
-    );
-  }
+  if (params.get('error')) return finish(errorPage('provider_refused'));
 
   const code = params.get('code');
   if (!code) return finish(errorPage('provider_bad_response'));
 
+  let google: Awaited<ReturnType<typeof googleExchangeCode>>;
+  try {
+    google = await googleExchangeCode(code, state.verifier);
+  } catch {
+    return finish(errorPage('provider_bad_response'));
+  }
+
   let tokens: AuthTokens;
   try {
-    tokens = await gotrue.pkceGrant(code, state.verifier);
-  } catch {
-    return finish(errorPage('login_failed'));
+    tokens = await gotrue.idTokenGrant({
+      provider: 'google',
+      idToken: google.idToken,
+      accessToken: google.accessToken,
+      nonce: state.nonce,
+      linkTo: state.linkTo,
+    });
+  } catch (err) {
+    if (err instanceof GoTrueError && err.code === 'identity_already_exists') {
+      return finish(errorPage('provider_already_linked'));
+    }
+    return finish(errorPage(state.linkTo ? 'link_failed' : 'login_failed'));
   }
   await ensureProfile(tokens.user.id, avatarOf(tokens));
 

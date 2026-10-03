@@ -22,16 +22,30 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    It sets: email confirmation on, secure email change, manual identity linking, password policy
    (8+ chars, letters and digits, leaked-password check), TOTP MFA, the Custom Access Token Hook
    (`public.custom_access_token_hook`), redirect allow list (`https://coopseat.com/**`),
-   bilingual (English + pt-BR) email templates from `supabase/templates/`, and any OAuth provider / SMTP whose env vars are present:
+   bilingual (English + pt-BR) email templates from `supabase/templates/`, Google sign-in and SMTP when their env vars
+   are present. Google is the only OAuth provider; the script turns the others off.
 
-   | Provider | Env vars | Callback URL to register at the provider |
+   | Service | Env vars | Notes |
    | --- | --- | --- |
-   | Google | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | `https://<ref>.supabase.co/auth/v1/callback` |
-   | Facebook | `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET` | same |
-   | X (OAuth 2.0) | `X_CLIENT_ID`, `X_CLIENT_SECRET` | same |
-   | Discord | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET` | same |
+   | Google | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | see **Google OAuth client** below |
    | E-mail (Resend) | `RESEND_API_KEY` | sender `no-reply@coopseat.com` via `smtp.resend.com:465` |
    | Other SMTP (overrides Resend) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | same sender |
+
+   **Google OAuth client.** In Google Cloud Console (APIs & Services):
+   1. *OAuth consent screen*: user type *External*, app name `CoopSeat`, support e-mail, authorized domain
+      `coopseat.com`, scopes `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile`. Publish the app
+      (while in *Testing* only the listed test users can sign in).
+   2. *Credentials > Create credentials > OAuth client ID*, type *Web application*:
+      - Authorized JavaScript origins: `https://coopseat.com`, `http://localhost:3000`
+      - Authorized redirect URIs: `https://coopseat.com/api/auth/callback`, `http://localhost:3000/api/auth/callback`
+   3. Put the client id and secret in `.env.local` and in Vercel as `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`,
+      then run `npm run supabase:configure`.
+
+   The BFF runs the Google OAuth flow itself (so the consent screen shows `coopseat.com`, not the Supabase
+   domain): it exchanges the code with Google and signs in to Supabase Auth with the `id_token`
+   (`grant_type=id_token`, `link_identity` when linking from `/account`). Supabase only needs the same client id to
+   accept the token. Google requires exact redirect URIs, so Vercel preview URLs cannot use Google sign-in unless
+   they are added to the list.
 
    **Resend domain.** In Resend > Domains add `coopseat.com`, create the SPF (`send` MX + TXT) and DKIM
    (`resend._domainkey`) records it lists at the DNS provider, and wait for *Verified*. Add a DMARC record
@@ -56,7 +70,7 @@ With `KYC_PROVIDER=mock` on a dev/preview deployment:
 3. *Verify my age* → `/verification/mock` → choose **Approve (over 18)** → `/account` shows age verified and
    chat and host unlocked. Repeat with a second account and the same document number: it must be rejected.
 4. Enable TOTP in `/account`, sign out, sign in again: the 2FA step must appear.
-5. Link and unlink Google/Discord in `/account`; unlinking the last login method must be refused.
+5. Link and unlink Google in `/account`; unlinking the last login method must be refused.
 6. Desktop (`COOPSEAT_BFF_URL=<preview url> npm run dev` in `coopseat/`): *Continue with Google* opens the
    browser and returns via `coopseat://auth/callback`; email login, 2FA and *My account* work in the app.
 7. Switch the language (footer on the site, the language icon in the app header) and repeat a step: pages, API errors
@@ -69,8 +83,3 @@ The site, the API and `@coopseat/ui` speak English (default) and Brazilian Portu
 `Accept-Language`. Dictionaries live in `src/i18n/dictionaries/` and `packages/ui/src/i18n/`; a test keeps
 the pt-BR keys in sync with `en`. Supabase emails are bilingual (English first) because GoTrue renders one
 template for everyone.
-
-## Why X users may have no email
-
-X does not always return an email. Those accounts get `needsEmail: true` from `/api/me`; the web and
-desktop ask for an email (`PATCH /api/me { email }`), which Supabase confirms before it is attached.

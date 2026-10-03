@@ -3,13 +3,12 @@ import { OAUTH_PROVIDERS } from '@/lib/validation/account';
 
 export function ProviderButtons({ next = '/account', action }: { next?: string; action: string }) {
   return (
-    <div className="grid grid-cols-2 gap-2">
+    <div className="grid gap-2">
       {OAUTH_PROVIDERS.map((provider) => (
         <ProviderButton
           key={provider}
           provider={provider}
           action={action}
-          compact
           href={`/api/auth/oauth/${provider}?next=${encodeURIComponent(next)}`}
         />
       ))}

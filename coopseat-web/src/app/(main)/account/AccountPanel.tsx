@@ -117,7 +117,7 @@ export function AccountPanel({ initial, notice }: { initial: AccountSummary; not
             </li>
           ))}
         </ul>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid gap-2">
           {OAUTH_PROVIDERS.filter((p) => !account.identities.some((i) => i.provider === p)).map((provider) => (
             <Button
               key={provider}

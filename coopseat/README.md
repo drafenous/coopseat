@@ -22,7 +22,7 @@ O executável experimental não tem certificado de assinatura de código. Window
 
 O botão **Entrar** no cabeçalho conecta o app à conta CoopSeat. Toda a comunicação passa pelo BFF em `https://coopseat.com/api` (repositório `coopseat-web`); o app nunca fala direto com o Supabase.
 
-- **Login**: Google, Discord, X ou Facebook abrem o navegador do sistema. O app gera um par PKCE, o BFF devolve um ticket de uso único por `coopseat://auth/callback?ticket=…`, e o app troca ticket + verifier pela sessão. E-mail e senha funcionam direto no app; cadastro e "esqueci minha senha" abrem as páginas do site (o captcha não roda em `file://`).
+- **Login**: Google abre o navegador do sistema. O app gera um par PKCE, o BFF devolve um ticket de uso único por `coopseat://auth/callback?ticket=…`, e o app troca ticket + verifier pela sessão. E-mail e senha funcionam direto no app; cadastro e "esqueci minha senha" abrem as páginas do site (o captcha não roda em `file://`).
 - **2FA**: se a conta tiver autenticador, o app pede o código de 6 dígitos. Ativar e remover o autenticador também é possível em **Minha conta**.
 - **Sessão**: guardada criptografada com `safeStorage` (DPAPI no Windows) em `secure-store.json`, na pasta de dados do app. Se a criptografia do sistema não estiver disponível, o app se recusa a salvar a sessão.
 - **Permissões nas sessões**: assistir não exige conta. O chat exige e-mail confirmado, apelido e idade verificada (18+, ECA Digital). Criar salas também exige o 2FA confirmado na sessão, se ele estiver ativado.

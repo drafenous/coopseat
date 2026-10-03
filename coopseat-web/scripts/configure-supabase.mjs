@@ -81,10 +81,13 @@ const config = {
   // Captcha is verified by the BFF (Turnstile); GoTrue is only reachable through it.
   security_captcha_enabled: false,
   ...emailTemplates,
+  // Google is the only OAuth provider; the BFF runs its flow and signs in with the id_token, which
+  // Supabase accepts when the audience matches this client id.
+  external_facebook_enabled: false,
+  external_twitter_enabled: false,
+  external_x_enabled: false,
+  external_discord_enabled: false,
   ...provider('google', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'),
-  ...provider('facebook', 'FACEBOOK_CLIENT_ID', 'FACEBOOK_CLIENT_SECRET'),
-  ...provider('x', 'X_CLIENT_ID', 'X_CLIENT_SECRET'),
-  ...provider('discord', 'DISCORD_CLIENT_ID', 'DISCORD_CLIENT_SECRET'),
   ...smtp,
 };
 
@@ -98,6 +101,9 @@ if (!res.ok) {
   process.exitCode = 1;
 } else {
   console.log('Supabase Auth configured.');
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    console.warn('Google sign-in left unchanged: set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable it.');
+  }
   if (!pro) console.warn('Free plan: leaked-password protection (HaveIBeenPwned) is off. Set SUPABASE_PLAN=pro after upgrading.');
   if (!customTemplates) {
     console.warn(

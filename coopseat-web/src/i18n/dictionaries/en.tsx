@@ -135,7 +135,7 @@ export const en = {
       },
       {
         title: 'Secure account',
-        body: 'Sign in with Google, Discord, X or Facebook, and add extra protection with a code from your phone.',
+        body: 'Sign in with Google or e-mail, and add extra protection with a code from your phone.',
       },
       {
         title: 'Age check without exposure',
@@ -366,7 +366,7 @@ export const en = {
         heading: 'What we collect',
         body: (
           <ul className="list-disc space-y-1 pl-5">
-            <li>Account: e-mail, nickname, profile picture from the provider (when you sign in with Google, Facebook, X or Discord).</li>
+            <li>Account: e-mail, nickname, profile picture from the provider (when you sign in with Google).</li>
             <li>Security: access logs and attempts, to prevent abuse (kept for up to 30 days).</li>
             <li>
               Age verification: only the result (adult or not), the date and an irreversible cryptographic fingerprint of the

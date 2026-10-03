@@ -87,15 +87,12 @@ export const updateMeSchema = z
 
 export const deleteMeSchema = z.object({ confirm: z.string().min(1, 'confirm_required') });
 
-export const OAUTH_PROVIDERS = ['google', 'facebook', 'x', 'discord'] as const;
+export const OAUTH_PROVIDERS = ['google'] as const;
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
 export const oauthProviderSchema = z.enum(OAUTH_PROVIDERS, { error: 'provider_unsupported' });
 
 export const PROVIDER_LABELS: Record<OAuthProvider, string> = {
   google: 'Google',
-  facebook: 'Facebook',
-  x: 'X (Twitter)',
-  discord: 'Discord',
 };
 
 export const pkceChallengeSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/, 'pkce_challenge_invalid');

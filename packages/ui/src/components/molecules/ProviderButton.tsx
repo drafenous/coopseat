@@ -5,7 +5,7 @@ import {PROVIDER_LABELS,type OAuthProvider} from '../../lib/providers';
 type Props={provider:OAuthProvider;action:string;compact?:boolean;disabled?:boolean}&({onClick():void;href?:never}|{href:string;onClick?:never});
 
 const buttonClass='flex h-[42px] w-full items-center gap-2 rounded-lg border border-line bg-field px-2.5 text-[13px] font-semibold text-field-text no-underline not-disabled:hover:border-[#3d5163] not-disabled:hover:bg-[#152130]';
-const marks:Partial<Record<OAuthProvider,string>>={google:'bg-[#ea4335]',discord:'bg-[#5865f2]',x:'border border-[#444] bg-black',facebook:'bg-[#1877f2]'};
+const marks:Partial<Record<OAuthProvider,string>>={google:'bg-[#ea4335]'};
 
 export function ProviderButton({provider,action,compact,disabled,onClick,href}:Props){
  const label=PROVIDER_LABELS[provider],text=`${action} ${label}`;
