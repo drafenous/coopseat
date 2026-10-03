@@ -1,0 +1,1 @@
+.toasts{position:fixed;right:clamp(16px,2.5vw,48px);bottom:clamp(16px,3vh,32px);z-index:40;display:flex;flex-direction:column;align-items:flex-end;gap:10px;width:min(420px,calc(100vw - 32px));pointer-events:none}

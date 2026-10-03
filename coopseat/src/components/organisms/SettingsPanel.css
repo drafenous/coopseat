@@ -1,0 +1,10 @@
+aside{background:#121921;border:1px solid #2a3542;border-radius:14px;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.aside-body{flex:1;min-height:0;overflow-y:auto;padding:18px 20px 8px;scrollbar-width:thin;scrollbar-color:#2a3846 transparent}
+.aside-foot{flex:none;padding:14px 20px 14px;border-top:1px solid #25313d;background:#121921}
+.panel-title{display:flex;gap:9px;align-items:center;color:#c3d0dd;margin-bottom:18px}
+.panel-title h2{font-size:16px;font-weight:550;margin:0;flex:1}
+.panel-title .icon{padding:5px}
+.panel-foot{display:flex;justify-content:center;gap:6px;align-items:center;font-size:12px;margin-top:10px;color:#8494a5}
+
+@media(min-width:1800px){.aside-body{padding:22px 24px 8px}.aside-foot{padding:16px 24px}.panel-title h2{font-size:17px}}
+@media(max-width:750px){aside{overflow:visible}.aside-body{overflow:visible}}

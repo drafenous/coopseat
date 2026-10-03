@@ -1,0 +1,4 @@
+.donate{color:#97a8b8}
+.donate button{display:inline-flex;align-items:center;gap:6px;margin-left:8px;padding:7px 13px;border:1px solid #b0f3d244;border-radius:20px;background:#b0f3d212;color:#b0f3d2;font-size:12px;font-weight:600}
+.donate button:hover{background:#b0f3d224;border-color:#b0f3d288;color:#cafee3}
+.donate button svg{color:#f58fa6}

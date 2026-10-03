@@ -1,0 +1,6 @@
+.mode-card{display:flex;flex-direction:column;align-items:flex-start;padding:14px;border:1px solid #2a3846;border-radius:12px;background:#0f1720}
+.mode-card b{display:flex;align-items:center;gap:7px;font-size:14px;color:#e8eef4;margin:12px 0 4px}
+.mode-card b svg{color:#b0f3d2}
+.mode-card p{font-size:13px;line-height:1.5}
+.mode-card strong{color:#dbe5ed;font-weight:600}
+.mode-card small{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#8d9dad}

@@ -1,0 +1,79 @@
+export type Session={accessToken:string;refreshToken:string;expiresAt:number};
+export type GateRequirement='email'|'nickname'|'age'|'mfa';
+export type Gate={allowed:boolean;missing:GateRequirement[]};
+export type AgeStatus='UNVERIFIED'|'PENDING'|'VERIFIED'|'REJECTED';
+export type Account={
+ id:string;email:string|null;pendingEmail:string|null;emailConfirmed:boolean;needsEmail:boolean;
+ nickname:string|null;nicknameChangedAt:string|null;avatarUrl:string|null;
+ ageStatus:AgeStatus;ageVerifiedAt:string|null;termsVersion:string|null;
+ identities:{id:string;provider:string;email:string|null}[];
+ mfa:{enabled:boolean;factors:{id:string;name:string}[];level:'aal1'|'aal2'};
+ permissions:{watch:Gate;chat:Gate;voice:Gate;host:Gate};
+ message?:string;
+};
+export type MfaPending={mfaRequired:true;mfaToken:string;factors:{id:string;name:string}[]};
+export type LoginResult={session:Session}|MfaPending;
+
+export class ApiError extends Error{
+ constructor(public status:number,public code:string,message:string,public fields?:Record<string,string[]>){super(message);}
+}
+
+export const DEFAULT_BFF='https://coopseat.com';
+export const OAUTH_PROVIDERS=['google','discord','x','facebook'] as const;
+export type OAuthProvider=typeof OAUTH_PROVIDERS[number];
+export const PROVIDER_LABELS:Record<string,string>={google:'Google',discord:'Discord',x:'X',twitter:'X',facebook:'Facebook',email:'E-mail'};
+export const GATE_MESSAGES:Record<GateRequirement,string>={email:'Confirme seu e-mail.',nickname:'Escolha um apelido.',age:'Verifique sua idade (18+).',mfa:'Confirme a autenticação em duas etapas.'};
+
+let bff:Promise<string>|null=null;
+export const bffUrl=()=>bff??=(window.input?window.input.info().then(i=>i.bffUrl||DEFAULT_BFF,()=>DEFAULT_BFF):Promise.resolve(DEFAULT_BFF));
+
+const SESSION_KEY='auth.session';
+let session:Session|null=null,loaded=false;
+const isSession=(s:unknown):s is Session=>{const x=s as Session;return Boolean(x)&&typeof x.accessToken==='string'&&typeof x.refreshToken==='string'&&typeof x.expiresAt==='number';};
+
+export async function loadSession(){
+ if(loaded)return session;
+ try{const raw=await window.input?.secureStore.get(SESSION_KEY);const s:unknown=raw?JSON.parse(raw):null;session=isSession(s)?s:null;}catch{session=null;}
+ loaded=true;return session;
+}
+export async function saveSession(s:Session|null){
+ session=s;loaded=true;
+ if(s)await window.input?.secureStore.set(SESSION_KEY,JSON.stringify(s));else await window.input?.secureStore.remove(SESSION_KEY);
+}
+
+type Options={method?:string;body?:unknown;auth?:boolean};
+async function send<T>(path:string,{method='GET',body}:Options,token?:string):Promise<T>{
+ const headers:Record<string,string>={'x-coopseat-client':'desktop'};
+ if(body!==undefined)headers['content-type']='application/json';
+ if(token)headers.authorization=`Bearer ${token}`;
+ let res:Response;
+ try{res=await fetch(`${await bffUrl()}${path}`,{method,headers,body:body===undefined?undefined:JSON.stringify(body)});}
+ catch{throw new ApiError(0,'network','Não foi possível falar com o CoopSeat. Confira sua internet.');}
+ const data=await res.json().catch(()=>({}));
+ if(!res.ok){const e=data?.error??{};throw new ApiError(res.status,e.code??'error',e.message??'Algo deu errado. Tente novamente.',e.fields);}
+ return data as T;
+}
+
+let refreshing:Promise<Session|null>|null=null;
+/** Single-flight refresh; a rejected refresh token signs the user out. */
+export function refreshSession(){
+ return refreshing??=(async()=>{
+  const current=await loadSession();if(!current)return null;
+  try{const r=await send<{session:Session}>('/api/auth/refresh',{method:'POST',body:{refreshToken:current.refreshToken}});await saveSession(r.session);return r.session;}
+  catch(e){if(e instanceof ApiError&&e.status===401){await saveSession(null);return null;}throw e;}
+ })().finally(()=>{refreshing=null;});
+}
+
+export const checkNickname=(nickname:string)=>send<{available:boolean;reason?:string}>(`/api/nicknames/available?n=${encodeURIComponent(nickname)}`,{});
+
+export async function api<T>(path:string,opts:Options={}):Promise<T>{
+ if(opts.auth===false)return send<T>(path,opts);
+ let s=await loadSession();
+ if(s&&s.expiresAt-60<Date.now()/1000)s=await refreshSession();
+ try{return await send<T>(path,opts,s?.accessToken);}
+ catch(e){
+  if(!(e instanceof ApiError&&e.status===401&&s))throw e;
+  const next=await refreshSession();if(!next)throw e;
+  return send<T>(path,opts,next.accessToken);
+ }
+}

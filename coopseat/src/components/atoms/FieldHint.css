@@ -1,0 +1,2 @@
+.field-hint{display:flex;align-items:center;gap:6px;font-size:12px;color:#9ad9bd;margin:-6px 0 12px}
+.field-hint.warn{color:#f3c97a;margin:8px 0 0}

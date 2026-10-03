@@ -1,0 +1,29 @@
+.auth-providers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px}
+.auth-divider{display:flex;align-items:center;gap:10px;margin:18px 0 14px;color:#6f8193;font-size:12px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:#26333f}
+.auth-field{display:grid;gap:6px;margin-bottom:12px;font-size:12px;color:#a2afbd}
+.auth-links{display:flex;justify-content:space-between;gap:12px;margin-top:14px}
+.auth-links .text-button{padding:0}
+.auth-error{color:#ff9d9d;font-size:13px;margin:10px 0 0}
+.auth-waiting{margin-top:14px;padding:12px;border:1px dashed #33465a;border-radius:8px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.auth-fine{margin-top:16px;font-size:12px;color:#6f8193}
+.auth-check{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#a2afbd;margin-top:12px}
+.auth-check input{margin-top:3px}
+.auth-check .text-button{display:inline;padding:0}
+.code-input{letter-spacing:6px;font-size:18px;text-align:center}
+.account-head{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.account-head h2{margin:0}
+.avatar{width:44px;height:44px;border-radius:100%;object-fit:cover;background:#26333f;display:grid;place-items:center;font-weight:700;color:#b0f3d2;flex:none}
+.avatar.small{width:30px;height:30px;font-size:13px}
+.account-section{border-top:1px solid #1f2b37;padding:16px 0}
+.account-section h3{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:#7d8ea0;margin:0 0 10px}
+.account-row{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:36px;font-size:13px}
+.account-row .secondary{padding:7px 12px;font-size:13px}
+.account-row span{color:#a2afbd}
+.account-ok{color:#9ad9bd}
+.account-warn{color:#f3c97a}
+.account-qr{display:flex;gap:16px;align-items:center;margin:10px 0}
+.account-qr img{width:150px;height:150px;background:#fff;border-radius:8px;padding:6px}
+.account-qr code{font-size:12px;word-break:break-all;color:#dbe4ed}
+.account-link{display:flex;align-items:center;gap:8px;border:1px solid #3a4b5c;background:transparent;color:#d4dee8;border-radius:999px;padding:5px 12px 5px 6px;font-size:13px;font-weight:600}
+.account-link:hover{background:#ffffff0a}

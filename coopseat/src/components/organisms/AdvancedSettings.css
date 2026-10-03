@@ -1,0 +1,8 @@
+.advanced-toggle{display:flex;align-items:center;gap:8px;width:100%;padding:12px 2px;margin-top:2px;border:0;border-top:1px solid #25313d;background:transparent;color:#a5b4c3;font-size:13px;font-weight:550}
+.advanced-toggle:hover{color:#e1eaf2}
+.advanced-toggle svg:last-child{margin-left:auto;transition:transform .15s}
+.advanced-toggle.open svg:last-child{transform:rotate(180deg)}
+.advanced{padding-top:6px}
+.split{display:grid;grid-template-columns:1fr 84px;gap:10px}
+
+@media(prefers-reduced-motion:reduce){.advanced-toggle svg:last-child{transition:none}}

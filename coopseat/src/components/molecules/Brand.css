@@ -1,0 +1,4 @@
+.brand{display:flex;align-items:center;gap:9px;text-decoration:none;color:#f3f6f8;font-size:24px;letter-spacing:-1.2px;font-weight:700}
+.brand-icon{background:#b0f3d2;color:#122b25;display:grid;place-items:center;width:35px;height:35px;border-radius:10px;margin-right:3px}
+.brand-seat{color:#a5b2c0;font-weight:400;margin-left:-5px}
+.version{font-size:11px;color:#97a6b3;letter-spacing:0;border:1px solid #33404b;padding:3px 6px;border-radius:4px;margin:4px 0 0 4px}

@@ -1,0 +1,6 @@
+.icon{border:0;background:transparent;padding:8px;display:inline-flex;align-items:center;justify-content:center;border-radius:7px;color:#a5b2c3}
+.icon:hover:not(:disabled){background:#ffffff0d;color:#effff8}
+.icon.selected{color:#a8f0cb;background:#a8f0cb17}
+.icon.labeled{gap:7px;padding:7px 11px;font-size:12px;font-weight:550}
+
+@media(max-width:900px){.icon.labeled span{display:none}.icon.labeled{padding:8px}}

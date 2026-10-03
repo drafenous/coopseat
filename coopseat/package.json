@@ -1,0 +1,72 @@
+{
+  "name": "coopseat",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CoopSeat: jogue o console numa janela do Windows pela placa de captura USB",
+  "author": "Rodrigo Almeida",
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "vite --host 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && vite build",
+    "start": "electron .",
+    "native:build": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/build-native.ps1",
+    "dist": "npm run native:build && npm run build && electron-builder --win nsis --x64",
+    "dist:compat": "npm run build && electron-builder --win nsis --x64 --config electron-builder.compat.cjs",
+    "test": "node --test tests/*.test.cjs",
+    "dist:portable": "npm run native:build && npm run build && electron-builder --win portable --x64 --config portable.config.cjs"
+  },
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "lucide-react": "^0.468.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^4.5.0",
+    "electron": "^41.0.0",
+    "electron-builder": "^26.0.12",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.5"
+  },
+  "build": {
+    "appId": "com.coopseat.desktop",
+    "productName": "CoopSeat",
+    "protocols": [
+      {
+        "name": "CoopSeat",
+        "schemes": ["coopseat"]
+      }
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "native/build/Release/InputCapture.exe",
+        "to": "native/InputCapture.exe"
+      },
+      {
+        "from": "licenses",
+        "to": "licenses"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "artifactName": "CoopSeat-${version}-Setup.${ext}",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  }
+}

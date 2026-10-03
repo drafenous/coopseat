@@ -1,0 +1,7 @@
+.switch{appearance:none;flex:none;position:relative;width:38px;height:22px;margin:0;border-radius:22px;background:#2a3846;border:1px solid #3a4b5c;cursor:pointer;transition:background .15s,border-color .15s}
+.switch:before{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#c3cedb;transition:transform .15s,background .15s}
+.switch:checked{background:#5fbf95;border-color:#7fd8b0}
+.switch:checked:before{transform:translateX(16px);background:#fff}
+.switch:disabled{opacity:.4;cursor:default}
+
+@media(prefers-reduced-motion:reduce){.switch,.switch:before{transition:none}}

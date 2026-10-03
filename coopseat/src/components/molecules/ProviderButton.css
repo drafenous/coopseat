@@ -1,0 +1,7 @@
+.provider-button{display:flex;align-items:center;gap:10px;width:100%;height:42px;padding:0 12px;border:1px solid #33465a;background:#0d141c;color:#dbe4ed;border-radius:8px;font-size:13px;font-weight:600}
+.provider-button:hover:not(:disabled){background:#152130;border-color:#3d5163}
+.provider-mark{display:grid;place-items:center;width:22px;height:22px;border-radius:6px;font-size:12px;font-weight:700;color:#fff;background:#3a4b5c}
+.provider-mark.google{background:#ea4335}
+.provider-mark.discord{background:#5865f2}
+.provider-mark.x{background:#000;border:1px solid #444}
+.provider-mark.facebook{background:#1877f2}

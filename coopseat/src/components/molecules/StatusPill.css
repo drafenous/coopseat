@@ -1,0 +1,6 @@
+.status{display:flex;align-items:center;gap:8px;border:1px solid #33404b;border-radius:20px;padding:7px 13px;font-size:13px;color:#b3c0cd}
+.status.live{color:#b0f3d2;border-color:#b0f3d266;background:#b0f3d20d}
+.status.live i{background:#9aefc5;box-shadow:0 0 0 4px #9aefc522}
+.status.busy i{background:#f3d18a}
+
+@media(max-width:750px){.status{font-size:12px}}
