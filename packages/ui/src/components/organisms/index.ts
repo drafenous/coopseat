@@ -1,5 +1,4 @@
 export {AccountCta} from './AccountCta';
-export {AccountModal} from './AccountModal';
 export {AdvancedSettings} from './AdvancedSettings';
 export {AppFooter} from './AppFooter';
 export {AppHeader} from './AppHeader';

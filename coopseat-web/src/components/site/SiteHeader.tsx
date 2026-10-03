@@ -3,9 +3,10 @@ import { Download } from 'lucide-react';
 import { Brand } from '@coopseat/ui/design';
 import { getDictionary } from '@/i18n/server';
 import { DOWNLOAD_URL } from '@/lib/links';
+import { getPageSession } from '@/server/page-session';
 
 export async function SiteHeader() {
-  const h = (await getDictionary()).home;
+  const [{ home: h }, session] = await Promise.all([getDictionary(), getPageSession()]);
   const nav = [
     { href: '/#features', label: h.nav.features },
     { href: '/#how', label: h.nav.how },
@@ -26,10 +27,10 @@ export async function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <Link
-            href="/login"
+            href={session ? '/account' : '/login'}
             className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-[#d4dee8] transition hover:bg-white/5 sm:block"
           >
-            {h.signIn}
+            {session ? h.myAccount : h.signIn}
           </Link>
           <a
             href={DOWNLOAD_URL}

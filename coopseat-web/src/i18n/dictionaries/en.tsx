@@ -37,6 +37,7 @@ export const en = {
   home: {
     nav: { features: 'Features', how: 'How it works', party: 'Watch party', faq: 'FAQ' },
     signIn: 'Sign in',
+    myAccount: 'My account',
     createAccount: 'Create account',
     download: 'Download for Windows',
     downloadShort: 'Download',
@@ -269,6 +270,15 @@ export const en = {
     invalid: 'Invalid link.',
   },
   account: {
+    greeting: (name: string) => `Hi, ${name}!`,
+    welcome: 'Welcome to CoopSeat!',
+    playBody: 'Plug in your capture card and play your console right in the browser, nothing to install.',
+    playCta: 'Play now',
+    play: 'Play',
+    tabs: { profile: 'Profile', security: 'Sign-in & security', account: 'Account' },
+    partyBody: 'Finish the steps below to unlock each watch-party feature.',
+    partyUnlocked: 'All set! You can watch, chat and create rooms.',
+    dangerTitle: 'Danger zone',
     linked: 'Account linked successfully.',
     verificationReceived: 'We received your verification. The result will show up here shortly.',
     nicknameSaved: 'Nickname saved. Welcome to CoopSeat!',

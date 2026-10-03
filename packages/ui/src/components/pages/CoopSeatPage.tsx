@@ -15,7 +15,7 @@ import {setTelemetryConsent,track,useTelemetryConsent} from '../../lib/telemetry
 import {bridge} from '../../platform';
 import {I18nProvider,useT,type UiLocale} from '../../i18n';
 import {LAST_VOLUME_KEY,ONBOARDED_KEY,PANEL_COLLAPSED_KEY,PANEL_SIDE_KEY,STATS_KEY} from '../../lib/storage';
-import {AccountCta,AccountModal,AppFooter,AppHeader,AuthModal,CaptureViewer,HelpModal,MetricsBar,NicknameStep,PreferencesModal,PresetPicker,SavePresetModal,SettingsPanel,TelemetryModal,ToastStack,TransportBar,TroubleshootModal,ViewerEmptyState} from '../organisms';
+import {AccountCta,AppFooter,AppHeader,AuthModal,CaptureViewer,HelpModal,MetricsBar,NicknameStep,PreferencesModal,PresetPicker,SavePresetModal,SettingsPanel,TelemetryModal,ToastStack,TransportBar,TroubleshootModal,ViewerEmptyState} from '../organisms';
 import {MainLayout,type PanelSide} from '../templates/MainLayout';
 
 /** `locale` is set by hosts that already know the language (the site passes its cookie). */
@@ -39,7 +39,7 @@ function CoopSeat(){
  useEffect(()=>{localStorage.setItem(PANEL_COLLAPSED_KEY,panelCollapsed?'1':'0');},[panelCollapsed]);
 
  const auth=useAuth({setError,setNotice});
- const [authOpen,setAuthOpen]=useState(false),[accountOpen,setAccountOpen]=useState(false),[nicknameOpen,setNicknameOpen]=useState(false),[nicknameSkipped,setNicknameSkipped]=useState(false);
+ const [authOpen,setAuthOpen]=useState(false),[nicknameOpen,setNicknameOpen]=useState(false),[nicknameSkipped,setNicknameSkipped]=useState(false);
  const askNickname=nicknameOpen||(auth.status==='signedIn'&&auth.account!==null&&!auth.account.nickname&&!nicknameSkipped&&!help);
 
  const telemetry=useTelemetryConsent(),askTelemetry=Boolean(bridge())&&telemetry===null&&!help;
@@ -48,7 +48,7 @@ function CoopSeat(){
 
  const {devices,modes,running,busy,stats,loaded}=capture;
  useEffect(()=>{if(running)track({event:'capture_start',backend:s.backend});},[running]);
- const modalOpen=help||troubleshoot||preferences||saving||authOpen||accountOpen||askNickname||askTelemetry;
+ const modalOpen=help||troubleshoot||preferences||saving||authOpen||askNickname||askTelemetry;
  const cinema=useCinema({running,backend:s.backend,autoFull:s.autoFull,cinemaDelay:s.cinemaDelay,blocked:modalOpen||presetMenu||cinemaMenu});
  useNativeBounds(capture.screenRef,running&&s.backend==='native',modalOpen);
  const pip=usePictureInPicture({videoRef:capture.videoRef,enabled:running&&s.backend==='compat',setError});
@@ -63,10 +63,11 @@ function CoopSeat(){
  const closeTroubleshoot=useCallback(()=>setTroubleshoot(false),[]);
  const closePreferences=useCallback(()=>setPreferences(false),[]);
  const closeAuth=useCallback(()=>setAuthOpen(false),[]);
- const closeAccount=useCallback(()=>setAccountOpen(false),[]);
  const closeNickname=useCallback(()=>{setNicknameOpen(false);setNicknameSkipped(true);},[]);
  const login=()=>auth.web?auth.openSignIn():setAuthOpen(true);
  const signUp=()=>void auth.openSignUp().catch(e=>setError(errorText(e)));
+ const myAccount=()=>void auth.openWeb('/account').catch(e=>setError(errorText(e)));
+ const signOut=()=>void auth.logout().catch(e=>setError(errorText(e)));
  const pin=async()=>setTop(Boolean(await bridge()?.window('top')));
  const disableAutoCinema=()=>{change('autoFull',false);setNotice(t.page.autoCinemaOff);};
  const start=()=>void capture.start(),stop=()=>void capture.stop(),permit=()=>void capture.permit();
@@ -81,7 +82,7 @@ function CoopSeat(){
   immersive={cinema.chromeHidden}
   panelSide={panelSide}
   panelCollapsed={panelCollapsed}
-  header={<AppHeader status={running?'live':busy?'busy':'idle'} auth={auth} onHelp={()=>setHelp(true)} onTroubleshoot={()=>setTroubleshoot(true)} onPreferences={()=>setPreferences(true)} onLogin={login} onAccount={()=>setAccountOpen(true)}/>}
+  header={<AppHeader status={running?'live':busy?'busy':'idle'} auth={auth} onHelp={()=>setHelp(true)} onTroubleshoot={()=>setTroubleshoot(true)} onPreferences={()=>setPreferences(true)} onLogin={login} onMyAccount={myAccount} onSignOut={signOut}/>}
   viewer={<CaptureViewer backend={s.backend} running={running} stats={stats} smoothing={smoothingLevel(s.smoothing)} effect={effectIndex(s.effect)} cinemaHint={cinema.cinemaHint} screenRef={capture.screenRef} videoRef={capture.videoRef} audioRef={capture.audioRef}
    emptyState={!running&&<ViewerEmptyState busy={busy} hasDevices={devices.video.length>0} videoName={videoName} audioName={audioName} formatLabel={formatLabel} needsPermission={needsPermission} canStart={canStart} onStart={start} onStop={stop} onPermit={permit}/>}
    transport={<TransportBar panelSide={panelSide} panelOpen={!panelCollapsed} onTogglePanel={()=>setPanelCollapsed(x=>!x)} volume={s.volume} onVolume={v=>change('volume',v)} onToggleMute={toggleMute} showStats={showStats} onToggleStats={()=>setShowStats(x=>!x)} top={top} canPin={Boolean(bridge())} onPin={()=>void pin()} pipActive={pip.active} canPip={pip.supported&&running&&s.backend==='compat'} onPip={pip.toggle} cinemaActive={cinema.chromeHidden} canCinema={running} onCinema={cinema.enterCinema} autoCinema={s.autoFull} cinemaDelay={s.cinemaDelay} cinemaMenu={cinemaMenu} onCinemaMenu={setCinemaMenu} onAutoCinema={v=>change('autoFull',v)} onCinemaDelay={v=>change('cinemaDelay',v)} onFullscreen={()=>void cinema.fullscreen()}/>}/>}
@@ -98,7 +99,6 @@ function CoopSeat(){
    {preferences&&<PreferencesModal onClose={closePreferences}/>}
    {saving&&<SavePresetModal existingNames={presets.presets.map(p=>p.name)} onSave={presets.savePreset} onClose={closeSave}/>}
    {authOpen&&<AuthModal auth={auth} onClose={closeAuth}/>}
-   {accountOpen&&!askNickname&&<AccountModal auth={auth} onClose={closeAccount} onNickname={()=>setNicknameOpen(true)}/>}
    {askNickname&&!authOpen&&<NicknameStep auth={auth} onClose={closeNickname}/>}
    {askTelemetry&&!askNickname&&<TelemetryModal onChoose={g=>setTelemetryConsent(g?'granted':'denied')}/>}
   </>}

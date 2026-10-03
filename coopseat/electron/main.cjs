@@ -13,7 +13,11 @@ const bffUrl = resolveBff({packaged:app.isPackaged,dev,envName:process.env.COOPS
 const bffOrigins = [bffUrl];
 const gotLock = app.requestSingleInstanceLock();
 if(!gotLock) app.quit();
-if(process.defaultApp) app.setAsDefaultProtocolClient(PROTOCOL,process.execPath,[path.resolve(process.argv[1]||'.')]);
+if(process.defaultApp){
+  app.setAsDefaultProtocolClient(PROTOCOL,process.execPath,[path.resolve(process.argv[1]||'.')]);
+  // Browsers name the handler after electron.exe unless the verb carries its own name.
+  if(process.platform==='win32') spawn('reg',['add',`HKCU\\Software\\Classes\\${PROTOCOL}\\shell\\open`,'/v','FriendlyAppName','/d','CoopSeat','/f'],{stdio:'ignore',windowsHide:true}).on('error',()=>{});
+}
 else app.setAsDefaultProtocolClient(PROTOCOL);
 let pendingLink = findDeepLink(process.argv) ?? null, rendererReady = false;
 function deliverLink(raw) {

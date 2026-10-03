@@ -37,6 +37,7 @@ export const ptBR: Dictionary = {
   home: {
     nav: { features: 'Recursos', how: 'Como funciona', party: 'Watch party', faq: 'Dúvidas' },
     signIn: 'Entrar',
+    myAccount: 'Minha conta',
     createAccount: 'Criar conta',
     download: 'Baixar para Windows',
     downloadShort: 'Baixar',
@@ -265,6 +266,15 @@ export const ptBR: Dictionary = {
     invalid: 'Link inválido.',
   },
   account: {
+    greeting: (name) => `Olá, ${name}!`,
+    welcome: 'Bem-vindo ao CoopSeat!',
+    playBody: 'Conecte sua placa de captura e jogue o seu console direto no navegador, sem instalar nada.',
+    playCta: 'Jogar agora',
+    play: 'Jogar',
+    tabs: { profile: 'Perfil', security: 'Login e segurança', account: 'Conta' },
+    partyBody: 'Conclua os passos abaixo para liberar cada recurso da watch-party.',
+    partyUnlocked: 'Tudo liberado! Você já pode assistir, conversar e criar salas.',
+    dangerTitle: 'Zona de perigo',
     linked: 'Conta vinculada com sucesso.',
     verificationReceived: 'Recebemos sua verificação. O resultado aparece aqui em instantes.',
     nicknameSaved: 'Apelido salvo. Bem-vindo ao CoopSeat!',

@@ -2,20 +2,116 @@
 
 import { useRouter } from 'next/navigation';
 import { useState, type FormEvent, type ReactNode } from 'react';
+import { CircleCheck, Download, Lock, Play } from 'lucide-react';
 import { NicknameField } from '@/components/NicknameField';
-import { Alert, Button, Field } from '@/components/ui';
+import { Alert, Button, Field, buttonClass } from '@/components/ui';
+import { DOWNLOAD_URL } from '@/lib/links';
 import { useLocale, useT } from '@/i18n/client';
 import type { Dictionary } from '@/i18n/dictionaries';
 import { api, ApiClientError } from '@/lib/client/api';
 import { OAUTH_PROVIDERS, PROVIDER_LABELS, type OAuthProvider } from '@/lib/validation/account';
 import type { AccountSummary } from '@/server/account';
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+type Tab = 'profile' | 'security' | 'account';
+const TABS: Tab[] = ['profile', 'security', 'account'];
+
+function Section({ title, description, children }: { title: string; description?: ReactNode; children: ReactNode }) {
   return (
     <section className="rounded-2xl bg-surface p-6 ring-1 ring-white/5">
-      <h2 className="mb-4 text-lg font-semibold text-white">{title}</h2>
-      <div className="space-y-3">{children}</div>
+      <h2 className="text-lg font-semibold text-white">{title}</h2>
+      {description ? <p className="mt-1 text-sm text-muted">{description}</p> : null}
+      <div className="mt-4 space-y-3">{children}</div>
     </section>
+  );
+}
+
+function PlayHero({ account }: { account: AccountSummary }) {
+  const t = useT();
+  const initial = (account.nickname ?? account.email ?? '?').charAt(0).toUpperCase();
+  const [avatarFailed, setAvatarFailed] = useState(false);
+  return (
+    <section className="relative overflow-hidden rounded-2xl bg-surface p-6 ring-1 ring-accent/20">
+      <div aria-hidden className="absolute -top-24 -right-16 h-56 w-56 rounded-full bg-accent/15 blur-3xl" />
+      <div className="relative flex items-center gap-4">
+        {account.avatarUrl && !avatarFailed ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={account.avatarUrl}
+            alt=""
+            referrerPolicy="no-referrer"
+            onError={() => setAvatarFailed(true)}
+            className="size-14 shrink-0 rounded-full object-cover ring-2 ring-accent/30"
+          />
+        ) : (
+          <span className="grid size-14 shrink-0 place-items-center rounded-full bg-accent/15 text-xl font-bold text-accent ring-2 ring-accent/30">
+            {initial}
+          </span>
+        )}
+        <div className="min-w-0">
+          <h1 className="truncate text-xl font-bold text-strong">
+            {account.nickname ? t.account.greeting(account.nickname) : t.account.welcome}
+          </h1>
+          {account.email ? <p className="truncate text-sm text-muted">{account.email}</p> : null}
+        </div>
+      </div>
+      <p className="relative mt-5 text-sm text-muted">{t.account.playBody}</p>
+      <div className="relative mt-4 flex flex-wrap gap-3">
+        <a href="/play" className={buttonClass({ inline: true })}>
+          <Play size={16} />
+          {t.account.playCta}
+        </a>
+        <a href={DOWNLOAD_URL} className={buttonClass({ variant: 'secondary' })}>
+          <Download size={16} />
+          {t.home.download}
+        </a>
+      </div>
+    </section>
+  );
+}
+
+function PartySection({ account, busy, run }: Omit<SectionProps, 'setFlash'>) {
+  const t = useT();
+  const gates = (['watch', 'chat', 'host'] as const).map((key) => ({ key, ...account.permissions[key] }));
+  const allUnlocked = gates.every((g) => g.allowed);
+  const canVerify = account.ageStatus !== 'VERIFIED' && account.ageStatus !== 'PENDING';
+
+  return (
+    <Section title={t.account.permissionsTitle} description={allUnlocked ? t.account.partyUnlocked : t.account.partyBody}>
+      <ul className="grid gap-2 sm:grid-cols-3">
+        {gates.map((gate) => (
+          <li
+            key={gate.key}
+            className={`rounded-xl p-3 ring-1 ${gate.allowed ? 'bg-accent/5 ring-accent/20' : 'bg-white/[0.02] ring-white/5'}`}
+          >
+            <p className="flex items-center gap-2 text-sm font-semibold">
+              {gate.allowed ? <CircleCheck size={16} className="text-accent" /> : <Lock size={16} className="text-muted" />}
+              {t.account.permissions[gate.key]}
+            </p>
+            {!gate.allowed ? <p className="mt-1 text-xs text-muted">{gate.missing.map((m) => t.gates[m]).join(' ')}</p> : null}
+          </li>
+        ))}
+      </ul>
+
+      <div className="border-t border-white/5 pt-3">
+        <p className="text-sm">
+          {t.account.ageTitle}: <strong>{t.account.ageLabels[account.ageStatus]}</strong>
+        </p>
+        <p className="mt-1 text-xs text-muted">{t.account.ageExplainer}</p>
+      </div>
+      {canVerify ? (
+        <Button
+          disabled={busy === 'kyc' || !account.emailConfirmed || !account.nickname}
+          onClick={() =>
+            run('kyc', async () => {
+              const { url } = await api<{ url: string }>('/api/identity/sessions', { method: 'POST', body: {} });
+              window.location.href = url;
+            })
+          }
+        >
+          {t.account.verifyAge}
+        </Button>
+      ) : null}
+    </Section>
   );
 }
 
@@ -23,7 +119,15 @@ function message(err: unknown, t: Dictionary): string {
   return err instanceof ApiClientError ? err.message : t.common.genericError;
 }
 
-export function AccountPanel({ initial, notice }: { initial: AccountSummary; notice?: string }) {
+export function AccountPanel({
+  initial,
+  notice,
+  initialTab = 'profile',
+}: {
+  initial: AccountSummary;
+  notice?: string;
+  initialTab?: Tab;
+}) {
   const t = useT();
   const router = useRouter();
   const [account, setAccount] = useState(initial);
@@ -31,6 +135,7 @@ export function AccountPanel({ initial, notice }: { initial: AccountSummary; not
     notice ? { tone: 'success', text: notice } : undefined,
   );
   const [busy, setBusy] = useState<string>();
+  const [tab, setTab] = useState<Tab>(initialTab);
 
   async function run(key: string, fn: () => Promise<void>) {
     setBusy(key);
@@ -52,9 +157,14 @@ export function AccountPanel({ initial, notice }: { initial: AccountSummary; not
     setAccount(await api<AccountSummary>('/api/me'));
   }
 
+  const emailAction = account.needsEmail || Boolean(account.pendingEmail);
+
   return (
     <div className="space-y-6">
       {flash ? <Alert tone={flash.tone}>{flash.text}</Alert> : null}
+
+      <PlayHero account={account} />
+
       {!account.nickname ? (
         <NicknameSetup
           needsTerms={!account.termsVersion}
@@ -63,34 +173,49 @@ export function AccountPanel({ initial, notice }: { initial: AccountSummary; not
             setFlash({ tone: 'success', text: t.account.nicknameSaved });
           }}
         />
-      ) : (
-        <ProfileSection account={account} busy={busy} run={run} setAccount={setAccount} setFlash={setFlash} />
-      )}
-
-      {account.needsEmail || account.pendingEmail ? (
-        <EmailSection account={account} busy={busy} run={run} setFlash={setFlash} />
       ) : null}
+      {emailAction ? <EmailSection account={account} busy={busy} run={run} setFlash={setFlash} /> : null}
 
-      <Section title={t.account.ageTitle}>
-        <p className="text-sm">
-          {t.account.ageStatus} <strong>{t.account.ageLabels[account.ageStatus]}</strong>
-        </p>
-        <p className="text-sm text-muted">{t.account.ageExplainer}</p>
-        {account.ageStatus !== 'VERIFIED' && account.ageStatus !== 'PENDING' ? (
-          <Button
-            disabled={busy === 'kyc' || !account.emailConfirmed || !account.nickname}
-            onClick={() =>
-              run('kyc', async () => {
-                const { url } = await api<{ url: string }>('/api/identity/sessions', { method: 'POST', body: {} });
-                window.location.href = url;
-              })
-            }
-          >
-            {t.account.verifyAge}
-          </Button>
-        ) : null}
-      </Section>
+      <PartySection account={account} busy={busy} run={run} />
 
+      <div>
+        <div role="tablist" className="mb-4 flex gap-1 rounded-xl bg-surface p-1 ring-1 ring-white/5">
+          {TABS.map((key) => (
+            <button
+              key={key}
+              type="button"
+              role="tab"
+              aria-selected={tab === key}
+              onClick={() => setTab(key)}
+              className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold transition ${
+                tab === key ? 'bg-white/10 text-strong' : 'text-muted hover:text-strong'
+              }`}
+            >
+              {t.account.tabs[key]}
+            </button>
+          ))}
+        </div>
+
+        <div role="tabpanel" className="space-y-6">
+          {tab === 'profile' ? (
+            account.nickname ? (
+              <ProfileSection account={account} busy={busy} run={run} setAccount={setAccount} setFlash={setFlash} />
+            ) : (
+              <p className="text-sm text-muted">{t.gates.nickname}</p>
+            )
+          ) : null}
+          {tab === 'security' ? <SignInSection account={account} busy={busy} run={run} reload={reload} setFlash={setFlash} /> : null}
+          {tab === 'account' ? <AccountSection account={account} busy={busy} run={run} /> : null}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SignInSection({ account, busy, run, reload, setFlash }: SectionProps & { reload: () => Promise<void> }) {
+  const t = useT();
+  return (
+    <>
       <Section title={t.account.linkedTitle}>
         <ul className="space-y-2">
           {account.identities.map((identity) => (
@@ -137,24 +262,19 @@ export function AccountPanel({ initial, notice }: { initial: AccountSummary; not
       </Section>
 
       <SecuritySection account={account} busy={busy} run={run} reload={reload} setFlash={setFlash} />
+    </>
+  );
+}
 
-      <Section title={t.account.permissionsTitle}>
-        <ul className="space-y-1 text-sm">
-          {(['watch', 'chat', 'host'] as const).map((key) => {
-            const gate = account.permissions[key];
-            return (
-              <li key={key}>
-                {gate.allowed ? '✅' : '🔒'} {t.account.permissions[key]}
-                {!gate.allowed ? <span className="text-muted"> — {gate.missing.map((m) => t.gates[m]).join(' ')}</span> : null}
-              </li>
-            );
-          })}
-        </ul>
-      </Section>
-
+function AccountSection({ account, busy, run }: Omit<SectionProps, 'setFlash'>) {
+  const t = useT();
+  const router = useRouter();
+  return (
+    <>
       <Section title={t.account.sessionTitle}>
         <Button
           variant="secondary"
+          disabled={busy === 'logout'}
           onClick={() =>
             run('logout', async () => {
               await api('/api/auth/logout', { method: 'POST', body: {} });
@@ -165,9 +285,11 @@ export function AccountPanel({ initial, notice }: { initial: AccountSummary; not
         >
           {t.account.signOut}
         </Button>
+      </Section>
+      <Section title={t.account.dangerTitle}>
         <DeleteAccount account={account} run={run} busy={busy} />
       </Section>
-    </div>
+    </>
   );
 }
 
