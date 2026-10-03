@@ -1,0 +1,97 @@
+// use prisma-8
+
+types {
+  AuthUserId = Uuid
+}
+
+enum age_status {
+  @@type("pg/text@1")
+  UNVERIFIED = "UNVERIFIED"
+  PENDING    = "PENDING"
+  VERIFIED   = "VERIFIED"
+  REJECTED   = "REJECTED"
+}
+
+enum verification_status {
+  @@type("pg/text@1")
+  created  = "created"
+  approved = "approved"
+  rejected = "rejected"
+  review   = "review"
+}
+
+enum ticket_kind {
+  @@type("pg/text@1")
+  desktop_login = "desktop_login"
+  link          = "link"
+}
+
+namespace public {
+  model Profile {
+    id                AuthUserId             @id
+    user              supabase:auth.AuthUser @relation(fields: [id], references: [id], onDelete: Cascade)
+    nickname          String?
+    nicknameKey       String?                @unique
+    nicknameChangedAt TimestamptzString?
+    avatarUrl         String?
+    ageStatus         age_status             @default(UNVERIFIED)
+    ageVerifiedAt     TimestamptzString?
+    termsVersion      String?
+    termsAcceptedAt   TimestamptzString?
+    createdAt         TimestamptzString      @default(now())
+    updatedAt         temporal.updatedAtString()
+
+    @@check(expression: "nickname IS NULL OR nickname ~ '^[A-Za-z0-9_]{3,20}$'", name: "profiles_nickname_format")
+    @@check(expression: "\"nicknameKey\" IS NOT DISTINCT FROM lower(nickname)", name: "profiles_nickname_key")
+    @@map("profiles")
+    @@rls
+  }
+
+  policy_select profiles_owner_read {
+    target = Profile
+    roles  = [authenticated]
+    using  = "id = auth.uid()"
+  }
+
+  model IdentityVerification {
+    id                  Uuid                @id @default(uuid())
+    profileId           AuthUserId
+    profile             Profile             @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    provider            String
+    providerSessionId   String              @unique
+    status              verification_status @default(created)
+    isAdult             Boolean?
+    documentFingerprint String?
+    failureReason       String?
+    createdAt           TimestamptzString   @default(now())
+    completedAt         TimestamptzString?
+
+    @@index([profileId])
+    @@index([documentFingerprint], where: "status = 'approved'", unique: true, name: "identity_verifications_fingerprint_approved")
+    @@map("identity_verifications")
+    @@rls
+  }
+
+  model AuthTicket {
+    id        String            @id
+    kind      ticket_kind
+    challenge String?
+    payload   String
+    expiresAt TimestamptzString
+    createdAt TimestamptzString @default(now())
+
+    @@index([expiresAt])
+    @@map("auth_tickets")
+    @@rls
+  }
+
+  model RateLimitHit {
+    id        Uuid              @id @default(uuid())
+    key       String
+    createdAt TimestamptzString @default(now())
+
+    @@index([key, createdAt])
+    @@map("rate_limit_hits")
+    @@rls
+  }
+}

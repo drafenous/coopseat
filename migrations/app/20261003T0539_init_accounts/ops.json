@@ -1,0 +1,698 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.auth_tickets",
+    "label": "Create table \"auth_tickets\"",
+    "summary": "Creates table \"auth_tickets\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "auth_tickets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"auth_tickets\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auth_tickets\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"auth_tickets\"",
+        "sql": "CREATE TABLE \"public\".\"auth_tickets\" (\n  \"challenge\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" text NOT NULL,\n  \"kind\" text NOT NULL,\n  \"payload\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"auth_tickets_kind_check_49651328\" CHECK (\"kind\" IN ('desktop_login', 'link'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"auth_tickets\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auth_tickets\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.identity_verifications",
+    "label": "Create table \"identity_verifications\"",
+    "summary": "Creates table \"identity_verifications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "identity_verifications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"identity_verifications\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"identity_verifications\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"identity_verifications\"",
+        "sql": "CREATE TABLE \"public\".\"identity_verifications\" (\n  \"completedAt\" timestamptz,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"documentFingerprint\" text,\n  \"failureReason\" text,\n  \"id\" uuid NOT NULL,\n  \"isAdult\" bool,\n  \"profileId\" \"uuid\" NOT NULL,\n  \"provider\" text NOT NULL,\n  \"providerSessionId\" text NOT NULL,\n  \"status\" text DEFAULT 'created' NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"identity_verifications_status_check_43b000f7\" CHECK (\"status\" IN ('created', 'approved', 'rejected', 'review'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"identity_verifications\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"identity_verifications\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.profiles",
+    "label": "Create table \"profiles\"",
+    "summary": "Creates table \"profiles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"profiles\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"profiles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"profiles\"",
+        "sql": "CREATE TABLE \"public\".\"profiles\" (\n  \"ageStatus\" text DEFAULT 'UNVERIFIED' NOT NULL,\n  \"ageVerifiedAt\" timestamptz,\n  \"avatarUrl\" text,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" \"uuid\" NOT NULL,\n  \"nickname\" text,\n  \"nicknameChangedAt\" timestamptz,\n  \"nicknameKey\" text,\n  \"termsAcceptedAt\" timestamptz,\n  \"termsVersion\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"profiles_ageStatus_check_a5aaea88\" CHECK (\"ageStatus\" IN ('UNVERIFIED', 'PENDING', 'VERIFIED', 'REJECTED')),\n  CONSTRAINT \"profiles_nickname_format_f9d1d8b1\" CHECK (nickname IS NULL OR nickname ~ '^[A-Za-z0-9_]{3,20}$'),\n  CONSTRAINT \"profiles_nickname_key_99a12a76\" CHECK (\"nicknameKey\" IS NOT DISTINCT FROM lower(nickname))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"profiles\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"profiles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.rate_limit_hits",
+    "label": "Create table \"rate_limit_hits\"",
+    "summary": "Creates table \"rate_limit_hits\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "rate_limit_hits"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"rate_limit_hits\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_hits\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"rate_limit_hits\"",
+        "sql": "CREATE TABLE \"public\".\"rate_limit_hits\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"key\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"rate_limit_hits\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_hits\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.identity_verifications.identity_verifications_providerSessionId_key",
+    "label": "Add unique constraint on \"identity_verifications\" (providerSessionId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "identity_verifications_providerSessionId_key",
+        "table": "identity_verifications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"identity_verifications_providerSessionId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "identity_verifications_providerSessionId_key",
+          "public",
+          "\"public\".\"identity_verifications\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"identity_verifications_providerSessionId_key\"",
+        "sql": "ALTER TABLE \"public\".\"identity_verifications\" ADD CONSTRAINT \"identity_verifications_providerSessionId_key\" UNIQUE (\"providerSessionId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"identity_verifications_providerSessionId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "identity_verifications_providerSessionId_key",
+          "public",
+          "\"public\".\"identity_verifications\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.profiles.profiles_nicknameKey_key",
+    "label": "Add unique constraint on \"profiles\" (nicknameKey)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "profiles_nicknameKey_key",
+        "table": "profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"profiles_nicknameKey_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "profiles_nicknameKey_key",
+          "public",
+          "\"public\".\"profiles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"profiles_nicknameKey_key\"",
+        "sql": "ALTER TABLE \"public\".\"profiles\" ADD CONSTRAINT \"profiles_nicknameKey_key\" UNIQUE (\"nicknameKey\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"profiles_nicknameKey_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "profiles_nicknameKey_key",
+          "public",
+          "\"public\".\"profiles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.auth_tickets.auth_tickets_expiresAt_idx_6b6b8c10",
+    "label": "Create index \"auth_tickets_expiresAt_idx_6b6b8c10\" on \"auth_tickets\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "auth_tickets_expiresAt_idx_6b6b8c10",
+        "table": "auth_tickets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"auth_tickets_expiresAt_idx_6b6b8c10\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auth_tickets_expiresAt_idx_6b6b8c10\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"auth_tickets_expiresAt_idx_6b6b8c10\"",
+        "sql": "CREATE INDEX \"auth_tickets_expiresAt_idx_6b6b8c10\" ON \"public\".\"auth_tickets\" (\"expiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"auth_tickets_expiresAt_idx_6b6b8c10\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auth_tickets_expiresAt_idx_6b6b8c10\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.identity_verifications.identity_verifications_fingerprint_approved_4ee76cca",
+    "label": "Create index \"identity_verifications_fingerprint_approved_4ee76cca\" on \"identity_verifications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "identity_verifications_fingerprint_approved_4ee76cca",
+        "table": "identity_verifications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"identity_verifications_fingerprint_approved_4ee76cca\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"identity_verifications_fingerprint_approved_4ee76cca\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"identity_verifications_fingerprint_approved_4ee76cca\"",
+        "sql": "CREATE UNIQUE INDEX \"identity_verifications_fingerprint_approved_4ee76cca\" ON \"public\".\"identity_verifications\" (\"documentFingerprint\") WHERE (status = 'approved')",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"identity_verifications_fingerprint_approved_4ee76cca\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"identity_verifications_fingerprint_approved_4ee76cca\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.identity_verifications.identity_verifications_profileId_idx_d9cdfcaf",
+    "label": "Create index \"identity_verifications_profileId_idx_d9cdfcaf\" on \"identity_verifications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "identity_verifications_profileId_idx_d9cdfcaf",
+        "table": "identity_verifications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"identity_verifications_profileId_idx_d9cdfcaf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"identity_verifications_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"identity_verifications_profileId_idx_d9cdfcaf\"",
+        "sql": "CREATE INDEX \"identity_verifications_profileId_idx_d9cdfcaf\" ON \"public\".\"identity_verifications\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"identity_verifications_profileId_idx_d9cdfcaf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"identity_verifications_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.rate_limit_hits.rate_limit_hits_key_createdAt_idx_82c8d55f",
+    "label": "Create index \"rate_limit_hits_key_createdAt_idx_82c8d55f\" on \"rate_limit_hits\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "rate_limit_hits_key_createdAt_idx_82c8d55f",
+        "table": "rate_limit_hits"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"rate_limit_hits_key_createdAt_idx_82c8d55f\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_hits_key_createdAt_idx_82c8d55f\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"rate_limit_hits_key_createdAt_idx_82c8d55f\"",
+        "sql": "CREATE INDEX \"rate_limit_hits_key_createdAt_idx_82c8d55f\" ON \"public\".\"rate_limit_hits\" (\"key\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"rate_limit_hits_key_createdAt_idx_82c8d55f\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"rate_limit_hits_key_createdAt_idx_82c8d55f\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.identity_verifications.identity_verifications_profileId_fkey",
+    "label": "Add foreign key \"identity_verifications_profileId_fkey\" on \"identity_verifications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "identity_verifications_profileId_fkey",
+        "table": "identity_verifications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"identity_verifications_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "identity_verifications_profileId_fkey",
+          "public",
+          "\"public\".\"identity_verifications\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"identity_verifications_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"identity_verifications\"\nADD CONSTRAINT \"identity_verifications_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"identity_verifications_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "identity_verifications_profileId_fkey",
+          "public",
+          "\"public\".\"identity_verifications\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.profiles.profiles_id_fkey",
+    "label": "Add foreign key \"profiles_id_fkey\" on \"profiles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "profiles_id_fkey",
+        "table": "profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"profiles_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "profiles_id_fkey",
+          "public",
+          "\"public\".\"profiles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"profiles_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"profiles\"\nADD CONSTRAINT \"profiles_id_fkey\"\nFOREIGN KEY (\"id\")\nREFERENCES \"auth\".\"users\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"profiles_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "profiles_id_fkey",
+          "public",
+          "\"public\".\"profiles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.auth_tickets",
+    "label": "Enable row-level security on \"auth_tickets\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "auth_tickets"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"auth_tickets\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "auth_tickets"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"auth_tickets\"",
+        "sql": "ALTER TABLE \"public\".\"auth_tickets\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"auth_tickets\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "auth_tickets"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.identity_verifications",
+    "label": "Enable row-level security on \"identity_verifications\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "identity_verifications"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"identity_verifications\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "identity_verifications"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"identity_verifications\"",
+        "sql": "ALTER TABLE \"public\".\"identity_verifications\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"identity_verifications\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "identity_verifications"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.profiles",
+    "label": "Enable row-level security on \"profiles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"profiles\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "profiles"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"profiles\"",
+        "sql": "ALTER TABLE \"public\".\"profiles\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"profiles\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "profiles"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.rate_limit_hits",
+    "label": "Enable row-level security on \"rate_limit_hits\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "rate_limit_hits"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"rate_limit_hits\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "rate_limit_hits"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"rate_limit_hits\"",
+        "sql": "ALTER TABLE \"public\".\"rate_limit_hits\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"rate_limit_hits\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "rate_limit_hits"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rlsPolicy.public.profiles.profiles_owner_read_b499dcb9",
+    "label": "Create RLS policy \"profiles_owner_read_b499dcb9\" on \"profiles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rlsPolicy",
+        "name": "profiles_owner_read_b499dcb9",
+        "table": "profiles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure RLS policy \"profiles_owner_read_b499dcb9\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "profiles",
+          "profiles_owner_read_b499dcb9"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create RLS policy \"profiles_owner_read_b499dcb9\"",
+        "sql": "CREATE POLICY \"profiles_owner_read_b499dcb9\" ON \"public\".\"profiles\" AS PERMISSIVE FOR SELECT TO authenticated USING (id = auth.uid())",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify RLS policy \"profiles_owner_read_b499dcb9\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_policies\" WHERE (\"schemaname\" = $1 AND \"tablename\" = $2 AND \"policyname\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "profiles",
+          "profiles_owner_read_b499dcb9"
+        ]
+      }
+    ]
+  }
+]
