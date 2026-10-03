@@ -32,6 +32,12 @@ export const env = {
   get kycProvider() {
     return process.env['KYC_PROVIDER'] ?? 'mock';
   },
+  get turnKeyId() {
+    return required('CLOUDFLARE_TURN_KEY_ID');
+  },
+  get turnApiToken() {
+    return required('CLOUDFLARE_TURN_API_TOKEN');
+  },
   get isProduction() {
     return process.env['NODE_ENV'] === 'production';
   },
