@@ -1,7 +1,8 @@
 // Applies the CoopSeat Auth settings through the Supabase Management API.
 // Usage: SUPABASE_ACCESS_TOKEN=... SUPABASE_PROJECT_REF=... npm run supabase:configure
 // OAuth client ids/secrets and SMTP credentials are read from the env when present.
-import 'dotenv/config';
+import { config } from 'dotenv';
+config({ path: ['.env.local', '.env'], quiet: true });
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 

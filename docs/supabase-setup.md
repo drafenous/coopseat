@@ -4,8 +4,9 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
 
 1. **Create the project** (region `sa-east-1`). In *Database > Extensions* enable `pg_cron`.
 2. **Database roles.** In the SQL editor run `supabase/sql/000_prisma_role.sql` after replacing
-   `CHANGE_ME` with a strong password. Use the **session pooler** (port 5432) URLs in `.env`
-   (`DATABASE_URL`, `DIRECT_URL` with user `prisma.<ref>`, `SQL_ADMIN_URL` with user `postgres.<ref>`).
+   `CHANGE_ME` with a strong password. Use the **session pooler** (port 5432) URLs in `.env.local`:
+   `DATABASE_URL` with user `prisma.<ref>` (BFF runtime), `DIRECT_URL` and `SQL_ADMIN_URL` with user
+   `postgres.<ref>` (migrations: only `postgres` may add the FK and trigger on `auth.users`).
    The Prisma 8 Supabase runtime binds roles per session, so the 6543 transaction pooler is not supported.
 3. **Schema.**
    ```bash
