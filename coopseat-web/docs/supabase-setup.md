@@ -22,8 +22,13 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    It sets: email confirmation on, secure email change, manual identity linking, password policy
    (8+ chars, letters and digits, leaked-password check), TOTP MFA, the Custom Access Token Hook
    (`public.custom_access_token_hook`), redirect allow list (`https://coopseat.com/**`),
-   bilingual (English + pt-BR) email templates from `supabase/templates/`, Google sign-in and SMTP when their env vars
+   bilingual (English + pt-BR) email templates and security notifications (password, e-mail, 2FA and sign-in
+   method changes) from `supabase/templates/emails.mjs`, Google sign-in and SMTP when their env vars
    are present. Google is the only OAuth provider; the script turns the others off.
+
+   Every e-mail shares one layout in `emails.mjs`. Run `npm run email:preview` to render them all with sample data
+   into `.email-preview/` and open `index.html` in a browser; `tests/email-templates.test.ts` checks that each
+   template only uses the variables GoTrue gives it and that every link is accepted by `/api/auth/confirm`.
 
    | Service | Env vars | Notes |
    | --- | --- | --- |
@@ -69,8 +74,10 @@ With `KYC_PROVIDER=mock` on a dev/preview deployment:
 2. `/login` → `/account` asks for a nickname if needed; a taken nickname (any casing) is refused.
 3. *Verify my age* → `/verification/mock` → choose **Approve (over 18)** → `/account` shows age verified and
    chat and host unlocked. Repeat with a second account and the same document number: it must be rejected.
-4. Enable TOTP in `/account`, sign out, sign in again: the 2FA step must appear.
-5. Link and unlink Google in `/account`; unlinking the last login method must be refused.
+4. Enable TOTP in `/account`, sign out, sign in again: the 2FA step must appear. A "two-step verification added"
+   e-mail must arrive.
+5. Link and unlink Google in `/account`; unlinking the last login method must be refused. Each change sends a
+   security e-mail.
 6. Desktop (`COOPSEAT_BFF_URL=<preview url> npm run dev` in `coopseat/`): *Continue with Google* opens the
    browser and returns via `coopseat://auth/callback`; email login, 2FA and *My account* work in the app.
 7. Switch the language (footer on the site, the language icon in the app header) and repeat a step: pages, API errors

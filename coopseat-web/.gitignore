@@ -22,6 +22,7 @@
 
 # misc
 .DS_Store
+/.email-preview/
 *.pem
 
 # debug

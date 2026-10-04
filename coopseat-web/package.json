@@ -17,7 +17,8 @@
     "db:migrate": "prisma db migrate",
     "db:sql": "node scripts/apply-sql.mjs",
     "db:test": "node scripts/test-db.mjs",
-    "supabase:configure": "node scripts/configure-supabase.mjs"
+    "supabase:configure": "node scripts/configure-supabase.mjs",
+    "email:preview": "node scripts/preview-emails.mjs"
   },
   "dependencies": {
     "@coopseat/ui": "0.2.0",

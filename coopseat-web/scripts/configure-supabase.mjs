@@ -3,8 +3,7 @@
 // OAuth client ids/secrets and RESEND_API_KEY (or SMTP_*) are read from the env when present.
 import { config as loadEnv } from 'dotenv';
 loadEnv({ path: ['.env.local', '.env'], quiet: true });
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { authEmailConfig } from '../supabase/templates/emails.mjs';
 
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 const ref = process.env.SUPABASE_PROJECT_REF;
@@ -13,9 +12,6 @@ if (!token || !ref) {
   console.error('Set SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF.');
   process.exit(1);
 }
-
-const templates = join(import.meta.dirname, '..', 'supabase', 'templates');
-const tpl = (name) => readFile(join(templates, `${name}.html`), 'utf8');
 
 function provider(name, idVar, secretVar) {
   const id = process.env[idVar];
@@ -47,18 +43,7 @@ const smtp = smtpServer
 // The free plan rejects the leaked-password check and, without custom SMTP, custom templates.
 const pro = process.env.SUPABASE_PLAN === 'pro';
 const customTemplates = Boolean(smtpServer) || pro;
-const emailTemplates = customTemplates
-  ? {
-      mailer_subjects_confirmation: 'Confirm your CoopSeat e-mail / Confirme seu e-mail no CoopSeat',
-      mailer_subjects_recovery: 'CoopSeat password reset / Redefinição de senha do CoopSeat',
-      mailer_subjects_email_change: 'Confirm your new CoopSeat e-mail / Confirme seu novo e-mail no CoopSeat',
-      mailer_subjects_magic_link: 'Your CoopSeat sign-in link / Seu link de acesso ao CoopSeat',
-      mailer_templates_confirmation_content: await tpl('confirmation'),
-      mailer_templates_recovery_content: await tpl('recovery'),
-      mailer_templates_email_change_content: await tpl('email-change'),
-      mailer_templates_magic_link_content: await tpl('magic-link'),
-    }
-  : {};
+const emailTemplates = customTemplates ? authEmailConfig(appUrl) : {};
 
 const config = {
   site_url: appUrl,
@@ -107,7 +92,7 @@ if (!res.ok) {
   if (!pro) console.warn('Free plan: leaked-password protection (HaveIBeenPwned) is off. Set SUPABASE_PLAN=pro after upgrading.');
   if (!customTemplates) {
     console.warn(
-      'Email templates skipped: set RESEND_API_KEY (or SMTP_*) to use the PT-BR templates. Until then Supabase sends its ' +
+      'Email templates and security notifications skipped: set RESEND_API_KEY (or SMTP_*) to use the bilingual templates. Until then Supabase sends its ' +
         'default emails (only to members of your Supabase organization) and password reset links will not work.',
     );
   }
