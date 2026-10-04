@@ -1,0 +1,282 @@
+import { OWNER_PERMS, type EndReason, type ModPerms } from '@coopseat/ui/party-protocol';
+import { permissionsFor } from '@/lib/gates';
+import { NICKNAME_PATTERN } from '@/lib/validation/account';
+import { adminDb } from '@/prisma/db';
+import { accountSummary } from '../account';
+import { auth as authErrors } from '../auth-errors';
+import { gotrue } from '../gotrue';
+import { ApiError } from '../http';
+import { isUniqueViolation } from '../profiles';
+import { rateLimit } from '../rate-limit';
+import type { AuthContext } from '../session';
+import { verifyRoomPassword } from './password';
+import { getPartyPolicy, roomCapacity, type PartyPolicy } from './policy';
+import { activeSanctions, isBlocked } from './sanctions';
+import { signalCommand } from './signal';
+import type { RoomTokenInput } from './tokens';
+
+export type Viewer = {
+  profileId: string;
+  nickname: string | null;
+  permissions: ReturnType<typeof permissionsFor>;
+};
+
+export async function loadViewer(session: AuthContext): Promise<Viewer> {
+  const user = await authErrors(gotrue.getUser(session.token));
+  const account = await accountSummary(user, session.claims);
+  return { profileId: account.id, nickname: account.nickname, permissions: account.permissions };
+}
+
+export type RoomOwner = { id: string; nickname: string };
+
+/** Rooms are addressed by the owner's nickname (case-insensitive). */
+export async function findOwner(nickname: string): Promise<RoomOwner | null> {
+  if (!NICKNAME_PATTERN.test(nickname)) return null;
+  const db = await adminDb();
+  const profile = await db.orm.public.Profile.where({ nicknameKey: nickname.toLowerCase() }).first();
+  return profile?.nickname ? { id: profile.id, nickname: profile.nickname } : null;
+}
+
+export async function getRoom(ownerId: string) {
+  const db = await adminDb();
+  return db.orm.public.PartyRoom.where({ ownerId }).first();
+}
+
+/** New rooms start with approval on, which satisfies the "at least one protection" rule. */
+export async function ensureRoom(ownerId: string) {
+  const existing = await getRoom(ownerId);
+  if (existing) return existing;
+  const db = await adminDb();
+  try {
+    return await db.orm.public.PartyRoom.create({ ownerId, requireApproval: true });
+  } catch (err) {
+    if (isUniqueViolation(err)) return (await getRoom(ownerId))!;
+    throw err;
+  }
+}
+
+export function sessionEndsAt(startedAt: string, policy: PartyPolicy): number {
+  return Math.floor(Date.parse(startedAt) / 1000) + policy.sessionMaxHours * 3600;
+}
+
+/** Ends the session row and tells the signal server. Returns false if it had already ended. */
+export async function endSession(sessionId: string, reason: EndReason, notifySignal = true): Promise<boolean> {
+  const db = await adminDb();
+  const now = new Date().toISOString();
+  const updated = await db.orm.public.PartySession.where({ id: sessionId })
+    .where((s) => s.endedAt.isNull())
+    .updateAll({ endedAt: now, endReason: reason });
+  if (updated.length === 0) return false;
+  await db.orm.public.PartySessionParticipant.where({ sessionId })
+    .where((p) => p.leftAt.isNull())
+    .updateAll({ leftAt: now });
+  if (notifySignal) await signalCommand(sessionId, { action: 'end', reason });
+  return true;
+}
+
+/** The live session of a room, closing it first if it outlived `sessionMaxHours`. */
+export async function getActiveSession(roomId: string, policy: PartyPolicy) {
+  const db = await adminDb();
+  const session = await db.orm.public.PartySession.where({ roomId })
+    .where((s) => s.endedAt.isNull())
+    .first();
+  if (!session) return null;
+  if (sessionEndsAt(session.startedAt, policy) * 1000 <= Date.now()) {
+    await endSession(session.id, 'max_duration');
+    return null;
+  }
+  return session;
+}
+
+export async function getModerator(roomId: string, profileId: string) {
+  const db = await adminDb();
+  return db.orm.public.PartyRoomModerator.where({ roomId, profileId }).first();
+}
+
+export function modPerms(row: {
+  canKick: boolean;
+  canBan: boolean;
+  canStopStreams: boolean;
+  canApprove: boolean;
+  canGrantStream: boolean;
+  canDeleteMessages: boolean;
+}): ModPerms {
+  return {
+    kick: row.canKick,
+    ban: row.canBan,
+    stopStreams: row.canStopStreams,
+    approve: row.canApprove,
+    grantStream: row.canGrantStream,
+    deleteMessages: row.canDeleteMessages,
+  };
+}
+
+export async function getActiveBan(roomId: string, profileId: string) {
+  const db = await adminDb();
+  const ban = await db.orm.public.PartyRoomBan.where({ roomId, profileId }).first();
+  return ban && (!ban.expiresAt || Date.parse(ban.expiresAt) > Date.now()) ? ban : null;
+}
+
+async function admittedParticipant(sessionId: string, profileId: string) {
+  const db = await adminDb();
+  const row = await db.orm.public.PartySessionParticipant.where({ sessionId, profileId }).first();
+  return row && row.removal === null ? row : null;
+}
+
+/** One row per (session, profile); re-admission after a kick clears the removal. */
+export async function admitParticipant(sessionId: string, profileId: string): Promise<void> {
+  const db = await adminDb();
+  const rows = db.orm.public.PartySessionParticipant;
+  const existing = await rows.where({ sessionId, profileId }).first();
+  if (existing) {
+    if (existing.removal !== null || existing.leftAt !== null) {
+      await rows.where({ id: existing.id }).updateAll({ removal: null, removedBy: null, leftAt: null });
+    }
+    return;
+  }
+  await rows.create({ sessionId, profileId });
+}
+
+export async function markRemoved(sessionId: string, profileId: string, removal: 'kick' | 'ban', by: string) {
+  const db = await adminDb();
+  await db.orm.public.PartySessionParticipant.where({ sessionId, profileId }).updateAll({
+    removal,
+    removedBy: by,
+    leftAt: new Date().toISOString(),
+  });
+}
+
+export type AccessResult =
+  | {
+      state: 'admitted' | 'pending';
+      claims: RoomTokenInput;
+      sessionId: string;
+      endsAt: number;
+    }
+  | { state: 'offline'; isOwner: boolean }
+  | { state: 'password_required' }
+  | { state: 'not_invited' }
+  | { state: 'banned' }
+  | { state: 'unavailable' }
+  | { state: 'disabled' }
+  | { state: 'requirements'; missing: string[] };
+
+/**
+ * Decides whether a viewer may enter the room's live session and with which role. Order matters:
+ * sanctions, identity gate, ban, live session, then the room protections (allow list skips the
+ * password and the approval; previously admitted participants skip everything until kicked).
+ */
+export async function decideAccess(input: {
+  viewer: Viewer;
+  owner: RoomOwner;
+  password?: string;
+  expectedSessionId?: string;
+}): Promise<AccessResult> {
+  const { viewer, owner } = input;
+  const policy = await getPartyPolicy();
+  if (!policy.enabled) return { state: 'disabled' };
+
+  const sanctions = await activeSanctions(viewer.profileId);
+  if (isBlocked(sanctions, 'party_join')) return { state: 'unavailable' };
+  if (!viewer.permissions.watch.allowed) return { state: 'requirements', missing: viewer.permissions.watch.missing };
+
+  const isOwner = viewer.profileId === owner.id;
+  if (!isOwner && (await getActiveBan(owner.id, viewer.profileId))) return { state: 'banned' };
+
+  const room = await getRoom(owner.id);
+  const session = room ? await getActiveSession(room.ownerId, policy) : null;
+  if (!room || !session || (input.expectedSessionId && input.expectedSessionId !== session.id)) {
+    return { state: 'offline', isOwner };
+  }
+
+  const endsAt = sessionEndsAt(session.startedAt, policy);
+  const base = {
+    sid: session.id,
+    rid: room.ownerId,
+    sub: viewer.profileId,
+    nick: viewer.nickname ?? '',
+    streamBlocked: !viewer.permissions.host.allowed || isBlocked(sanctions, 'party_stream'),
+    chat: policy.chatEnabled && viewer.permissions.chat.allowed && !isBlocked(sanctions, 'party_chat'),
+    cfg: {
+      cap: roomCapacity(policy, room),
+      maxStreamers: policy.maxStreamers,
+      ownerGraceSeconds: policy.ownerGraceSeconds,
+      endsAt,
+      chat: policy.chatEnabled,
+    },
+  };
+  const result = (
+    state: 'admitted' | 'pending',
+    claims: Pick<RoomTokenInput, 'role' | 'canStream' | 'mod'> & Partial<Pick<RoomTokenInput, 'streamBlocked'>>,
+  ): AccessResult => ({ state, sessionId: session.id, endsAt, claims: { ...base, ...claims, status: state } });
+
+  if (isOwner) {
+    return result('admitted', {
+      role: 'owner',
+      canStream: true,
+      mod: OWNER_PERMS,
+      streamBlocked: base.streamBlocked || isBlocked(sanctions, 'party_host'),
+    });
+  }
+
+  const db = await adminDb();
+  const moderator = await getModerator(room.ownerId, viewer.profileId);
+  const listed = room.whitelistEnabled
+    ? await db.orm.public.PartyRoomWhitelist.where({ roomId: room.ownerId, profileId: viewer.profileId }).first()
+    : null;
+  const role = moderator ? ('moderator' as const) : ('member' as const);
+  const claims = { role, canStream: listed?.canStream ?? false, mod: moderator ? modPerms(moderator) : null };
+
+  if (moderator || listed || (await admittedParticipant(session.id, viewer.profileId))) {
+    await admitParticipant(session.id, viewer.profileId);
+    return result('admitted', claims);
+  }
+
+  if (!room.passwordHash && !room.requireApproval) return { state: 'not_invited' };
+
+  if (room.passwordHash) {
+    if (!input.password) return { state: 'password_required' };
+    await rateLimit('party_password', `${viewer.profileId}:${room.ownerId}`);
+    if (!(await verifyRoomPassword(input.password, room.passwordHash))) throw new ApiError(403, 'party_password_invalid');
+  }
+
+  if (room.requireApproval) return result('pending', claims);
+
+  await admitParticipant(session.id, viewer.profileId);
+  return result('admitted', claims);
+}
+
+export type Actor = { role: 'owner' | 'moderator'; perms: ModPerms };
+
+export async function actorFor(roomId: string, profileId: string): Promise<Actor | null> {
+  if (roomId === profileId) return { role: 'owner', perms: OWNER_PERMS };
+  const moderator = await getModerator(roomId, profileId);
+  return moderator ? { role: 'moderator', perms: modPerms(moderator) } : null;
+}
+
+/** Nobody acts on the owner; moderators can't act on other moderators. */
+export async function assertCanTarget(roomId: string, actor: Actor, targetId: string): Promise<void> {
+  if (targetId === roomId) throw new ApiError(403, 'party_target_invalid');
+  if (actor.role === 'moderator' && (await getModerator(roomId, targetId))) {
+    throw new ApiError(403, 'party_target_invalid');
+  }
+}
+
+export async function logModeration(event: {
+  roomId: string;
+  sessionId?: string | null;
+  actorId: string;
+  targetId?: string | null;
+  action: string;
+  detail?: string | null;
+}): Promise<void> {
+  const db = await adminDb();
+  await db.orm.public.PartyModerationEvent.create({
+    roomId: event.roomId,
+    sessionId: event.sessionId ?? null,
+    actorId: event.actorId,
+    targetId: event.targetId ?? null,
+    action: event.action,
+    detail: event.detail ?? null,
+  });
+}

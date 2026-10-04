@@ -1,5 +1,5 @@
 const {test}=require('node:test');const assert=require('node:assert/strict');
-const {parseDeepLink,findDeepLink,validateExternalUrl,validateSecureKey,validateSecureValue}=require('../electron/validation.cjs');
+const {parseDeepLink,findDeepLink,validateExternalUrl,validateSecureKey,validateSecureValue,validatePick}=require('../electron/validation.cjs');
 const ticket='a'.repeat(21)+'_-'+'B9'.repeat(10);
 const bff=['https://coopseat.com','http://localhost:3000'];
 test('parses the auth deep links the BFF sends',()=>{
@@ -7,6 +7,16 @@ test('parses the auth deep links the BFF sends',()=>{
  assert.deepEqual(parseDeepLink('coopseat://auth/linked'),{kind:'linked'});
  assert.deepEqual(parseDeepLink('coopseat://auth/confirmed/'),{kind:'confirmed'});
  assert.deepEqual(parseDeepLink('coopseat://auth/verified'),{kind:'verified'});
+});
+test('parses party room links',()=>{
+ assert.deepEqual(parseDeepLink('coopseat://party/Rodri_99'),{kind:'party',nickname:'Rodri_99'});
+ assert.deepEqual(parseDeepLink('coopseat://party/abc/'),{kind:'party',nickname:'abc'});
+ for(const raw of ['coopseat://party/ab','coopseat://party/'+'a'.repeat(21),'coopseat://party/a-b-c','coopseat://party/abc/extra','coopseat://party/%3Cscript%3E','coopseat://party'])assert.equal(parseDeepLink(raw),null);
+});
+test('accepts only desktopCapturer source ids when picking a screen',()=>{
+ assert.deepEqual(validatePick({id:'screen:0:0',audio:true}),{id:'screen:0:0',audio:true});
+ assert.deepEqual(validatePick({id:'window:132456:0',audio:false,extra:1}),{id:'window:132456:0',audio:false});
+ for(const o of [null,{id:'screen:0:0'},{id:'tab:1:0',audio:false},{id:'screen:0:0;rm',audio:false},{id:'window:1:0',audio:'yes'}])assert.throws(()=>validatePick(o));
 });
 test('ignores unknown routes, bad tickets and other schemes',()=>{
  for(const raw of ['coopseat://auth/callback','coopseat://auth/callback?ticket=curto',`coopseat://auth/callback?ticket=${ticket}x`,'coopseat://auth/callback?ticket='+'%'.repeat(43),'coopseat://evil/run','https://coopseat.com/auth/linked',`coopseat://auth/linked?${'x'.repeat(600)}`,null,42])assert.equal(parseDeepLink(raw),null);

@@ -47,7 +47,16 @@ function parseDeepLink(raw) {
   if (route === 'auth/linked') return {kind:'linked'};
   if (route === 'auth/confirmed') return {kind:'confirmed'};
   if (route === 'auth/verified') return {kind:'verified'};
+  const party = /^party\/([A-Za-z0-9_]{3,20})$/.exec(route);
+  if (party) return {kind:'party',nickname:party[1]};
   return null;
+}
+
+/** desktopCapturer ids look like `screen:0:0` or `window:123456:0`. */
+const SOURCE_ID = /^(screen|window):\d{1,20}:\d{1,10}$/;
+function validatePick(o) {
+  if (!o || typeof o.id !== 'string' || !SOURCE_ID.test(o.id) || typeof o.audio !== 'boolean') throw Error('Fonte inválida.');
+  return {id:o.id,audio:o.audio};
 }
 function findDeepLink(argv) {
   return Array.isArray(argv) ? argv.find(a => typeof a === 'string' && a.startsWith(`${PROTOCOL}://`)) : undefined;
@@ -75,4 +84,4 @@ function validateSecureValue(value) {
   return value;
 }
 
-module.exports = {validateOpen,validateBounds,bounded,parseDeepLink,findDeepLink,validateExternalUrl,validateSecureKey,validateSecureValue,PROTOCOL};
+module.exports = {validateOpen,validateBounds,bounded,parseDeepLink,findDeepLink,validateExternalUrl,validateSecureKey,validateSecureValue,validatePick,PROTOCOL};

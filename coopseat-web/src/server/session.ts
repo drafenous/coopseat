@@ -42,9 +42,17 @@ export async function getAuth(req: NextRequest): Promise<AuthContext | null> {
   return claims ? { token, claims, mode: 'cookie' } : null;
 }
 
-export async function requireAuth(req: NextRequest, opts: { aal2IfEnrolled?: boolean } = {}): Promise<AuthContext> {
+/** `allowSuspended` is only for leaving the platform (account deletion) while under a `platform` sanction. */
+export async function requireAuth(
+  req: NextRequest,
+  opts: { aal2IfEnrolled?: boolean; allowSuspended?: boolean } = {},
+): Promise<AuthContext> {
   const auth = await getAuth(req);
   if (!auth) throw new ApiError(401, 'unauthenticated');
+  if (!opts.allowSuspended) {
+    const { assertNotSuspended } = await import('./party/sanctions');
+    await assertNotSuspended(auth.claims.sub);
+  }
   if (opts.aal2IfEnrolled && auth.claims.aal !== 'aal2') {
     const { gotrue } = await import('./gotrue');
     const user = await gotrue.getUser(auth.token);

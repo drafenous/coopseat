@@ -8,6 +8,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./design": "./src/design.ts",
+    "./party-protocol": "./src/party/protocol.ts",
+    "./webrtc": "./src/lib/webrtc/index.ts",
+    "./party-layout": "./src/lib/party/layout.ts",
     "./base.css": "./src/styles/base.css",
     "./theme.css": "./src/styles/theme.css"
   },

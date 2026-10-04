@@ -34,9 +34,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'2ce8ed99f683ffe3565107d651e1d87d3a75403c3f72fe66d0a0d8618fa75358'>;
+  StorageHashBase<'865c0af292ccb63258648dfec3b64677416f9f1c782cac36464cb735724f6435'>;
 export type ExecutionHash =
-  ExecutionHashBase<'bbaee8b25bdf57de5dfb09c146d91e32b72180c523f135d8ccf2dce99937dfa8'>;
+  ExecutionHashBase<'c943bb841ab8bfe8fe45ffaa85846ccbc1921fe9af2f924d3a8e3a31b0a75ae1'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -270,6 +270,91 @@ export type FieldOutputTypes = {
       readonly providerSessionId: CodecTypes['pg/text@1']['output'];
       readonly status: 'created' | 'approved' | 'rejected' | 'review';
     };
+    readonly PartyModerationEvent: {
+      readonly action: CodecTypes['pg/text@1']['output'];
+      readonly actorId: CodecTypes['pg/uuid@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly detail: CodecTypes['pg/text@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+      readonly sessionId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly targetId: CodecTypes['pg/uuid@1']['output'] | null;
+    };
+    readonly PartyPolicy: {
+      readonly chatEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly enabled: CodecTypes['pg/bool@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly maxParticipants: CodecTypes['pg/int4@1']['output'];
+      readonly maxStreamers: CodecTypes['pg/int4@1']['output'];
+      readonly note: CodecTypes['pg/text@1']['output'] | null;
+      readonly ownerGraceSeconds: CodecTypes['pg/int4@1']['output'];
+      readonly sessionMaxHours: CodecTypes['pg/int4@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly PartyRoom: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly defaultLayout: CodecTypes['pg/text@1']['output'];
+      readonly maxParticipants: CodecTypes['pg/int4@1']['output'] | null;
+      readonly ownerId: CodecTypes['pg/uuid@1']['output'];
+      readonly passwordHash: CodecTypes['pg/text@1']['output'] | null;
+      readonly requireApproval: CodecTypes['pg/bool@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly whitelistEnabled: CodecTypes['pg/bool@1']['output'];
+    };
+    readonly PartyRoomBan: {
+      readonly bannedBy: CodecTypes['pg/uuid@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly reason: CodecTypes['pg/text@1']['output'] | null;
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+    };
+    readonly PartyRoomModerator: {
+      readonly canApprove: CodecTypes['pg/bool@1']['output'];
+      readonly canBan: CodecTypes['pg/bool@1']['output'];
+      readonly canDeleteMessages: CodecTypes['pg/bool@1']['output'];
+      readonly canGrantStream: CodecTypes['pg/bool@1']['output'];
+      readonly canKick: CodecTypes['pg/bool@1']['output'];
+      readonly canStopStreams: CodecTypes['pg/bool@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+    };
+    readonly PartyRoomWhitelist: {
+      readonly canStream: CodecTypes['pg/bool@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+    };
+    readonly PartySession: {
+      readonly endReason: CodecTypes['pg/text@1']['output'] | null;
+      readonly endedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+      readonly startedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly PartySessionParticipant: {
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly leftAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly removal: CodecTypes['pg/text@1']['output'] | null;
+      readonly removedBy: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly sessionId: CodecTypes['pg/uuid@1']['output'];
+    };
+    readonly PlatformSanction: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly createdBy: CodecTypes['pg/text@1']['output'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly reason: CodecTypes['pg/text@1']['output'] | null;
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly scope: CodecTypes['pg/text@1']['output'];
+    };
     readonly Profile: {
       readonly ageStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
       readonly ageVerifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
@@ -348,6 +433,91 @@ export type FieldInputTypes = {
       readonly provider: CodecTypes['pg/text@1']['input'];
       readonly providerSessionId: CodecTypes['pg/text@1']['input'];
       readonly status: 'created' | 'approved' | 'rejected' | 'review';
+    };
+    readonly PartyModerationEvent: {
+      readonly action: CodecTypes['pg/text@1']['input'];
+      readonly actorId: CodecTypes['pg/uuid@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly detail: CodecTypes['pg/text@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+      readonly sessionId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly targetId: CodecTypes['pg/uuid@1']['input'] | null;
+    };
+    readonly PartyPolicy: {
+      readonly chatEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly enabled: CodecTypes['pg/bool@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly maxParticipants: CodecTypes['pg/int4@1']['input'];
+      readonly maxStreamers: CodecTypes['pg/int4@1']['input'];
+      readonly note: CodecTypes['pg/text@1']['input'] | null;
+      readonly ownerGraceSeconds: CodecTypes['pg/int4@1']['input'];
+      readonly sessionMaxHours: CodecTypes['pg/int4@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly PartyRoom: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly defaultLayout: CodecTypes['pg/text@1']['input'];
+      readonly maxParticipants: CodecTypes['pg/int4@1']['input'] | null;
+      readonly ownerId: CodecTypes['pg/uuid@1']['input'];
+      readonly passwordHash: CodecTypes['pg/text@1']['input'] | null;
+      readonly requireApproval: CodecTypes['pg/bool@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly whitelistEnabled: CodecTypes['pg/bool@1']['input'];
+    };
+    readonly PartyRoomBan: {
+      readonly bannedBy: CodecTypes['pg/uuid@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly reason: CodecTypes['pg/text@1']['input'] | null;
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly PartyRoomModerator: {
+      readonly canApprove: CodecTypes['pg/bool@1']['input'];
+      readonly canBan: CodecTypes['pg/bool@1']['input'];
+      readonly canDeleteMessages: CodecTypes['pg/bool@1']['input'];
+      readonly canGrantStream: CodecTypes['pg/bool@1']['input'];
+      readonly canKick: CodecTypes['pg/bool@1']['input'];
+      readonly canStopStreams: CodecTypes['pg/bool@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly PartyRoomWhitelist: {
+      readonly canStream: CodecTypes['pg/bool@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly PartySession: {
+      readonly endReason: CodecTypes['pg/text@1']['input'] | null;
+      readonly endedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+      readonly startedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly PartySessionParticipant: {
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly leftAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly removal: CodecTypes['pg/text@1']['input'] | null;
+      readonly removedBy: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly sessionId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly PlatformSanction: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly createdBy: CodecTypes['pg/text@1']['input'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly reason: CodecTypes['pg/text@1']['input'] | null;
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly scope: CodecTypes['pg/text@1']['input'];
     };
     readonly Profile: {
       readonly ageStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
@@ -428,6 +598,91 @@ export type StorageColumnTypes = {
       readonly providerSessionId: CodecTypes['pg/text@1']['output'];
       readonly status: 'created' | 'approved' | 'rejected' | 'review';
     };
+    readonly party_moderation_events: {
+      readonly action: CodecTypes['pg/text@1']['output'];
+      readonly actorId: CodecTypes['pg/uuid@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly detail: CodecTypes['pg/text@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+      readonly sessionId: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly targetId: CodecTypes['pg/uuid@1']['output'] | null;
+    };
+    readonly party_policy: {
+      readonly chatEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly enabled: CodecTypes['pg/bool@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly maxParticipants: CodecTypes['pg/int4@1']['output'];
+      readonly maxStreamers: CodecTypes['pg/int4@1']['output'];
+      readonly note: CodecTypes['pg/text@1']['output'] | null;
+      readonly ownerGraceSeconds: CodecTypes['pg/int4@1']['output'];
+      readonly sessionMaxHours: CodecTypes['pg/int4@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly party_room_bans: {
+      readonly bannedBy: CodecTypes['pg/uuid@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly reason: CodecTypes['pg/text@1']['output'] | null;
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+    };
+    readonly party_room_moderators: {
+      readonly canApprove: CodecTypes['pg/bool@1']['output'];
+      readonly canBan: CodecTypes['pg/bool@1']['output'];
+      readonly canDeleteMessages: CodecTypes['pg/bool@1']['output'];
+      readonly canGrantStream: CodecTypes['pg/bool@1']['output'];
+      readonly canKick: CodecTypes['pg/bool@1']['output'];
+      readonly canStopStreams: CodecTypes['pg/bool@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+    };
+    readonly party_room_whitelist: {
+      readonly canStream: CodecTypes['pg/bool@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+    };
+    readonly party_rooms: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly defaultLayout: CodecTypes['pg/text@1']['output'];
+      readonly maxParticipants: CodecTypes['pg/int4@1']['output'] | null;
+      readonly ownerId: CodecTypes['pg/uuid@1']['output'];
+      readonly passwordHash: CodecTypes['pg/text@1']['output'] | null;
+      readonly requireApproval: CodecTypes['pg/bool@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly whitelistEnabled: CodecTypes['pg/bool@1']['output'];
+    };
+    readonly party_session_participants: {
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly leftAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly removal: CodecTypes['pg/text@1']['output'] | null;
+      readonly removedBy: CodecTypes['pg/uuid@1']['output'] | null;
+      readonly sessionId: CodecTypes['pg/uuid@1']['output'];
+    };
+    readonly party_sessions: {
+      readonly endedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly endReason: CodecTypes['pg/text@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly roomId: CodecTypes['pg/uuid@1']['output'];
+      readonly startedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly platform_sanctions: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly createdBy: CodecTypes['pg/text@1']['output'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly reason: CodecTypes['pg/text@1']['output'] | null;
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly scope: CodecTypes['pg/text@1']['output'];
+    };
     readonly profiles: {
       readonly ageStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
       readonly ageVerifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
@@ -506,6 +761,91 @@ export type StorageColumnInputTypes = {
       readonly provider: CodecTypes['pg/text@1']['input'];
       readonly providerSessionId: CodecTypes['pg/text@1']['input'];
       readonly status: 'created' | 'approved' | 'rejected' | 'review';
+    };
+    readonly party_moderation_events: {
+      readonly action: CodecTypes['pg/text@1']['input'];
+      readonly actorId: CodecTypes['pg/uuid@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly detail: CodecTypes['pg/text@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+      readonly sessionId: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly targetId: CodecTypes['pg/uuid@1']['input'] | null;
+    };
+    readonly party_policy: {
+      readonly chatEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly enabled: CodecTypes['pg/bool@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly maxParticipants: CodecTypes['pg/int4@1']['input'];
+      readonly maxStreamers: CodecTypes['pg/int4@1']['input'];
+      readonly note: CodecTypes['pg/text@1']['input'] | null;
+      readonly ownerGraceSeconds: CodecTypes['pg/int4@1']['input'];
+      readonly sessionMaxHours: CodecTypes['pg/int4@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly party_room_bans: {
+      readonly bannedBy: CodecTypes['pg/uuid@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly reason: CodecTypes['pg/text@1']['input'] | null;
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly party_room_moderators: {
+      readonly canApprove: CodecTypes['pg/bool@1']['input'];
+      readonly canBan: CodecTypes['pg/bool@1']['input'];
+      readonly canDeleteMessages: CodecTypes['pg/bool@1']['input'];
+      readonly canGrantStream: CodecTypes['pg/bool@1']['input'];
+      readonly canKick: CodecTypes['pg/bool@1']['input'];
+      readonly canStopStreams: CodecTypes['pg/bool@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly party_room_whitelist: {
+      readonly canStream: CodecTypes['pg/bool@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly party_rooms: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly defaultLayout: CodecTypes['pg/text@1']['input'];
+      readonly maxParticipants: CodecTypes['pg/int4@1']['input'] | null;
+      readonly ownerId: CodecTypes['pg/uuid@1']['input'];
+      readonly passwordHash: CodecTypes['pg/text@1']['input'] | null;
+      readonly requireApproval: CodecTypes['pg/bool@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly whitelistEnabled: CodecTypes['pg/bool@1']['input'];
+    };
+    readonly party_session_participants: {
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly joinedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly leftAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly removal: CodecTypes['pg/text@1']['input'] | null;
+      readonly removedBy: CodecTypes['pg/uuid@1']['input'] | null;
+      readonly sessionId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly party_sessions: {
+      readonly endedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly endReason: CodecTypes['pg/text@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly roomId: CodecTypes['pg/uuid@1']['input'];
+      readonly startedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly platform_sanctions: {
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly createdBy: CodecTypes['pg/text@1']['input'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly reason: CodecTypes['pg/text@1']['input'] | null;
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly scope: CodecTypes['pg/text@1']['input'];
     };
     readonly profiles: {
       readonly ageStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
@@ -589,6 +929,112 @@ export namespace Models {
     profile: public_Profile;
     readonly [RelationKeys]?: 'profile';
   };
+  export type public_PartyModerationEvent = {
+    action: CodecTypes['pg/text@1']['output'];
+    actorId: CodecTypes['pg/uuid@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    detail: CodecTypes['pg/text@1']['output'] | null;
+    id: CodecTypes['pg/uuid@1']['output'];
+    roomId: CodecTypes['pg/uuid@1']['output'];
+    sessionId: CodecTypes['pg/uuid@1']['output'] | null;
+    targetId: CodecTypes['pg/uuid@1']['output'] | null;
+    room: public_PartyRoom;
+    readonly [RelationKeys]?: 'room';
+  };
+  export type public_PartyPolicy = {
+    chatEnabled: CodecTypes['pg/bool@1']['output'];
+    enabled: CodecTypes['pg/bool@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    maxParticipants: CodecTypes['pg/int4@1']['output'];
+    maxStreamers: CodecTypes['pg/int4@1']['output'];
+    note: CodecTypes['pg/text@1']['output'] | null;
+    ownerGraceSeconds: CodecTypes['pg/int4@1']['output'];
+    sessionMaxHours: CodecTypes['pg/int4@1']['output'];
+    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    readonly [RelationKeys]?: never;
+  };
+  export type public_PartyRoom = {
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    defaultLayout: CodecTypes['pg/text@1']['output'];
+    maxParticipants: CodecTypes['pg/int4@1']['output'] | null;
+    ownerId: CodecTypes['pg/uuid@1']['output'];
+    passwordHash: CodecTypes['pg/text@1']['output'] | null;
+    requireApproval: CodecTypes['pg/bool@1']['output'];
+    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    whitelistEnabled: CodecTypes['pg/bool@1']['output'];
+    owner: public_Profile;
+    readonly [RelationKeys]?: 'owner';
+  };
+  export type public_PartyRoomBan = {
+    bannedBy: CodecTypes['pg/uuid@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    id: CodecTypes['pg/uuid@1']['output'];
+    profileId: CodecTypes['pg/uuid@1']['output'];
+    reason: CodecTypes['pg/text@1']['output'] | null;
+    roomId: CodecTypes['pg/uuid@1']['output'];
+    profile: public_Profile;
+    room: public_PartyRoom;
+    readonly [RelationKeys]?: 'profile' | 'room';
+  };
+  export type public_PartyRoomModerator = {
+    canApprove: CodecTypes['pg/bool@1']['output'];
+    canBan: CodecTypes['pg/bool@1']['output'];
+    canDeleteMessages: CodecTypes['pg/bool@1']['output'];
+    canGrantStream: CodecTypes['pg/bool@1']['output'];
+    canKick: CodecTypes['pg/bool@1']['output'];
+    canStopStreams: CodecTypes['pg/bool@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/uuid@1']['output'];
+    profileId: CodecTypes['pg/uuid@1']['output'];
+    roomId: CodecTypes['pg/uuid@1']['output'];
+    profile: public_Profile;
+    room: public_PartyRoom;
+    readonly [RelationKeys]?: 'profile' | 'room';
+  };
+  export type public_PartyRoomWhitelist = {
+    canStream: CodecTypes['pg/bool@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/uuid@1']['output'];
+    profileId: CodecTypes['pg/uuid@1']['output'];
+    roomId: CodecTypes['pg/uuid@1']['output'];
+    profile: public_Profile;
+    room: public_PartyRoom;
+    readonly [RelationKeys]?: 'profile' | 'room';
+  };
+  export type public_PartySession = {
+    endReason: CodecTypes['pg/text@1']['output'] | null;
+    endedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    id: CodecTypes['pg/uuid@1']['output'];
+    roomId: CodecTypes['pg/uuid@1']['output'];
+    startedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    room: public_PartyRoom;
+    readonly [RelationKeys]?: 'room';
+  };
+  export type public_PartySessionParticipant = {
+    id: CodecTypes['pg/uuid@1']['output'];
+    joinedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    leftAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    profileId: CodecTypes['pg/uuid@1']['output'];
+    removal: CodecTypes['pg/text@1']['output'] | null;
+    removedBy: CodecTypes['pg/uuid@1']['output'] | null;
+    sessionId: CodecTypes['pg/uuid@1']['output'];
+    profile: public_Profile;
+    session: public_PartySession;
+    readonly [RelationKeys]?: 'profile' | 'session';
+  };
+  export type public_PlatformSanction = {
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    createdBy: CodecTypes['pg/text@1']['output'] | null;
+    expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    id: CodecTypes['pg/uuid@1']['output'];
+    profileId: CodecTypes['pg/uuid@1']['output'];
+    reason: CodecTypes['pg/text@1']['output'] | null;
+    revokedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    scope: CodecTypes['pg/text@1']['output'];
+    profile: public_Profile;
+    readonly [RelationKeys]?: 'profile';
+  };
   export type public_Profile = {
     ageStatus: 'UNVERIFIED' | 'PENDING' | 'VERIFIED' | 'REJECTED';
     ageVerifiedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
@@ -658,6 +1104,15 @@ export declare const models: {
   public: {
     AuthTicket: Models.public_AuthTicket;
     IdentityVerification: Models.public_IdentityVerification;
+    PartyModerationEvent: Models.public_PartyModerationEvent;
+    PartyPolicy: Models.public_PartyPolicy;
+    PartyRoom: Models.public_PartyRoom;
+    PartyRoomBan: Models.public_PartyRoomBan;
+    PartyRoomModerator: Models.public_PartyRoomModerator;
+    PartyRoomWhitelist: Models.public_PartyRoomWhitelist;
+    PartySession: Models.public_PartySession;
+    PartySessionParticipant: Models.public_PartySessionParticipant;
+    PlatformSanction: Models.public_PlatformSanction;
     Profile: Models.public_Profile;
     RateLimitHit: Models.public_RateLimitHit;
     RelayCredential: Models.public_RelayCredential;
@@ -812,6 +1267,738 @@ type ContractBase = Omit<
                   readonly source: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'identity_verifications';
+                    readonly columns: readonly ['profileId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'profiles';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly party_moderation_events: {
+              columns: {
+                readonly action: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly actorId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly detail: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly roomId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly sessionId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly targetId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'party_moderation_events_roomId_createdAt_idx_71ac5cd0';
+                  readonly prefix: 'party_moderation_events_roomId_createdAt_idx';
+                  readonly columns: readonly ['roomId', 'createdAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'party_moderation_events_roomId_idx_fe51d647';
+                  readonly prefix: 'party_moderation_events_roomId_idx';
+                  readonly columns: readonly ['roomId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_moderation_events';
+                    readonly columns: readonly ['roomId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_rooms';
+                    readonly columns: readonly ['ownerId'];
+                  };
+                },
+              ];
+            };
+            readonly party_policy: {
+              columns: {
+                readonly chatEnabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly enabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly id: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'global'>;
+                  };
+                };
+                readonly maxParticipants: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 10>;
+                  };
+                };
+                readonly maxStreamers: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 10>;
+                  };
+                };
+                readonly note: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly ownerGraceSeconds: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 60>;
+                  };
+                };
+                readonly sessionMaxHours: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 12>;
+                  };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
+            readonly party_room_bans: {
+              columns: {
+                readonly bannedBy: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly profileId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly reason: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly roomId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['roomId', 'profileId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'party_room_bans_profileId_idx_d9cdfcaf';
+                  readonly prefix: 'party_room_bans_profileId_idx';
+                  readonly columns: readonly ['profileId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'party_room_bans_roomId_idx_fe51d647';
+                  readonly prefix: 'party_room_bans_roomId_idx';
+                  readonly columns: readonly ['roomId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_room_bans';
+                    readonly columns: readonly ['roomId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_rooms';
+                    readonly columns: readonly ['ownerId'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_room_bans';
+                    readonly columns: readonly ['profileId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'profiles';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly party_room_moderators: {
+              columns: {
+                readonly canApprove: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly canBan: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly canDeleteMessages: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly canGrantStream: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly canKick: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly canStopStreams: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly profileId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly roomId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['roomId', 'profileId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'party_room_moderators_profileId_idx_d9cdfcaf';
+                  readonly prefix: 'party_room_moderators_profileId_idx';
+                  readonly columns: readonly ['profileId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'party_room_moderators_roomId_idx_fe51d647';
+                  readonly prefix: 'party_room_moderators_roomId_idx';
+                  readonly columns: readonly ['roomId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_room_moderators';
+                    readonly columns: readonly ['roomId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_rooms';
+                    readonly columns: readonly ['ownerId'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_room_moderators';
+                    readonly columns: readonly ['profileId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'profiles';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly party_room_whitelist: {
+              columns: {
+                readonly canStream: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly profileId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly roomId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['roomId', 'profileId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'party_room_whitelist_profileId_idx_d9cdfcaf';
+                  readonly prefix: 'party_room_whitelist_profileId_idx';
+                  readonly columns: readonly ['profileId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'party_room_whitelist_roomId_idx_fe51d647';
+                  readonly prefix: 'party_room_whitelist_roomId_idx';
+                  readonly columns: readonly ['roomId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_room_whitelist';
+                    readonly columns: readonly ['roomId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_rooms';
+                    readonly columns: readonly ['ownerId'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_room_whitelist';
+                    readonly columns: readonly ['profileId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'profiles';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly party_rooms: {
+              columns: {
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly defaultLayout: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'stage'>;
+                  };
+                };
+                readonly maxParticipants: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly ownerId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly passwordHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly requireApproval: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+                readonly whitelistEnabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['ownerId'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_rooms';
+                    readonly columns: readonly ['ownerId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'profiles';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly party_session_participants: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly joinedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly leftAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly profileId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly removal: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly removedBy: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: true;
+                };
+                readonly sessionId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'party_session_participants_profileId_idx_d9cdfcaf';
+                  readonly prefix: 'party_session_participants_profileId_idx';
+                  readonly columns: readonly ['profileId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'party_session_participants_sessionId_idx_29f415d4';
+                  readonly prefix: 'party_session_participants_sessionId_idx';
+                  readonly columns: readonly ['sessionId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_session_participants';
+                    readonly columns: readonly ['sessionId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_sessions';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_session_participants';
+                    readonly columns: readonly ['profileId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'profiles';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly party_sessions: {
+              columns: {
+                readonly endReason: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly endedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly roomId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly startedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'party_sessions_one_active_f6101b30';
+                  readonly prefix: 'party_sessions_one_active';
+                  readonly columns: readonly ['roomId'];
+                  readonly where: '"endedAt" IS NULL';
+                  readonly unique: true;
+                },
+                {
+                  readonly name: 'party_sessions_startedAt_idx_cac56236';
+                  readonly prefix: 'party_sessions_startedAt_idx';
+                  readonly columns: readonly ['startedAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_sessions';
+                    readonly columns: readonly ['roomId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'party_rooms';
+                    readonly columns: readonly ['ownerId'];
+                  };
+                },
+              ];
+            };
+            readonly platform_sanctions: {
+              columns: {
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly createdBy: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly profileId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly reason: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly revokedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly scope: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'platform_sanctions_profileId_idx_d9cdfcaf';
+                  readonly prefix: 'platform_sanctions_profileId_idx';
+                  readonly columns: readonly ['profileId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'platform_sanctions';
                     readonly columns: readonly ['profileId'];
                   };
                   readonly target: {
@@ -1238,6 +2425,42 @@ type ContractBase = Omit<
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'IdentityVerification';
     };
+    readonly party_moderation_events: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PartyModerationEvent';
+    };
+    readonly party_policy: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PartyPolicy';
+    };
+    readonly party_room_bans: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PartyRoomBan';
+    };
+    readonly party_room_moderators: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PartyRoomModerator';
+    };
+    readonly party_room_whitelist: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PartyRoomWhitelist';
+    };
+    readonly party_rooms: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PartyRoom';
+    };
+    readonly party_session_participants: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PartySessionParticipant';
+    };
+    readonly party_sessions: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PartySession';
+    };
+    readonly platform_sanctions: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PlatformSanction';
+    };
     readonly profiles: { readonly namespace: 'public' & NamespaceId; readonly model: 'Profile' };
     readonly rate_limit_hits: {
       readonly namespace: 'public' & NamespaceId;
@@ -1388,6 +2611,637 @@ type ContractBase = Omit<
                 readonly provider: { readonly column: 'provider' };
                 readonly providerSessionId: { readonly column: 'providerSessionId' };
                 readonly status: { readonly column: 'status' };
+              };
+            };
+          };
+          readonly PartyModerationEvent: {
+            readonly fields: {
+              readonly action: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly actorId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly detail: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly roomId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly sessionId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly targetId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+            };
+            readonly relations: {
+              readonly room: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PartyRoom';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['roomId'];
+                  readonly targetFields: readonly ['ownerId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'party_moderation_events';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly action: { readonly column: 'action' };
+                readonly actorId: { readonly column: 'actorId' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly detail: { readonly column: 'detail' };
+                readonly id: { readonly column: 'id' };
+                readonly roomId: { readonly column: 'roomId' };
+                readonly sessionId: { readonly column: 'sessionId' };
+                readonly targetId: { readonly column: 'targetId' };
+              };
+            };
+          };
+          readonly PartyPolicy: {
+            readonly fields: {
+              readonly chatEnabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly enabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly maxParticipants: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly maxStreamers: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly note: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly ownerGraceSeconds: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly sessionMaxHours: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'party_policy';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly chatEnabled: { readonly column: 'chatEnabled' };
+                readonly enabled: { readonly column: 'enabled' };
+                readonly id: { readonly column: 'id' };
+                readonly maxParticipants: { readonly column: 'maxParticipants' };
+                readonly maxStreamers: { readonly column: 'maxStreamers' };
+                readonly note: { readonly column: 'note' };
+                readonly ownerGraceSeconds: { readonly column: 'ownerGraceSeconds' };
+                readonly sessionMaxHours: { readonly column: 'sessionMaxHours' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly PartyRoom: {
+            readonly fields: {
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly defaultLayout: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly maxParticipants: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly ownerId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly passwordHash: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly requireApproval: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly whitelistEnabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+            };
+            readonly relations: {
+              readonly owner: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Profile';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['ownerId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'party_rooms';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly defaultLayout: { readonly column: 'defaultLayout' };
+                readonly maxParticipants: { readonly column: 'maxParticipants' };
+                readonly ownerId: { readonly column: 'ownerId' };
+                readonly passwordHash: { readonly column: 'passwordHash' };
+                readonly requireApproval: { readonly column: 'requireApproval' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+                readonly whitelistEnabled: { readonly column: 'whitelistEnabled' };
+              };
+            };
+          };
+          readonly PartyRoomBan: {
+            readonly fields: {
+              readonly bannedBy: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly expiresAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly profileId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly reason: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly roomId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+            };
+            readonly relations: {
+              readonly profile: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Profile';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['profileId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly room: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PartyRoom';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['roomId'];
+                  readonly targetFields: readonly ['ownerId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'party_room_bans';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly bannedBy: { readonly column: 'bannedBy' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly id: { readonly column: 'id' };
+                readonly profileId: { readonly column: 'profileId' };
+                readonly reason: { readonly column: 'reason' };
+                readonly roomId: { readonly column: 'roomId' };
+              };
+            };
+          };
+          readonly PartyRoomModerator: {
+            readonly fields: {
+              readonly canApprove: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly canBan: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly canDeleteMessages: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly canGrantStream: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly canKick: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly canStopStreams: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly profileId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly roomId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+            };
+            readonly relations: {
+              readonly profile: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Profile';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['profileId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly room: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PartyRoom';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['roomId'];
+                  readonly targetFields: readonly ['ownerId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'party_room_moderators';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly canApprove: { readonly column: 'canApprove' };
+                readonly canBan: { readonly column: 'canBan' };
+                readonly canDeleteMessages: { readonly column: 'canDeleteMessages' };
+                readonly canGrantStream: { readonly column: 'canGrantStream' };
+                readonly canKick: { readonly column: 'canKick' };
+                readonly canStopStreams: { readonly column: 'canStopStreams' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly profileId: { readonly column: 'profileId' };
+                readonly roomId: { readonly column: 'roomId' };
+              };
+            };
+          };
+          readonly PartyRoomWhitelist: {
+            readonly fields: {
+              readonly canStream: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly profileId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly roomId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+            };
+            readonly relations: {
+              readonly profile: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Profile';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['profileId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly room: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PartyRoom';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['roomId'];
+                  readonly targetFields: readonly ['ownerId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'party_room_whitelist';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly canStream: { readonly column: 'canStream' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly profileId: { readonly column: 'profileId' };
+                readonly roomId: { readonly column: 'roomId' };
+              };
+            };
+          };
+          readonly PartySession: {
+            readonly fields: {
+              readonly endReason: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly endedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly roomId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly startedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly room: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PartyRoom';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['roomId'];
+                  readonly targetFields: readonly ['ownerId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'party_sessions';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly endReason: { readonly column: 'endReason' };
+                readonly endedAt: { readonly column: 'endedAt' };
+                readonly id: { readonly column: 'id' };
+                readonly roomId: { readonly column: 'roomId' };
+                readonly startedAt: { readonly column: 'startedAt' };
+              };
+            };
+          };
+          readonly PartySessionParticipant: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly joinedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly leftAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly profileId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly removal: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly removedBy: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly sessionId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+            };
+            readonly relations: {
+              readonly profile: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Profile';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['profileId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly session: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PartySession';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['sessionId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'party_session_participants';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly joinedAt: { readonly column: 'joinedAt' };
+                readonly leftAt: { readonly column: 'leftAt' };
+                readonly profileId: { readonly column: 'profileId' };
+                readonly removal: { readonly column: 'removal' };
+                readonly removedBy: { readonly column: 'removedBy' };
+                readonly sessionId: { readonly column: 'sessionId' };
+              };
+            };
+          };
+          readonly PlatformSanction: {
+            readonly fields: {
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly createdBy: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly profileId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly reason: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly revokedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly scope: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly profile: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Profile';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['profileId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'platform_sanctions';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly createdBy: { readonly column: 'createdBy' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly id: { readonly column: 'id' };
+                readonly profileId: { readonly column: 'profileId' };
+                readonly reason: { readonly column: 'reason' };
+                readonly revokedAt: { readonly column: 'revokedAt' };
+                readonly scope: { readonly column: 'scope' };
               };
             };
           };
@@ -1805,6 +3659,80 @@ type ContractBase = Omit<
           readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
           readonly ref: {
             readonly entry: 'identity_verifications';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'party_moderation_events';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'party_policy';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'party_room_bans';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'party_room_moderators';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'party_room_whitelist';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'party_rooms';
+            readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'party_session_participants';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'party_sessions';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'platform_sanctions';
             readonly field: 'id';
             readonly namespace: 'public';
           };

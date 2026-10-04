@@ -1,0 +1,23 @@
+{
+  "name": "coopseat-signal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Gaming-Party signaling and chat (Cloudflare Worker + one Durable Object per session)",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@coopseat/ui": "0.2.1",
+    "jose": "6.2.12"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261004.1",
+    "typescript": "^5",
+    "vitest": "^5.0.3",
+    "wrangler": "^4"
+  }
+}

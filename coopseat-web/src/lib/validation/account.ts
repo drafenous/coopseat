@@ -54,7 +54,7 @@ export const passwordSchema = z
 
 export const captchaSchema = z.string().max(4096).optional();
 
-export const TERMS_VERSION = '2026-10-03';
+export const TERMS_VERSION = '2026-10-04';
 
 export const signupSchema = z.object({
   email: emailSchema,

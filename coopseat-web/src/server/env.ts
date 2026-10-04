@@ -1,3 +1,5 @@
+import { toPem } from '@coopseat/ui/party-protocol';
+
 function required(name: string): string {
   const value = process.env[name];
   if (!value) throw new Error(`Variável de ambiente ausente: ${name}`);
@@ -58,6 +60,20 @@ export const env = {
   },
   get cloudflareAnalyticsToken() {
     return process.env['CLOUDFLARE_ANALYTICS_API_TOKEN'] ?? '';
+  },
+  /** PEM keys may arrive with literal `\n` (single-line env vars). */
+  get partyTokenPrivateKey() {
+    return toPem(required('PARTY_TOKEN_PRIVATE_KEY'), 'PRIVATE KEY');
+  },
+  get partyTokenPublicKey() {
+    return toPem(required('PARTY_TOKEN_PUBLIC_KEY'), 'PUBLIC KEY');
+  },
+  /** Base URL of coopseat-signal (https). Empty outside production means "no signaling configured". */
+  get partySignalUrl() {
+    return (process.env['PARTY_SIGNAL_URL'] ?? '').replace(/\/$/, '');
+  },
+  get partySignalSecret() {
+    return required('PARTY_SIGNAL_SECRET');
   },
   get githubReleasesToken() {
     return required('GITHUB_RELEASES_TOKEN');

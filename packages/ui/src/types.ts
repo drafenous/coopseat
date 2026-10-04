@@ -7,4 +7,6 @@ export type SmoothingLevel = 0|1|2;
 /** 0 none, 1 curved CRT, 2 flat CRT, 3 handheld LCD, 4 vivid colors, 5 protanopia, 6 deuteranopia, 7 tritanopia. */
 export type EffectIndex = 0|1|2|3|4|5|6|7;
 export type OpenConfig = {device:string;mode:number;audio:string;output:string;volume:number;vsync:boolean;smoothing:SmoothingLevel;effect:EffectIndex;top:boolean};
-export type AuthDeepLink = {kind:'callback';ticket:string}|{kind:'linked'}|{kind:'confirmed'}|{kind:'verified'};
+export type AuthDeepLink = {kind:'callback';ticket:string}|{kind:'linked'}|{kind:'confirmed'}|{kind:'verified'}|{kind:'party';nickname:string};
+/** A screen or window offered by Electron's desktopCapturer. */
+export type ScreenSource = {id:string;name:string;kind:'screen'|'window';thumbnail:string|null};

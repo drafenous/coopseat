@@ -36,7 +36,7 @@ export const PATCH = route(async (req) => {
 });
 
 export const DELETE = route(async (req) => {
-  const session = await requireAuth(req, { aal2IfEnrolled: true });
+  const session = await requireAuth(req, { aal2IfEnrolled: true, allowSuspended: true });
   await rateLimit('account', session.claims.sub);
   const { confirm } = await readJson(req, deleteMeSchema);
 

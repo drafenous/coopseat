@@ -1,10 +1,10 @@
-const {app,BrowserWindow,ipcMain,safeStorage,screen,session,shell} = require('electron');
+const {app,BrowserWindow,desktopCapturer,ipcMain,safeStorage,screen,session,shell} = require('electron');
 const {spawn} = require('node:child_process');
 const {existsSync,readFileSync,writeFileSync} = require('node:fs');
 const path = require('node:path');
 const {pathToFileURL} = require('node:url');
 const readline = require('node:readline');
-const {validateOpen,validateBounds,bounded,parseDeepLink,findDeepLink,validateExternalUrl,validateSecureKey,validateSecureValue,PROTOCOL} = require('./validation.cjs');
+const {validateOpen,validateBounds,bounded,parseDeepLink,findDeepLink,validateExternalUrl,validateSecureKey,validateSecureValue,validatePick,PROTOCOL} = require('./validation.cjs');
 const {resolveBff} = require('./bff.cjs');
 let win, core=null;
 const DONATE_URL = 'https://www.paypal.com/donate/?hosted_button_id=GHM82LRFVH3A6';
@@ -57,6 +57,22 @@ function watchPointer(on) {
     win.webContents.send('pointer:moved');
   },150);
 }
+// Screen/window sharing: the renderer lists sources, the user picks one in our own picker, and the
+// next getDisplayMedia() call receives exactly that source. A pick is single-use and expires.
+let listedSources=new Map(), picked=null;
+async function listSources() {
+  const own=win?.getMediaSourceId();
+  const sources=await desktopCapturer.getSources({types:['screen','window'],thumbnailSize:{width:320,height:180},fetchWindowIcons:false});
+  listedSources=new Map(sources.filter(s=>s.id!==own).map(s=>[s.id,s]));
+  return [...listedSources.values()].map(s=>({id:s.id,name:s.name.slice(0,200),kind:s.id.startsWith('screen:')?'screen':'window',thumbnail:s.thumbnail.isEmpty()?null:s.thumbnail.toDataURL()}));
+}
+function pickSource(o) {
+  const {id,audio}=validatePick(o);
+  const source=listedSources.get(id);
+  if(!source) throw Error('Fonte indisponível. Atualize a lista.');
+  picked={source,audio:audio && process.platform==='win32',at:Date.now()};
+  return true;
+}
 function emit(event) { if(win && !win.isDestroyed()) win.webContents.send('native:event',event); }
 function stop() { const p=core; if(!p)return Promise.resolve(); return new Promise(resolve=>{const timer=setTimeout(()=>p.kill(),1800);const done=()=>{clearTimeout(timer);if(core===p)core=null;resolve();};p.once('exit',done);p.stdin.end(JSON.stringify({cmd:'stop'})+'\n');}); }
 function launch(query) {
@@ -73,8 +89,15 @@ function query(request) {
 app.whenReady().then(()=>{
   if(!gotLock) return;
   win = new BrowserWindow({width:1240,height:820,minWidth:860,minHeight:650,backgroundColor:'#0b1016',autoHideMenuBar:true,title:'CoopSeat',icon:path.join(__dirname,dev?'../public/icon.png':'../dist/icon.png'),webPreferences:{preload:path.join(__dirname,'preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true,backgroundThrottling:false}});
-  session.defaultSession.setPermissionRequestHandler((wc,permission,cb,details)=>cb(wc===win.webContents && trusted(wc.getURL()) && ['media','speaker-selection'].includes(permission) && (!details.requestingUrl || trusted(details.requestingUrl))));
-  session.defaultSession.setPermissionCheckHandler((wc,permission)=>wc===win.webContents && trusted(wc.getURL()) && ['media','speaker-selection'].includes(permission));
+  const PERMISSIONS=['media','speaker-selection','display-capture'];
+  session.defaultSession.setPermissionRequestHandler((wc,permission,cb,details)=>cb(wc===win.webContents && trusted(wc.getURL()) && PERMISSIONS.includes(permission) && (!details.requestingUrl || trusted(details.requestingUrl))));
+  session.defaultSession.setPermissionCheckHandler((wc,permission)=>wc===win.webContents && trusted(wc.getURL()) && PERMISSIONS.includes(permission));
+  session.defaultSession.setDisplayMediaRequestHandler((request,cb)=>{
+    const choice=picked; picked=null;
+    if(!trusted(request.frame?.url) || !choice || Date.now()-choice.at>30000) return cb({});
+    // Loopback is the whole system mix (Windows only); the renderer asks for it only when the user opts in.
+    cb(choice.audio?{video:choice.source,audio:'loopback'}:{video:choice.source});
+  },{useSystemPicker:false});
   if(!dev)win.removeMenu();
   win.webContents.setWindowOpenHandler(()=>({action:'deny'}));
   win.webContents.on('will-navigate',(event,url)=>{if(!trusted(url))event.preventDefault();});
@@ -96,6 +119,10 @@ app.whenReady().then(()=>{
   handle('native:bounds',rect=>{rect=validateBounds(rect);core?.stdin.write(JSON.stringify({cmd:'bounds',...rect})+'\n');});
   handle('native:stop',()=>stop());
   handle('donate',()=>shell.openExternal(DONATE_URL));
+  handle('screen:sources',()=>listSources());
+  handle('screen:pick',o=>pickSource(o));
+  // While sharing a screen, hide this window from captures so the party (chat, other streams) isn't re-broadcast.
+  handle('screen:protect',on=>{win.setContentProtection(on===true);return on===true;});
   handle('pointer:watch',on=>watchPointer(on===true));
   handle('native:control',({key,value})=>{const levels={smoothing:2,effect:7};if(!['volume','vsync','smoothing','effect','top','fullscreen'].includes(key))throw Error('Comando inválido');if(key==='volume'?!bounded(value,0,1):key in levels?!(Number.isInteger(value)&&bounded(value,0,levels[key])):typeof value!=='boolean')throw Error('Valor inválido');core?.stdin.write(JSON.stringify({cmd:key,value})+'\n');});
   handle('window',action=>{if(action==='fullscreen'){win.setFullScreen(!win.isFullScreen());return win.isFullScreen();}else if(action==='exitFullscreen')win.setFullScreen(false);else if(action==='top'){win.setAlwaysOnTop(!win.isAlwaysOnTop());return win.isAlwaysOnTop();}});

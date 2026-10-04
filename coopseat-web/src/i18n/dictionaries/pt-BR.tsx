@@ -324,7 +324,12 @@ export const ptBR: Dictionary = {
     subtitle: 'Se o app não abrir sozinho, use o botão abaixo. Depois pode fechar esta aba.',
     invalid: 'Link inválido.',
   },
+  party: {
+    title: (nickname) => `Sala de ${nickname}`,
+  },
   account: {
+    myRoom: 'Minha sala',
+    myRoomLink: 'Link da sua sala',
     greeting: (name) => `Olá, ${name}!`,
     welcome: 'Bem-vindo ao CoopSeat!',
     playBody: 'Conecte sua placa de captura e jogue o seu console direto no navegador, sem instalar nada.',
@@ -443,7 +448,30 @@ export const ptBR: Dictionary = {
       },
       {
         heading: 'O que não coletamos',
-        body: <p>Não gravamos suas transmissões, câmera ou controles. A mídia trafega ponto a ponto entre os participantes.</p>,
+        body: (
+          <p>
+            Não gravamos suas transmissões, câmera ou controles. A mídia trafega ponto a ponto entre os participantes, ou por um
+            retransmissor criptografado (Cloudflare) quando a conexão direta não é possível; o retransmissor não vê o conteúdo.
+          </p>
+        ),
+      },
+      {
+        heading: 'Watch party',
+        body: (
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              Seu endereço IP fica visível para os outros participantes. As conexões ponto a ponto precisam dele: quem está na sala
+              com você pode ver o IP da sua conexão, como em qualquer chamada de vídeo. Entre apenas em salas de pessoas em quem
+              confia.
+            </li>
+            <li>O chat da sala não é armazenado: as mensagens ficam só na memória do servidor da sala e são apagadas quando a sessão termina.</li>
+            <li>
+              Guardamos o registro das sessões (início, fim, quem participou) e das ações de moderação (remoções, banimentos,
+              transmissões interrompidas) para tratar denúncias, recursos e abusos. Senhas de sala são guardadas apenas como hash
+              irreversível.
+            </li>
+          </ul>
+        ),
       },
       {
         heading: 'Para que usamos',
@@ -508,18 +536,33 @@ export const ptBR: Dictionary = {
       {
         heading: '3. Conduta',
         body: (
-          <p>
-            É proibido transmitir conteúdo ilegal, de terceiros sem autorização, discurso de ódio, assédio, conteúdo sexual ou
-            qualquer material envolvendo menores. Podemos suspender contas que violem estas regras e colaborar com autoridades.
-          </p>
+          <>
+            <p>Nas salas, transmissões e chat, é proibido:</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>qualquer conteúdo sexual ou material envolvendo menores, que será denunciado às autoridades;</li>
+              <li>conteúdo sexual ou pornográfico, gore e violência explícita;</li>
+              <li>conteúdo ilegal, incluindo pirataria, e conteúdo de terceiros (filmes, séries, esportes, transmissões pagas) sem autorização;</li>
+              <li>discurso de ódio, ameaças, assédio e incitação à violência;</li>
+              <li>expor dados pessoais de outras pessoas, incluindo os endereços IP vistos em uma sala;</li>
+              <li>spam, golpes, malware e links para eles;</li>
+              <li>burlar banimentos ou suspensões com outra conta.</li>
+            </ul>
+            <p className="mt-2">
+              O CoopSeat pode suspender contas que violem estas regras, de forma permanente ou apenas em alguns recursos (criar
+              salas, transmitir, entrar ou conversar), e colabora com autoridades.
+            </p>
+          </>
         ),
       },
       {
-        heading: '4. Transmissões',
+        heading: '4. Salas e transmissões',
         body: (
           <p>
-            As transmissões são ponto a ponto entre os participantes e não são gravadas pelo CoopSeat. Quem cria a sala decide quem
-            participa e pode remover convidados.
+            As transmissões são ponto a ponto entre os participantes e não são gravadas pelo CoopSeat. Cada conta verificada tem
+            sua própria sala; o dono decide quem entra (senha, aprovação ou lista de convidados), quem pode transmitir (até 10
+            pessoas ao mesmo tempo, somente enquanto o dono transmite) e quem modera. O dono e os moderadores podem remover,
+            banir e interromper a transmissão de participantes. Quando o dono encerra a transmissão, a sessão termina para todos
+            e o chat é apagado. Os participantes podem ver o endereço IP uns dos outros, como descrito na Política de Privacidade.
           </p>
         ),
       },
@@ -647,5 +690,19 @@ export const ptBR: Dictionary = {
     oauth_start_failed: 'Não foi possível iniciar o login com esse provedor.',
     link_expired: 'O link de vinculação expirou. Tente de novo pelo app.',
     link_failed: 'Não foi possível iniciar a vinculação. Entre novamente e tente de novo.',
+    account_suspended: 'Esta conta está suspensa. Fale com suporte@coopseat.com.',
+    party_unavailable: 'A Gaming-Party não está disponível para esta conta no momento.',
+    party_disabled: 'A Gaming-Party está temporariamente indisponível.',
+    party_not_found: 'Sala não encontrada.',
+    party_forbidden: 'Você não tem permissão para fazer isso nesta sala.',
+    party_requirements: 'Verifique sua identidade (18+) para usar a Gaming-Party.',
+    party_no_session: 'Esta sala não está ao vivo agora.',
+    party_password_invalid: 'Senha da sala incorreta.',
+    party_password_format: 'A senha deve ter de 4 a 64 caracteres.',
+    party_protection_required: 'Mantenha pelo menos uma proteção ativa: senha, aprovação ou lista de acesso.',
+    party_target_invalid: 'Você não pode fazer isso com essa pessoa.',
+    party_target_unverified: 'Só é possível adicionar pessoas com identidade verificada.',
+    party_token_invalid: 'Seu acesso à sala expirou. Entre na sala novamente.',
+    party_signal_invalid: 'Assinatura inválida.',
   },
 };

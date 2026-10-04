@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
-import { Play } from 'lucide-react';
+import { Play, Tv } from 'lucide-react';
 import { Brand, buttonClass } from '@coopseat/ui/design';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { getDictionary } from '@/i18n/server';
@@ -21,6 +21,16 @@ export default async function AccountPage({ searchParams }: PageProps<'/account'
       <header className="mb-8 flex items-center justify-between gap-4">
         <Brand href="/" version={null} />
         <div className="flex items-center gap-3">
+          {account.nickname && (
+            <a
+              href={`/party/${encodeURIComponent(account.nickname)}`}
+              title={t.account.myRoomLink}
+              className={buttonClass({ variant: 'secondary', compact: true })}
+            >
+              <Tv size={14} />
+              {t.account.myRoom}
+            </a>
+          )}
           <a href="/play" className={buttonClass({ variant: 'secondary', compact: true })}>
             <Play size={14} />
             {t.account.play}

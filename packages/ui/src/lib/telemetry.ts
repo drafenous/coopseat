@@ -6,7 +6,7 @@ import {TELEMETRY_ID_KEY,TELEMETRY_KEY} from './storage';
 
 /** `null` means the user hasn't been asked yet. */
 export type TelemetryConsent='granted'|'denied'|null;
-export type TelemetryEvent={event:'app_open'}|{event:'capture_start';backend:Backend};
+export type TelemetryEvent={event:'app_open'}|{event:'capture_start';backend:Backend}|{event:'rtc_connected';candidateType:'host'|'srflx'|'prflx'|'relay'};
 
 function read():TelemetryConsent{
  try{const v=localStorage.getItem(TELEMETRY_KEY);return v==='granted'||v==='denied'?v:null;}catch{return null;}

@@ -12,6 +12,42 @@
       "model": "IdentityVerification",
       "namespace": "public"
     },
+    "party_moderation_events": {
+      "model": "PartyModerationEvent",
+      "namespace": "public"
+    },
+    "party_policy": {
+      "model": "PartyPolicy",
+      "namespace": "public"
+    },
+    "party_room_bans": {
+      "model": "PartyRoomBan",
+      "namespace": "public"
+    },
+    "party_room_moderators": {
+      "model": "PartyRoomModerator",
+      "namespace": "public"
+    },
+    "party_room_whitelist": {
+      "model": "PartyRoomWhitelist",
+      "namespace": "public"
+    },
+    "party_rooms": {
+      "model": "PartyRoom",
+      "namespace": "public"
+    },
+    "party_session_participants": {
+      "model": "PartySessionParticipant",
+      "namespace": "public"
+    },
+    "party_sessions": {
+      "model": "PartySession",
+      "namespace": "public"
+    },
+    "platform_sanctions": {
+      "model": "PlatformSanction",
+      "namespace": "public"
+    },
     "profiles": {
       "model": "Profile",
       "namespace": "public"
@@ -307,6 +343,975 @@
               },
               "namespaceId": "public",
               "table": "identity_verifications"
+            }
+          },
+          "PartyModerationEvent": {
+            "fields": {
+              "action": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "actorId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "detail": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "roomId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "sessionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "targetId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "room": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "roomId"
+                  ],
+                  "targetFields": [
+                    "ownerId"
+                  ]
+                },
+                "to": {
+                  "model": "PartyRoom",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "action": {
+                  "column": "action"
+                },
+                "actorId": {
+                  "column": "actorId"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "detail": {
+                  "column": "detail"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "roomId": {
+                  "column": "roomId"
+                },
+                "sessionId": {
+                  "column": "sessionId"
+                },
+                "targetId": {
+                  "column": "targetId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "party_moderation_events"
+            }
+          },
+          "PartyPolicy": {
+            "fields": {
+              "chatEnabled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "enabled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "maxParticipants": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "maxStreamers": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "note": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "ownerGraceSeconds": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "sessionMaxHours": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "chatEnabled": {
+                  "column": "chatEnabled"
+                },
+                "enabled": {
+                  "column": "enabled"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "maxParticipants": {
+                  "column": "maxParticipants"
+                },
+                "maxStreamers": {
+                  "column": "maxStreamers"
+                },
+                "note": {
+                  "column": "note"
+                },
+                "ownerGraceSeconds": {
+                  "column": "ownerGraceSeconds"
+                },
+                "sessionMaxHours": {
+                  "column": "sessionMaxHours"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "party_policy"
+            }
+          },
+          "PartyRoom": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "defaultLayout": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "maxParticipants": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "ownerId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "passwordHash": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "requireApproval": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "whitelistEnabled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "owner": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "ownerId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Profile",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "defaultLayout": {
+                  "column": "defaultLayout"
+                },
+                "maxParticipants": {
+                  "column": "maxParticipants"
+                },
+                "ownerId": {
+                  "column": "ownerId"
+                },
+                "passwordHash": {
+                  "column": "passwordHash"
+                },
+                "requireApproval": {
+                  "column": "requireApproval"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "whitelistEnabled": {
+                  "column": "whitelistEnabled"
+                }
+              },
+              "namespaceId": "public",
+              "table": "party_rooms"
+            }
+          },
+          "PartyRoomBan": {
+            "fields": {
+              "bannedBy": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "reason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "roomId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Profile",
+                  "namespace": "public"
+                }
+              },
+              "room": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "roomId"
+                  ],
+                  "targetFields": [
+                    "ownerId"
+                  ]
+                },
+                "to": {
+                  "model": "PartyRoom",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "bannedBy": {
+                  "column": "bannedBy"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "expiresAt": {
+                  "column": "expiresAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "reason": {
+                  "column": "reason"
+                },
+                "roomId": {
+                  "column": "roomId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "party_room_bans"
+            }
+          },
+          "PartyRoomModerator": {
+            "fields": {
+              "canApprove": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "canBan": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "canDeleteMessages": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "canGrantStream": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "canKick": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "canStopStreams": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "roomId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Profile",
+                  "namespace": "public"
+                }
+              },
+              "room": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "roomId"
+                  ],
+                  "targetFields": [
+                    "ownerId"
+                  ]
+                },
+                "to": {
+                  "model": "PartyRoom",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "canApprove": {
+                  "column": "canApprove"
+                },
+                "canBan": {
+                  "column": "canBan"
+                },
+                "canDeleteMessages": {
+                  "column": "canDeleteMessages"
+                },
+                "canGrantStream": {
+                  "column": "canGrantStream"
+                },
+                "canKick": {
+                  "column": "canKick"
+                },
+                "canStopStreams": {
+                  "column": "canStopStreams"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "roomId": {
+                  "column": "roomId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "party_room_moderators"
+            }
+          },
+          "PartyRoomWhitelist": {
+            "fields": {
+              "canStream": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "roomId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Profile",
+                  "namespace": "public"
+                }
+              },
+              "room": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "roomId"
+                  ],
+                  "targetFields": [
+                    "ownerId"
+                  ]
+                },
+                "to": {
+                  "model": "PartyRoom",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "canStream": {
+                  "column": "canStream"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "roomId": {
+                  "column": "roomId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "party_room_whitelist"
+            }
+          },
+          "PartySession": {
+            "fields": {
+              "endReason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "endedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "roomId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "startedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "room": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "roomId"
+                  ],
+                  "targetFields": [
+                    "ownerId"
+                  ]
+                },
+                "to": {
+                  "model": "PartyRoom",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "endReason": {
+                  "column": "endReason"
+                },
+                "endedAt": {
+                  "column": "endedAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "roomId": {
+                  "column": "roomId"
+                },
+                "startedAt": {
+                  "column": "startedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "party_sessions"
+            }
+          },
+          "PartySessionParticipant": {
+            "fields": {
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "joinedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "leftAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "removal": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "removedBy": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "sessionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Profile",
+                  "namespace": "public"
+                }
+              },
+              "session": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "sessionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "PartySession",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "id": {
+                  "column": "id"
+                },
+                "joinedAt": {
+                  "column": "joinedAt"
+                },
+                "leftAt": {
+                  "column": "leftAt"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "removal": {
+                  "column": "removal"
+                },
+                "removedBy": {
+                  "column": "removedBy"
+                },
+                "sessionId": {
+                  "column": "sessionId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "party_session_participants"
+            }
+          },
+          "PlatformSanction": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdBy": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "reason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "revokedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "scope": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Profile",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "createdBy": {
+                  "column": "createdBy"
+                },
+                "expiresAt": {
+                  "column": "expiresAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "reason": {
+                  "column": "reason"
+                },
+                "revokedAt": {
+                  "column": "revokedAt"
+                },
+                "scope": {
+                  "column": "scope"
+                }
+              },
+              "namespaceId": "public",
+              "table": "platform_sanctions"
             }
           },
           "Profile": {
@@ -897,6 +1902,51 @@
               "namespaceId": "public",
               "tableName": "identity_verifications"
             },
+            "party_moderation_events": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "party_moderation_events"
+            },
+            "party_policy": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "party_policy"
+            },
+            "party_room_bans": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "party_room_bans"
+            },
+            "party_room_moderators": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "party_room_moderators"
+            },
+            "party_room_whitelist": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "party_room_whitelist"
+            },
+            "party_rooms": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "party_rooms"
+            },
+            "party_session_participants": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "party_session_participants"
+            },
+            "party_sessions": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "party_sessions"
+            },
+            "platform_sanctions": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "platform_sanctions"
+            },
             "profiles": {
               "kind": "rls",
               "namespaceId": "public",
@@ -1122,6 +2172,978 @@
                   ]
                 }
               ]
+            },
+            "party_moderation_events": {
+              "columns": {
+                "action": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "actorId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "detail": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "roomId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "sessionId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "targetId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "roomId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_moderation_events"
+                  },
+                  "target": {
+                    "columns": [
+                      "ownerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_rooms"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "roomId",
+                    "createdAt"
+                  ],
+                  "name": "party_moderation_events_roomId_createdAt_idx_71ac5cd0",
+                  "prefix": "party_moderation_events_roomId_createdAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "roomId"
+                  ],
+                  "name": "party_moderation_events_roomId_idx_fe51d647",
+                  "prefix": "party_moderation_events_roomId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "party_policy": {
+              "checks": [
+                {
+                  "expression": "\"ownerGraceSeconds\" BETWEEN 10 AND 600",
+                  "name": "party_policy_grace_0746bd0e",
+                  "prefix": "party_policy_grace"
+                },
+                {
+                  "expression": "\"sessionMaxHours\" BETWEEN 1 AND 24",
+                  "name": "party_policy_hours_8e0e6ad0",
+                  "prefix": "party_policy_hours"
+                },
+                {
+                  "expression": "\"maxParticipants\" BETWEEN 2 AND 50",
+                  "name": "party_policy_participants_9048ef65",
+                  "prefix": "party_policy_participants"
+                },
+                {
+                  "expression": "id = 'global'",
+                  "name": "party_policy_singleton_3422eee5",
+                  "prefix": "party_policy_singleton"
+                },
+                {
+                  "expression": "\"maxStreamers\" BETWEEN 1 AND 10",
+                  "name": "party_policy_streamers_43c6d4b2",
+                  "prefix": "party_policy_streamers"
+                }
+              ],
+              "columns": {
+                "chatEnabled": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "enabled": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "global"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "maxParticipants": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 10
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "maxStreamers": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 10
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "note": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "ownerGraceSeconds": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 60
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "sessionMaxHours": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 12
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "party_room_bans": {
+              "checks": [
+                {
+                  "expression": "reason IS NULL OR length(reason) <= 300",
+                  "name": "party_room_bans_reason_7ccf3891",
+                  "prefix": "party_room_bans_reason"
+                }
+              ],
+              "columns": {
+                "bannedBy": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "expiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "profileId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "reason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "roomId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "roomId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_room_bans"
+                  },
+                  "target": {
+                    "columns": [
+                      "ownerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_rooms"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_room_bans"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "profiles"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "party_room_bans_profileId_idx_d9cdfcaf",
+                  "prefix": "party_room_bans_profileId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "roomId"
+                  ],
+                  "name": "party_room_bans_roomId_idx_fe51d647",
+                  "prefix": "party_room_bans_roomId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "roomId",
+                    "profileId"
+                  ]
+                }
+              ]
+            },
+            "party_room_moderators": {
+              "columns": {
+                "canApprove": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "canBan": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "canDeleteMessages": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "canGrantStream": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "canKick": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "canStopStreams": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "profileId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "roomId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "roomId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_room_moderators"
+                  },
+                  "target": {
+                    "columns": [
+                      "ownerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_rooms"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_room_moderators"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "profiles"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "party_room_moderators_profileId_idx_d9cdfcaf",
+                  "prefix": "party_room_moderators_profileId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "roomId"
+                  ],
+                  "name": "party_room_moderators_roomId_idx_fe51d647",
+                  "prefix": "party_room_moderators_roomId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "roomId",
+                    "profileId"
+                  ]
+                }
+              ]
+            },
+            "party_room_whitelist": {
+              "columns": {
+                "canStream": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "profileId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "roomId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "roomId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_room_whitelist"
+                  },
+                  "target": {
+                    "columns": [
+                      "ownerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_rooms"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_room_whitelist"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "profiles"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "party_room_whitelist_profileId_idx_d9cdfcaf",
+                  "prefix": "party_room_whitelist_profileId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "roomId"
+                  ],
+                  "name": "party_room_whitelist_roomId_idx_fe51d647",
+                  "prefix": "party_room_whitelist_roomId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "roomId",
+                    "profileId"
+                  ]
+                }
+              ]
+            },
+            "party_rooms": {
+              "checks": [
+                {
+                  "expression": "\"defaultLayout\" IN ('stage', 'grid', 'split', 'focus')",
+                  "name": "party_rooms_layout_8a3d9b9f",
+                  "prefix": "party_rooms_layout"
+                },
+                {
+                  "expression": "\"maxParticipants\" IS NULL OR \"maxParticipants\" BETWEEN 2 AND 50",
+                  "name": "party_rooms_participants_55ed6ac1",
+                  "prefix": "party_rooms_participants"
+                },
+                {
+                  "expression": "\"passwordHash\" IS NOT NULL OR \"requireApproval\" OR \"whitelistEnabled\"",
+                  "name": "party_rooms_protected_79f84d77",
+                  "prefix": "party_rooms_protected"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "defaultLayout": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "stage"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "maxParticipants": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "ownerId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "passwordHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "requireApproval": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "whitelistEnabled": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "ownerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_rooms"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "profiles"
+                  }
+                }
+              ],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "ownerId"
+                ]
+              },
+              "uniques": []
+            },
+            "party_session_participants": {
+              "checks": [
+                {
+                  "expression": "removal IS NULL OR removal IN ('kick', 'ban')",
+                  "name": "party_session_participants_removal_44cb63c3",
+                  "prefix": "party_session_participants_removal"
+                }
+              ],
+              "columns": {
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "joinedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "leftAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "profileId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "removal": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "removedBy": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": true
+                },
+                "sessionId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "sessionId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_session_participants"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_sessions"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_session_participants"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "profiles"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "party_session_participants_profileId_idx_d9cdfcaf",
+                  "prefix": "party_session_participants_profileId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "sessionId"
+                  ],
+                  "name": "party_session_participants_sessionId_idx_29f415d4",
+                  "prefix": "party_session_participants_sessionId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "party_sessions": {
+              "checks": [
+                {
+                  "expression": "\"endReason\" IS NULL OR \"endReason\" IN ('owner_ended', 'owner_timeout', 'max_duration', 'sanction', 'operator')",
+                  "name": "party_sessions_end_reason_56813f84",
+                  "prefix": "party_sessions_end_reason"
+                }
+              ],
+              "columns": {
+                "endReason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "endedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "roomId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "startedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "roomId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_sessions"
+                  },
+                  "target": {
+                    "columns": [
+                      "ownerId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "party_rooms"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "roomId"
+                  ],
+                  "name": "party_sessions_one_active_f6101b30",
+                  "prefix": "party_sessions_one_active",
+                  "unique": true,
+                  "where": "\"endedAt\" IS NULL"
+                },
+                {
+                  "columns": [
+                    "startedAt"
+                  ],
+                  "name": "party_sessions_startedAt_idx_cac56236",
+                  "prefix": "party_sessions_startedAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "platform_sanctions": {
+              "checks": [
+                {
+                  "expression": "scope IN ('platform', 'party_host', 'party_stream', 'party_join', 'party_chat')",
+                  "name": "platform_sanctions_scope_17110c0c",
+                  "prefix": "platform_sanctions_scope"
+                }
+              ],
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "createdBy": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "expiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "profileId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "reason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "revokedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "scope": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "platform_sanctions"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "profiles"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "platform_sanctions_profileId_idx_d9cdfcaf",
+                  "prefix": "platform_sanctions_profileId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             },
             "profiles": {
               "checks": [
@@ -1653,7 +3675,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "2ce8ed99f683ffe3565107d651e1d87d3a75403c3f72fe66d0a0d8618fa75358",
+    "storageHash": "865c0af292ccb63258648dfec3b64677416f9f1c782cac36464cb735724f6435",
     "types": {
       "AuthUserId": {
         "codecId": "pg/uuid@1",
@@ -1663,7 +3685,7 @@
     }
   },
   "execution": {
-    "executionHash": "bbaee8b25bdf57de5dfb09c146d91e32b72180c523f135d8ccf2dce99937dfa8",
+    "executionHash": "c943bb841ab8bfe8fe45ffaa85846ccbc1921fe9af2f924d3a8e3a31b0a75ae1",
     "mutations": {
       "defaults": [
         {
@@ -1673,6 +3695,113 @@
           },
           "ref": {
             "entry": "identity_verifications",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "party_moderation_events",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "party_policy",
+            "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "party_room_bans",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "party_room_moderators",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "party_room_whitelist",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "party_rooms",
+            "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "party_session_participants",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "party_sessions",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "platform_sanctions",
             "field": "id",
             "namespace": "public"
           }

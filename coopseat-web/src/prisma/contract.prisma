@@ -156,4 +156,158 @@ namespace public {
     @@map("relay_usage")
     @@rls
   }
+
+  model PartyPolicy {
+    id                String                     @id @default("global")
+    enabled           Boolean                    @default(true)
+    maxParticipants   Int                        @default(10)
+    maxStreamers      Int                        @default(10)
+    sessionMaxHours   Int                        @default(12)
+    ownerGraceSeconds Int                        @default(60)
+    chatEnabled       Boolean                    @default(true)
+    note              String?
+    updatedAt         temporal.updatedAtString()
+
+    @@check(expression: "id = 'global'", name: "party_policy_singleton")
+    @@check(expression: "\"maxParticipants\" BETWEEN 2 AND 50", name: "party_policy_participants")
+    @@check(expression: "\"maxStreamers\" BETWEEN 1 AND 10", name: "party_policy_streamers")
+    @@check(expression: "\"sessionMaxHours\" BETWEEN 1 AND 24", name: "party_policy_hours")
+    @@check(expression: "\"ownerGraceSeconds\" BETWEEN 10 AND 600", name: "party_policy_grace")
+    @@map("party_policy")
+    @@rls
+  }
+
+  model PartyRoom {
+    ownerId          AuthUserId                 @id
+    owner            Profile                    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+    passwordHash     String?
+    requireApproval  Boolean                    @default(true)
+    whitelistEnabled Boolean                    @default(false)
+    defaultLayout    String                     @default("stage")
+    maxParticipants  Int?
+    createdAt        TimestamptzString          @default(now())
+    updatedAt        temporal.updatedAtString()
+
+    @@check(expression: "\"passwordHash\" IS NOT NULL OR \"requireApproval\" OR \"whitelistEnabled\"", name: "party_rooms_protected")
+    @@check(expression: "\"defaultLayout\" IN ('stage', 'grid', 'split', 'focus')", name: "party_rooms_layout")
+    @@check(expression: "\"maxParticipants\" IS NULL OR \"maxParticipants\" BETWEEN 2 AND 50", name: "party_rooms_participants")
+    @@map("party_rooms")
+    @@rls
+  }
+
+  model PartyRoomWhitelist {
+    id        Uuid              @id @default(uuid())
+    roomId    AuthUserId
+    room      PartyRoom         @relation(fields: [roomId], references: [ownerId], onDelete: Cascade)
+    profileId AuthUserId
+    profile   Profile           @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    canStream Boolean           @default(false)
+    createdAt TimestamptzString @default(now())
+
+    @@unique([roomId, profileId])
+    @@map("party_room_whitelist")
+    @@rls
+  }
+
+  model PartyRoomModerator {
+    id                Uuid              @id @default(uuid())
+    roomId            AuthUserId
+    room              PartyRoom         @relation(fields: [roomId], references: [ownerId], onDelete: Cascade)
+    profileId         AuthUserId
+    profile           Profile           @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    canKick           Boolean           @default(true)
+    canBan            Boolean           @default(false)
+    canStopStreams    Boolean           @default(true)
+    canApprove        Boolean           @default(true)
+    canGrantStream    Boolean           @default(false)
+    canDeleteMessages Boolean           @default(true)
+    createdAt         TimestamptzString @default(now())
+
+    @@unique([roomId, profileId])
+    @@map("party_room_moderators")
+    @@rls
+  }
+
+  model PartyRoomBan {
+    id        Uuid               @id @default(uuid())
+    roomId    AuthUserId
+    room      PartyRoom          @relation(fields: [roomId], references: [ownerId], onDelete: Cascade)
+    profileId AuthUserId
+    profile   Profile            @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    reason    String?
+    bannedBy  Uuid
+    expiresAt TimestamptzString?
+    createdAt TimestamptzString  @default(now())
+
+    @@unique([roomId, profileId])
+    @@check(expression: "reason IS NULL OR length(reason) <= 300", name: "party_room_bans_reason")
+    @@map("party_room_bans")
+    @@rls
+  }
+
+  model PartySession {
+    id        Uuid               @id @default(uuid())
+    roomId    AuthUserId
+    room      PartyRoom          @relation(fields: [roomId], references: [ownerId], onDelete: Cascade)
+    startedAt TimestamptzString  @default(now())
+    endedAt   TimestamptzString?
+    endReason String?
+
+    @@index([roomId], where: "\"endedAt\" IS NULL", unique: true, name: "party_sessions_one_active")
+    @@index([startedAt])
+    @@check(expression: "\"endReason\" IS NULL OR \"endReason\" IN ('owner_ended', 'owner_timeout', 'max_duration', 'sanction', 'operator')", name: "party_sessions_end_reason")
+    @@map("party_sessions")
+    @@rls
+  }
+
+  model PartySessionParticipant {
+    id        Uuid               @id @default(uuid())
+    sessionId Uuid
+    session   PartySession       @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+    profileId AuthUserId
+    profile   Profile            @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    joinedAt  TimestamptzString  @default(now())
+    leftAt    TimestamptzString?
+    removal   String?
+    removedBy Uuid?
+
+    @@index([sessionId])
+    @@index([profileId])
+    @@check(expression: "removal IS NULL OR removal IN ('kick', 'ban')", name: "party_session_participants_removal")
+    @@map("party_session_participants")
+    @@rls
+  }
+
+  model PartyModerationEvent {
+    id        Uuid              @id @default(uuid())
+    roomId    AuthUserId
+    room      PartyRoom         @relation(fields: [roomId], references: [ownerId], onDelete: Cascade)
+    sessionId Uuid?
+    actorId   Uuid
+    targetId  Uuid?
+    action    String
+    detail    String?
+    createdAt TimestamptzString @default(now())
+
+    @@index([roomId, createdAt])
+    @@map("party_moderation_events")
+    @@rls
+  }
+
+  model PlatformSanction {
+    id        Uuid               @id @default(uuid())
+    profileId AuthUserId
+    profile   Profile            @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    scope     String
+    reason    String?
+    expiresAt TimestamptzString?
+    createdBy String?
+    createdAt TimestamptzString  @default(now())
+    revokedAt TimestamptzString?
+
+    @@index([profileId])
+    @@check(expression: "scope IN ('platform', 'party_host', 'party_stream', 'party_join', 'party_chat')", name: "platform_sanctions_scope")
+    @@map("platform_sanctions")
+    @@rls
+  }
 }

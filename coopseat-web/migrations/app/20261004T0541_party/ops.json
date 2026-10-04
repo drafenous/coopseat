@@ -1,0 +1,1841 @@
+[
+  {
+    "id": "table.party_moderation_events",
+    "label": "Create table \"party_moderation_events\"",
+    "summary": "Creates table \"party_moderation_events\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_moderation_events"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"party_moderation_events\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_moderation_events\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"party_moderation_events\"",
+        "sql": "CREATE TABLE \"public\".\"party_moderation_events\" (\n  \"action\" text NOT NULL,\n  \"actorId\" uuid NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"detail\" text,\n  \"id\" uuid NOT NULL,\n  \"roomId\" \"uuid\" NOT NULL,\n  \"sessionId\" uuid,\n  \"targetId\" uuid,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"party_moderation_events\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_moderation_events\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.party_policy",
+    "label": "Create table \"party_policy\"",
+    "summary": "Creates table \"party_policy\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_policy"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"party_policy\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_policy\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"party_policy\"",
+        "sql": "CREATE TABLE \"public\".\"party_policy\" (\n  \"chatEnabled\" bool DEFAULT true NOT NULL,\n  \"enabled\" bool DEFAULT true NOT NULL,\n  \"id\" text DEFAULT 'global' NOT NULL,\n  \"maxParticipants\" int4 DEFAULT 10 NOT NULL,\n  \"maxStreamers\" int4 DEFAULT 10 NOT NULL,\n  \"note\" text,\n  \"ownerGraceSeconds\" int4 DEFAULT 60 NOT NULL,\n  \"sessionMaxHours\" int4 DEFAULT 12 NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"party_policy_grace_0746bd0e\" CHECK (\"ownerGraceSeconds\" BETWEEN 10 AND 600),\n  CONSTRAINT \"party_policy_hours_8e0e6ad0\" CHECK (\"sessionMaxHours\" BETWEEN 1 AND 24),\n  CONSTRAINT \"party_policy_participants_9048ef65\" CHECK (\"maxParticipants\" BETWEEN 2 AND 50),\n  CONSTRAINT \"party_policy_singleton_3422eee5\" CHECK (id = 'global'),\n  CONSTRAINT \"party_policy_streamers_43c6d4b2\" CHECK (\"maxStreamers\" BETWEEN 1 AND 10)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"party_policy\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_policy\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.party_room_bans",
+    "label": "Create table \"party_room_bans\"",
+    "summary": "Creates table \"party_room_bans\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_room_bans"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"party_room_bans\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_bans\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"party_room_bans\"",
+        "sql": "CREATE TABLE \"public\".\"party_room_bans\" (\n  \"bannedBy\" uuid NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"expiresAt\" timestamptz,\n  \"id\" uuid NOT NULL,\n  \"profileId\" \"uuid\" NOT NULL,\n  \"reason\" text,\n  \"roomId\" \"uuid\" NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"party_room_bans_reason_7ccf3891\" CHECK (reason IS NULL OR length(reason) <= 300)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"party_room_bans\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_bans\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.party_room_moderators",
+    "label": "Create table \"party_room_moderators\"",
+    "summary": "Creates table \"party_room_moderators\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_room_moderators"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"party_room_moderators\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_moderators\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"party_room_moderators\"",
+        "sql": "CREATE TABLE \"public\".\"party_room_moderators\" (\n  \"canApprove\" bool DEFAULT true NOT NULL,\n  \"canBan\" bool DEFAULT false NOT NULL,\n  \"canDeleteMessages\" bool DEFAULT true NOT NULL,\n  \"canGrantStream\" bool DEFAULT false NOT NULL,\n  \"canKick\" bool DEFAULT true NOT NULL,\n  \"canStopStreams\" bool DEFAULT true NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"profileId\" \"uuid\" NOT NULL,\n  \"roomId\" \"uuid\" NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"party_room_moderators\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_moderators\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.party_room_whitelist",
+    "label": "Create table \"party_room_whitelist\"",
+    "summary": "Creates table \"party_room_whitelist\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_room_whitelist"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"party_room_whitelist\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_whitelist\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"party_room_whitelist\"",
+        "sql": "CREATE TABLE \"public\".\"party_room_whitelist\" (\n  \"canStream\" bool DEFAULT false NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"profileId\" \"uuid\" NOT NULL,\n  \"roomId\" \"uuid\" NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"party_room_whitelist\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_whitelist\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.party_rooms",
+    "label": "Create table \"party_rooms\"",
+    "summary": "Creates table \"party_rooms\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_rooms"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"party_rooms\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"party_rooms\"",
+        "sql": "CREATE TABLE \"public\".\"party_rooms\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"defaultLayout\" text DEFAULT 'stage' NOT NULL,\n  \"maxParticipants\" int4,\n  \"ownerId\" \"uuid\" NOT NULL,\n  \"passwordHash\" text,\n  \"requireApproval\" bool DEFAULT true NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  \"whitelistEnabled\" bool DEFAULT false NOT NULL,\n  PRIMARY KEY (\"ownerId\"),\n  CONSTRAINT \"party_rooms_layout_8a3d9b9f\" CHECK (\"defaultLayout\" IN ('stage', 'grid', 'split', 'focus')),\n  CONSTRAINT \"party_rooms_participants_55ed6ac1\" CHECK (\"maxParticipants\" IS NULL OR \"maxParticipants\" BETWEEN 2 AND 50),\n  CONSTRAINT \"party_rooms_protected_79f84d77\" CHECK (\"passwordHash\" IS NOT NULL OR \"requireApproval\" OR \"whitelistEnabled\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"party_rooms\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.party_session_participants",
+    "label": "Create table \"party_session_participants\"",
+    "summary": "Creates table \"party_session_participants\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_session_participants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"party_session_participants\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_session_participants\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"party_session_participants\"",
+        "sql": "CREATE TABLE \"public\".\"party_session_participants\" (\n  \"id\" uuid NOT NULL,\n  \"joinedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"leftAt\" timestamptz,\n  \"profileId\" \"uuid\" NOT NULL,\n  \"removal\" text,\n  \"removedBy\" uuid,\n  \"sessionId\" uuid NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"party_session_participants_removal_44cb63c3\" CHECK (removal IS NULL OR removal IN ('kick', 'ban'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"party_session_participants\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_session_participants\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.party_sessions",
+    "label": "Create table \"party_sessions\"",
+    "summary": "Creates table \"party_sessions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_sessions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"party_sessions\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_sessions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"party_sessions\"",
+        "sql": "CREATE TABLE \"public\".\"party_sessions\" (\n  \"endReason\" text,\n  \"endedAt\" timestamptz,\n  \"id\" uuid NOT NULL,\n  \"roomId\" \"uuid\" NOT NULL,\n  \"startedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"party_sessions_end_reason_56813f84\" CHECK (\"endReason\" IS NULL OR \"endReason\" IN ('owner_ended', 'owner_timeout', 'max_duration', 'sanction', 'operator'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"party_sessions\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_sessions\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.platform_sanctions",
+    "label": "Create table \"platform_sanctions\"",
+    "summary": "Creates table \"platform_sanctions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "platform_sanctions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"platform_sanctions\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"platform_sanctions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"platform_sanctions\"",
+        "sql": "CREATE TABLE \"public\".\"platform_sanctions\" (\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"createdBy\" text,\n  \"expiresAt\" timestamptz,\n  \"id\" uuid NOT NULL,\n  \"profileId\" \"uuid\" NOT NULL,\n  \"reason\" text,\n  \"revokedAt\" timestamptz,\n  \"scope\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"platform_sanctions_scope_17110c0c\" CHECK (scope IN ('platform', 'party_host', 'party_stream', 'party_join', 'party_chat'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"platform_sanctions\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"platform_sanctions\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.party_room_bans.party_room_bans_roomId_profileId_key",
+    "label": "Add unique constraint on \"party_room_bans\" (roomId, profileId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "party_room_bans_roomId_profileId_key",
+        "table": "party_room_bans"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"party_room_bans_roomId_profileId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_bans_roomId_profileId_key",
+          "public",
+          "\"public\".\"party_room_bans\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"party_room_bans_roomId_profileId_key\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_bans\" ADD CONSTRAINT \"party_room_bans_roomId_profileId_key\" UNIQUE (\"roomId\", \"profileId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"party_room_bans_roomId_profileId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_bans_roomId_profileId_key",
+          "public",
+          "\"public\".\"party_room_bans\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.party_room_moderators.party_room_moderators_roomId_profileId_key",
+    "label": "Add unique constraint on \"party_room_moderators\" (roomId, profileId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "party_room_moderators_roomId_profileId_key",
+        "table": "party_room_moderators"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"party_room_moderators_roomId_profileId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_moderators_roomId_profileId_key",
+          "public",
+          "\"public\".\"party_room_moderators\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"party_room_moderators_roomId_profileId_key\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_moderators\" ADD CONSTRAINT \"party_room_moderators_roomId_profileId_key\" UNIQUE (\"roomId\", \"profileId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"party_room_moderators_roomId_profileId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_moderators_roomId_profileId_key",
+          "public",
+          "\"public\".\"party_room_moderators\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.party_room_whitelist.party_room_whitelist_roomId_profileId_key",
+    "label": "Add unique constraint on \"party_room_whitelist\" (roomId, profileId)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "party_room_whitelist_roomId_profileId_key",
+        "table": "party_room_whitelist"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"party_room_whitelist_roomId_profileId_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_whitelist_roomId_profileId_key",
+          "public",
+          "\"public\".\"party_room_whitelist\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"party_room_whitelist_roomId_profileId_key\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_whitelist\" ADD CONSTRAINT \"party_room_whitelist_roomId_profileId_key\" UNIQUE (\"roomId\", \"profileId\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"party_room_whitelist_roomId_profileId_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_whitelist_roomId_profileId_key",
+          "public",
+          "\"public\".\"party_room_whitelist\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_moderation_events.party_moderation_events_roomId_createdAt_idx_71ac5cd0",
+    "label": "Create index \"party_moderation_events_roomId_createdAt_idx_71ac5cd0\" on \"party_moderation_events\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_moderation_events_roomId_createdAt_idx_71ac5cd0",
+        "table": "party_moderation_events"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_moderation_events_roomId_createdAt_idx_71ac5cd0\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_moderation_events_roomId_createdAt_idx_71ac5cd0\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_moderation_events_roomId_createdAt_idx_71ac5cd0\"",
+        "sql": "CREATE INDEX \"party_moderation_events_roomId_createdAt_idx_71ac5cd0\" ON \"public\".\"party_moderation_events\" (\"roomId\", \"createdAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_moderation_events_roomId_createdAt_idx_71ac5cd0\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_moderation_events_roomId_createdAt_idx_71ac5cd0\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_moderation_events.party_moderation_events_roomId_idx_fe51d647",
+    "label": "Create index \"party_moderation_events_roomId_idx_fe51d647\" on \"party_moderation_events\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_moderation_events_roomId_idx_fe51d647",
+        "table": "party_moderation_events"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_moderation_events_roomId_idx_fe51d647\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_moderation_events_roomId_idx_fe51d647\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_moderation_events_roomId_idx_fe51d647\"",
+        "sql": "CREATE INDEX \"party_moderation_events_roomId_idx_fe51d647\" ON \"public\".\"party_moderation_events\" (\"roomId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_moderation_events_roomId_idx_fe51d647\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_moderation_events_roomId_idx_fe51d647\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_room_bans.party_room_bans_profileId_idx_d9cdfcaf",
+    "label": "Create index \"party_room_bans_profileId_idx_d9cdfcaf\" on \"party_room_bans\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_room_bans_profileId_idx_d9cdfcaf",
+        "table": "party_room_bans"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_room_bans_profileId_idx_d9cdfcaf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_bans_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_room_bans_profileId_idx_d9cdfcaf\"",
+        "sql": "CREATE INDEX \"party_room_bans_profileId_idx_d9cdfcaf\" ON \"public\".\"party_room_bans\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_room_bans_profileId_idx_d9cdfcaf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_bans_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_room_bans.party_room_bans_roomId_idx_fe51d647",
+    "label": "Create index \"party_room_bans_roomId_idx_fe51d647\" on \"party_room_bans\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_room_bans_roomId_idx_fe51d647",
+        "table": "party_room_bans"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_room_bans_roomId_idx_fe51d647\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_bans_roomId_idx_fe51d647\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_room_bans_roomId_idx_fe51d647\"",
+        "sql": "CREATE INDEX \"party_room_bans_roomId_idx_fe51d647\" ON \"public\".\"party_room_bans\" (\"roomId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_room_bans_roomId_idx_fe51d647\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_bans_roomId_idx_fe51d647\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_room_moderators.party_room_moderators_profileId_idx_d9cdfcaf",
+    "label": "Create index \"party_room_moderators_profileId_idx_d9cdfcaf\" on \"party_room_moderators\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_room_moderators_profileId_idx_d9cdfcaf",
+        "table": "party_room_moderators"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_room_moderators_profileId_idx_d9cdfcaf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_moderators_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_room_moderators_profileId_idx_d9cdfcaf\"",
+        "sql": "CREATE INDEX \"party_room_moderators_profileId_idx_d9cdfcaf\" ON \"public\".\"party_room_moderators\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_room_moderators_profileId_idx_d9cdfcaf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_moderators_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_room_moderators.party_room_moderators_roomId_idx_fe51d647",
+    "label": "Create index \"party_room_moderators_roomId_idx_fe51d647\" on \"party_room_moderators\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_room_moderators_roomId_idx_fe51d647",
+        "table": "party_room_moderators"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_room_moderators_roomId_idx_fe51d647\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_moderators_roomId_idx_fe51d647\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_room_moderators_roomId_idx_fe51d647\"",
+        "sql": "CREATE INDEX \"party_room_moderators_roomId_idx_fe51d647\" ON \"public\".\"party_room_moderators\" (\"roomId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_room_moderators_roomId_idx_fe51d647\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_moderators_roomId_idx_fe51d647\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_room_whitelist.party_room_whitelist_profileId_idx_d9cdfcaf",
+    "label": "Create index \"party_room_whitelist_profileId_idx_d9cdfcaf\" on \"party_room_whitelist\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_room_whitelist_profileId_idx_d9cdfcaf",
+        "table": "party_room_whitelist"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_room_whitelist_profileId_idx_d9cdfcaf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_whitelist_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_room_whitelist_profileId_idx_d9cdfcaf\"",
+        "sql": "CREATE INDEX \"party_room_whitelist_profileId_idx_d9cdfcaf\" ON \"public\".\"party_room_whitelist\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_room_whitelist_profileId_idx_d9cdfcaf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_whitelist_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_room_whitelist.party_room_whitelist_roomId_idx_fe51d647",
+    "label": "Create index \"party_room_whitelist_roomId_idx_fe51d647\" on \"party_room_whitelist\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_room_whitelist_roomId_idx_fe51d647",
+        "table": "party_room_whitelist"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_room_whitelist_roomId_idx_fe51d647\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_whitelist_roomId_idx_fe51d647\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_room_whitelist_roomId_idx_fe51d647\"",
+        "sql": "CREATE INDEX \"party_room_whitelist_roomId_idx_fe51d647\" ON \"public\".\"party_room_whitelist\" (\"roomId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_room_whitelist_roomId_idx_fe51d647\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_room_whitelist_roomId_idx_fe51d647\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_session_participants.party_session_participants_profileId_idx_d9cdfcaf",
+    "label": "Create index \"party_session_participants_profileId_idx_d9cdfcaf\" on \"party_session_participants\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_session_participants_profileId_idx_d9cdfcaf",
+        "table": "party_session_participants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_session_participants_profileId_idx_d9cdfcaf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_session_participants_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_session_participants_profileId_idx_d9cdfcaf\"",
+        "sql": "CREATE INDEX \"party_session_participants_profileId_idx_d9cdfcaf\" ON \"public\".\"party_session_participants\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_session_participants_profileId_idx_d9cdfcaf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_session_participants_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_session_participants.party_session_participants_sessionId_idx_29f415d4",
+    "label": "Create index \"party_session_participants_sessionId_idx_29f415d4\" on \"party_session_participants\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_session_participants_sessionId_idx_29f415d4",
+        "table": "party_session_participants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_session_participants_sessionId_idx_29f415d4\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_session_participants_sessionId_idx_29f415d4\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_session_participants_sessionId_idx_29f415d4\"",
+        "sql": "CREATE INDEX \"party_session_participants_sessionId_idx_29f415d4\" ON \"public\".\"party_session_participants\" (\"sessionId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_session_participants_sessionId_idx_29f415d4\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_session_participants_sessionId_idx_29f415d4\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_sessions.party_sessions_one_active_f6101b30",
+    "label": "Create index \"party_sessions_one_active_f6101b30\" on \"party_sessions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_sessions_one_active_f6101b30",
+        "table": "party_sessions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_sessions_one_active_f6101b30\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_sessions_one_active_f6101b30\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_sessions_one_active_f6101b30\"",
+        "sql": "CREATE UNIQUE INDEX \"party_sessions_one_active_f6101b30\" ON \"public\".\"party_sessions\" (\"roomId\") WHERE (\"endedAt\" IS NULL)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_sessions_one_active_f6101b30\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_sessions_one_active_f6101b30\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.party_sessions.party_sessions_startedAt_idx_cac56236",
+    "label": "Create index \"party_sessions_startedAt_idx_cac56236\" on \"party_sessions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "party_sessions_startedAt_idx_cac56236",
+        "table": "party_sessions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"party_sessions_startedAt_idx_cac56236\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_sessions_startedAt_idx_cac56236\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"party_sessions_startedAt_idx_cac56236\"",
+        "sql": "CREATE INDEX \"party_sessions_startedAt_idx_cac56236\" ON \"public\".\"party_sessions\" (\"startedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"party_sessions_startedAt_idx_cac56236\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"party_sessions_startedAt_idx_cac56236\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.platform_sanctions.platform_sanctions_profileId_idx_d9cdfcaf",
+    "label": "Create index \"platform_sanctions_profileId_idx_d9cdfcaf\" on \"platform_sanctions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "platform_sanctions_profileId_idx_d9cdfcaf",
+        "table": "platform_sanctions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"platform_sanctions_profileId_idx_d9cdfcaf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"platform_sanctions_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"platform_sanctions_profileId_idx_d9cdfcaf\"",
+        "sql": "CREATE INDEX \"platform_sanctions_profileId_idx_d9cdfcaf\" ON \"public\".\"platform_sanctions\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"platform_sanctions_profileId_idx_d9cdfcaf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"platform_sanctions_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_moderation_events.party_moderation_events_roomId_fkey",
+    "label": "Add foreign key \"party_moderation_events_roomId_fkey\" on \"party_moderation_events\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_moderation_events_roomId_fkey",
+        "table": "party_moderation_events"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_moderation_events_roomId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_moderation_events_roomId_fkey",
+          "public",
+          "\"public\".\"party_moderation_events\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_moderation_events_roomId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_moderation_events\"\nADD CONSTRAINT \"party_moderation_events_roomId_fkey\"\nFOREIGN KEY (\"roomId\")\nREFERENCES \"public\".\"party_rooms\" (\"ownerId\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_moderation_events_roomId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_moderation_events_roomId_fkey",
+          "public",
+          "\"public\".\"party_moderation_events\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_room_bans.party_room_bans_roomId_fkey",
+    "label": "Add foreign key \"party_room_bans_roomId_fkey\" on \"party_room_bans\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_room_bans_roomId_fkey",
+        "table": "party_room_bans"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_room_bans_roomId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_bans_roomId_fkey",
+          "public",
+          "\"public\".\"party_room_bans\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_room_bans_roomId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_bans\"\nADD CONSTRAINT \"party_room_bans_roomId_fkey\"\nFOREIGN KEY (\"roomId\")\nREFERENCES \"public\".\"party_rooms\" (\"ownerId\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_room_bans_roomId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_bans_roomId_fkey",
+          "public",
+          "\"public\".\"party_room_bans\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_room_bans.party_room_bans_profileId_fkey",
+    "label": "Add foreign key \"party_room_bans_profileId_fkey\" on \"party_room_bans\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_room_bans_profileId_fkey",
+        "table": "party_room_bans"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_room_bans_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_bans_profileId_fkey",
+          "public",
+          "\"public\".\"party_room_bans\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_room_bans_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_bans\"\nADD CONSTRAINT \"party_room_bans_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_room_bans_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_bans_profileId_fkey",
+          "public",
+          "\"public\".\"party_room_bans\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_room_moderators.party_room_moderators_roomId_fkey",
+    "label": "Add foreign key \"party_room_moderators_roomId_fkey\" on \"party_room_moderators\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_room_moderators_roomId_fkey",
+        "table": "party_room_moderators"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_room_moderators_roomId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_moderators_roomId_fkey",
+          "public",
+          "\"public\".\"party_room_moderators\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_room_moderators_roomId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_moderators\"\nADD CONSTRAINT \"party_room_moderators_roomId_fkey\"\nFOREIGN KEY (\"roomId\")\nREFERENCES \"public\".\"party_rooms\" (\"ownerId\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_room_moderators_roomId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_moderators_roomId_fkey",
+          "public",
+          "\"public\".\"party_room_moderators\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_room_moderators.party_room_moderators_profileId_fkey",
+    "label": "Add foreign key \"party_room_moderators_profileId_fkey\" on \"party_room_moderators\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_room_moderators_profileId_fkey",
+        "table": "party_room_moderators"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_room_moderators_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_moderators_profileId_fkey",
+          "public",
+          "\"public\".\"party_room_moderators\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_room_moderators_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_moderators\"\nADD CONSTRAINT \"party_room_moderators_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_room_moderators_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_moderators_profileId_fkey",
+          "public",
+          "\"public\".\"party_room_moderators\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_room_whitelist.party_room_whitelist_roomId_fkey",
+    "label": "Add foreign key \"party_room_whitelist_roomId_fkey\" on \"party_room_whitelist\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_room_whitelist_roomId_fkey",
+        "table": "party_room_whitelist"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_room_whitelist_roomId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_whitelist_roomId_fkey",
+          "public",
+          "\"public\".\"party_room_whitelist\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_room_whitelist_roomId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_whitelist\"\nADD CONSTRAINT \"party_room_whitelist_roomId_fkey\"\nFOREIGN KEY (\"roomId\")\nREFERENCES \"public\".\"party_rooms\" (\"ownerId\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_room_whitelist_roomId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_whitelist_roomId_fkey",
+          "public",
+          "\"public\".\"party_room_whitelist\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_room_whitelist.party_room_whitelist_profileId_fkey",
+    "label": "Add foreign key \"party_room_whitelist_profileId_fkey\" on \"party_room_whitelist\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_room_whitelist_profileId_fkey",
+        "table": "party_room_whitelist"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_room_whitelist_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_whitelist_profileId_fkey",
+          "public",
+          "\"public\".\"party_room_whitelist\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_room_whitelist_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_whitelist\"\nADD CONSTRAINT \"party_room_whitelist_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_room_whitelist_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_room_whitelist_profileId_fkey",
+          "public",
+          "\"public\".\"party_room_whitelist\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_rooms.party_rooms_ownerId_fkey",
+    "label": "Add foreign key \"party_rooms_ownerId_fkey\" on \"party_rooms\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_rooms_ownerId_fkey",
+        "table": "party_rooms"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_rooms_ownerId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_rooms_ownerId_fkey",
+          "public",
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_rooms_ownerId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_rooms\"\nADD CONSTRAINT \"party_rooms_ownerId_fkey\"\nFOREIGN KEY (\"ownerId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_rooms_ownerId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_rooms_ownerId_fkey",
+          "public",
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_session_participants.party_session_participants_sessionId_fkey",
+    "label": "Add foreign key \"party_session_participants_sessionId_fkey\" on \"party_session_participants\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_session_participants_sessionId_fkey",
+        "table": "party_session_participants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_session_participants_sessionId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_session_participants_sessionId_fkey",
+          "public",
+          "\"public\".\"party_session_participants\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_session_participants_sessionId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_session_participants\"\nADD CONSTRAINT \"party_session_participants_sessionId_fkey\"\nFOREIGN KEY (\"sessionId\")\nREFERENCES \"public\".\"party_sessions\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_session_participants_sessionId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_session_participants_sessionId_fkey",
+          "public",
+          "\"public\".\"party_session_participants\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_session_participants.party_session_participants_profileId_fkey",
+    "label": "Add foreign key \"party_session_participants_profileId_fkey\" on \"party_session_participants\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_session_participants_profileId_fkey",
+        "table": "party_session_participants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_session_participants_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_session_participants_profileId_fkey",
+          "public",
+          "\"public\".\"party_session_participants\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_session_participants_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_session_participants\"\nADD CONSTRAINT \"party_session_participants_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_session_participants_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_session_participants_profileId_fkey",
+          "public",
+          "\"public\".\"party_session_participants\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.party_sessions.party_sessions_roomId_fkey",
+    "label": "Add foreign key \"party_sessions_roomId_fkey\" on \"party_sessions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "party_sessions_roomId_fkey",
+        "table": "party_sessions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"party_sessions_roomId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_sessions_roomId_fkey",
+          "public",
+          "\"public\".\"party_sessions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"party_sessions_roomId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"party_sessions\"\nADD CONSTRAINT \"party_sessions_roomId_fkey\"\nFOREIGN KEY (\"roomId\")\nREFERENCES \"public\".\"party_rooms\" (\"ownerId\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"party_sessions_roomId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_sessions_roomId_fkey",
+          "public",
+          "\"public\".\"party_sessions\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.platform_sanctions.platform_sanctions_profileId_fkey",
+    "label": "Add foreign key \"platform_sanctions_profileId_fkey\" on \"platform_sanctions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "platform_sanctions_profileId_fkey",
+        "table": "platform_sanctions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"platform_sanctions_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "platform_sanctions_profileId_fkey",
+          "public",
+          "\"public\".\"platform_sanctions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"platform_sanctions_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"platform_sanctions\"\nADD CONSTRAINT \"platform_sanctions_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"platform_sanctions_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "platform_sanctions_profileId_fkey",
+          "public",
+          "\"public\".\"platform_sanctions\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.party_moderation_events",
+    "label": "Enable row-level security on \"party_moderation_events\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "party_moderation_events"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"party_moderation_events\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "party_moderation_events"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"party_moderation_events\"",
+        "sql": "ALTER TABLE \"public\".\"party_moderation_events\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"party_moderation_events\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "party_moderation_events"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.party_policy",
+    "label": "Enable row-level security on \"party_policy\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "party_policy"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"party_policy\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "party_policy"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"party_policy\"",
+        "sql": "ALTER TABLE \"public\".\"party_policy\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"party_policy\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "party_policy"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.party_room_bans",
+    "label": "Enable row-level security on \"party_room_bans\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "party_room_bans"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"party_room_bans\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "party_room_bans"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"party_room_bans\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_bans\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"party_room_bans\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "party_room_bans"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.party_room_moderators",
+    "label": "Enable row-level security on \"party_room_moderators\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "party_room_moderators"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"party_room_moderators\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "party_room_moderators"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"party_room_moderators\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_moderators\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"party_room_moderators\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "party_room_moderators"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.party_room_whitelist",
+    "label": "Enable row-level security on \"party_room_whitelist\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "party_room_whitelist"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"party_room_whitelist\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "party_room_whitelist"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"party_room_whitelist\"",
+        "sql": "ALTER TABLE \"public\".\"party_room_whitelist\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"party_room_whitelist\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "party_room_whitelist"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.party_rooms",
+    "label": "Enable row-level security on \"party_rooms\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "party_rooms"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"party_rooms\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "party_rooms"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"party_rooms\"",
+        "sql": "ALTER TABLE \"public\".\"party_rooms\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"party_rooms\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "party_rooms"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.party_session_participants",
+    "label": "Enable row-level security on \"party_session_participants\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "party_session_participants"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"party_session_participants\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "party_session_participants"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"party_session_participants\"",
+        "sql": "ALTER TABLE \"public\".\"party_session_participants\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"party_session_participants\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "party_session_participants"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.party_sessions",
+    "label": "Enable row-level security on \"party_sessions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "party_sessions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"party_sessions\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "party_sessions"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"party_sessions\"",
+        "sql": "ALTER TABLE \"public\".\"party_sessions\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"party_sessions\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "party_sessions"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.platform_sanctions",
+    "label": "Enable row-level security on \"platform_sanctions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "platform_sanctions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"platform_sanctions\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "platform_sanctions"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"platform_sanctions\"",
+        "sql": "ALTER TABLE \"public\".\"platform_sanctions\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"platform_sanctions\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "platform_sanctions"
+        ]
+      }
+    ]
+  }
+]

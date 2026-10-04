@@ -8,9 +8,10 @@ import type {AuthDeepLink} from '../types';
 
 export type AuthStatus='loading'|'signedOut'|'signedIn';
 export type TotpEnrollment={factorId:string;qrCode:string;secret:string;uri:string};
-type Props={setError(message:string):void;setNotice(message:string):void};
+type Props={setError(message:string):void;setNotice(message:string):void;onPartyLink?(nickname:string):void};
 
-export function useAuth({setError,setNotice}:Props){
+export function useAuth({setError,setNotice,onPartyLink}:Props){
+ const partyRef=useRef(onPartyLink);partyRef.current=onPartyLink;
  const t=useT();
  const [status,setStatus]=useState<AuthStatus>('loading');
  const [account,setAccount]=useState<Account|null>(null);
@@ -41,6 +42,7 @@ export function useAuth({setError,setNotice}:Props){
 
  const handleLink=useCallback(async(link:AuthDeepLink)=>{
   try{
+   if(link.kind==='party'){partyRef.current?.(link.nickname);return;}
    if(link.kind==='callback'){
     const v=verifier.current;verifier.current=null;setWaiting(null);
     if(!v){setError(t.auth.notStartedHere);return;}

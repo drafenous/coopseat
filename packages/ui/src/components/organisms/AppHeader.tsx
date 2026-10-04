@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {ChevronDown,CircleHelp,LogOut,Settings,UserRound,Wrench} from 'lucide-react';
+import {ChevronDown,CircleHelp,LogOut,Settings,Tv,UserRound,Wrench} from 'lucide-react';
 import type {Auth} from '../../hooks/useAuth';
 import {cx} from '../../lib/cx';
 import {IconButton,MenuDivider,MenuItem} from '../atoms';
@@ -7,11 +7,11 @@ import {Brand,DropdownMenu,StatusPill,type CaptureStatus} from '../molecules';
 import {Avatar} from './Avatar';
 import {useT} from '../../i18n';
 
-type Props={status:CaptureStatus;auth:Auth;onHelp():void;onTroubleshoot():void;onPreferences():void;onLogin():void;onMyAccount():void;onSignOut():void};
+type Props={status:CaptureStatus;auth:Auth;onHelp():void;onTroubleshoot():void;onPreferences():void;onLogin():void;onMyAccount():void;onMyRoom?():void;onSignOut():void};
 
 const accountLink=(login?:boolean,open?:boolean)=>cx('flex items-center gap-2 rounded-full border border-line-strong text-[13px] font-semibold text-[#d4dee8] hover:bg-[#ffffff0a]',open?'bg-[#ffffff0a]':'bg-transparent',login?'px-4 py-[7px]':'py-[5px] pr-2.5 pl-1.5');
 
-export function AppHeader({status,auth,onHelp,onTroubleshoot,onPreferences,onLogin,onMyAccount,onSignOut}:Props){
+export function AppHeader({status,auth,onHelp,onTroubleshoot,onPreferences,onLogin,onMyAccount,onMyRoom,onSignOut}:Props){
  const t=useT().header;
  const a=auth.account;
  const [menu,setMenu]=useState(false);
@@ -30,6 +30,7 @@ export function AppHeader({status,auth,onHelp,onTroubleshoot,onPreferences,onLog
        <Avatar small account={a}/>{a.nickname??t.myAccount}<ChevronDown size={14} className={cx('text-[#9aabbb] transition-transform',menu&&'rotate-180')}/>
       </button>}>
       <MenuItem onClick={onMyAccount}><UserRound size={15}/> {t.myAccount}</MenuItem>
+      {onMyRoom&&<MenuItem onClick={onMyRoom}><Tv size={15}/> {t.myRoom}</MenuItem>}
       <MenuDivider/>
       <MenuItem danger onClick={onSignOut}><LogOut size={15}/> {t.signOut}</MenuItem>
      </DropdownMenu>

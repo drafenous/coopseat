@@ -2,6 +2,7 @@ import type { AccessClaims } from './jwt';
 import type { AuthUser } from './gotrue';
 import { ensureProfile } from './profiles';
 import { permissionsFor } from '@/lib/gates';
+import { activeSanctions } from './party/sanctions';
 
 /** Public account shape returned by /api/me to the web and the desktop. */
 export async function accountSummary(user: AuthUser, claims: AccessClaims) {
@@ -10,6 +11,7 @@ export async function accountSummary(user: AuthUser, claims: AccessClaims) {
       ?.map((i) => i.identity_data?.avatar_url ?? i.identity_data?.picture)
       .find((url): url is string => typeof url === 'string') ?? null;
   const profile = await ensureProfile(user.id, avatar);
+  const suspended = (await activeSanctions(user.id)).has('platform');
   const verifiedFactors = (user.factors ?? []).filter((f) => f.status === 'verified');
   const emailConfirmed = Boolean(user.email && user.email_confirmed_at);
 
@@ -25,6 +27,7 @@ export async function accountSummary(user: AuthUser, claims: AccessClaims) {
     ageStatus: profile.ageStatus,
     ageVerifiedAt: profile.ageVerifiedAt,
     termsVersion: profile.termsVersion,
+    suspended,
     identities: (user.identities ?? []).map((i) => ({
       id: i.identity_id ?? i.id,
       provider: i.provider,

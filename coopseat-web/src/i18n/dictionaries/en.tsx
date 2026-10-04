@@ -328,7 +328,12 @@ export const en = {
     subtitle: "If the app doesn't open on its own, use the button below. Then you can close this tab.",
     invalid: 'Invalid link.',
   },
+  party: {
+    title: (nickname: string) => `${nickname}'s room`,
+  },
   account: {
+    myRoom: 'My room',
+    myRoomLink: 'Link to your room',
     greeting: (name: string) => `Hi, ${name}!`,
     welcome: 'Welcome to CoopSeat!',
     playBody: 'Plug in your capture card and play your console right in the browser, nothing to install.',
@@ -448,7 +453,28 @@ export const en = {
       {
         heading: "What we don't collect",
         body: (
-          <p>We don&apos;t record your streams, camera or controllers. Media travels peer-to-peer between participants.</p>
+          <p>
+            We don&apos;t record your streams, camera or controllers. Media travels peer-to-peer between participants, or through
+            an encrypted relay (Cloudflare) when a direct connection isn&apos;t possible; the relay can&apos;t see the content.
+          </p>
+        ) as ReactNode,
+      },
+      {
+        heading: 'Watch party',
+        body: (
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              Your IP address is visible to other participants. Peer-to-peer connections need it: whoever is in the room with
+              you can see the IP address of your connection, as in any video call. Only join rooms of people you trust.
+            </li>
+            <li>
+              Room chat is not stored: messages live only in memory on the room server and are erased when the session ends.
+            </li>
+            <li>
+              We keep a record of sessions (start, end, who took part) and of moderation actions (kicks, bans, stopped streams)
+              to handle reports, appeals and abuse. Room passwords are stored only as an irreversible hash.
+            </li>
+          </ul>
         ) as ReactNode,
       },
       {
@@ -516,19 +542,33 @@ export const en = {
       {
         heading: '3. Conduct',
         body: (
-          <p>
-            Streaming illegal content, third-party content without authorization, hate speech, harassment, sexual content or any
-            material involving minors is prohibited. We may suspend accounts that break these rules and cooperate with
-            authorities.
-          </p>
+          <>
+            <p>In rooms, streams and chat, the following is prohibited:</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li>any sexual content or material involving minors, which will be reported to the authorities;</li>
+              <li>sexual or pornographic content, gore and graphic violence;</li>
+              <li>illegal content, including piracy, and third-party content (films, series, sports, paid streams) without authorization;</li>
+              <li>hate speech, threats, harassment and incitement to violence;</li>
+              <li>exposing other people&apos;s personal data, including the IP addresses seen in a room;</li>
+              <li>spam, scams, malware and links to them;</li>
+              <li>evading bans or suspensions with another account.</li>
+            </ul>
+            <p className="mt-2">
+              CoopSeat may suspend accounts that break these rules, permanently or only for some features (creating rooms,
+              streaming, joining or chatting), and cooperates with authorities.
+            </p>
+          </>
         ) as ReactNode,
       },
       {
-        heading: '4. Streams',
+        heading: '4. Rooms and streams',
         body: (
           <p>
-            Streams are peer-to-peer between participants and are not recorded by CoopSeat. Whoever creates the room decides who
-            joins and can remove guests.
+            Streams are peer-to-peer between participants and are not recorded by CoopSeat. Each verified account has its own room;
+            the owner decides who joins (password, approval or allow list), who can stream (up to 10 people at a time, only
+            while the owner is streaming) and who moderates. The owner and moderators can remove, ban and stop the streams of
+            participants. When the owner stops streaming, the session ends for everyone and the chat is erased. Participants can
+            see each other&apos;s IP address, as described in the Privacy Policy.
           </p>
         ) as ReactNode,
       },
@@ -658,6 +698,20 @@ export const en = {
     oauth_start_failed: "Couldn't start signing in with that provider.",
     link_expired: 'The linking link has expired. Try again from the app.',
     link_failed: "Couldn't start linking. Sign in again and retry.",
+    account_suspended: 'This account is suspended. Contact suporte@coopseat.com.',
+    party_unavailable: 'Gaming-Party is unavailable for this account right now.',
+    party_disabled: 'Gaming-Party is temporarily unavailable.',
+    party_not_found: 'Room not found.',
+    party_forbidden: "You don't have permission to do that in this room.",
+    party_requirements: 'Verify your identity (18+) to use Gaming-Party.',
+    party_no_session: "This room isn't live right now.",
+    party_password_invalid: 'Wrong room password.',
+    party_password_format: 'The password must be 4 to 64 characters.',
+    party_protection_required: 'Keep at least one protection on: password, approval or allow list.',
+    party_target_invalid: "You can't do that to this person.",
+    party_target_unverified: 'Only people with a verified identity can be added.',
+    party_token_invalid: 'Your room access expired. Join the room again.',
+    party_signal_invalid: 'Invalid signature.',
   },
 };
 

@@ -47,11 +47,17 @@ export async function saveSession(s:Session|null){
  if(s)await b.secureStore.set(SESSION_KEY,JSON.stringify(s));else await b.secureStore.remove(SESSION_KEY);
 }
 
+/** Desktop only: lets the BFF apply version rules (e.g. relay access for outdated builds). */
+let appVersion:Promise<string>|null=null;
+const desktopVersion=()=>{const b=bridge();return b?appVersion??=b.info().then(i=>i.version,()=>''):Promise.resolve('');};
+
 type Options={method?:string;body?:unknown;auth?:boolean};
 async function send<T>(path:string,{method='GET',body}:Options,token?:string):Promise<T>{
  const cookies=cookieSession();
  const headers:Record<string,string>=cookies?{}:{'x-coopseat-client':'desktop'};
  headers['accept-language']=getLocale();
+ const version=await desktopVersion();
+ if(version)headers['x-coopseat-version']=version;
  if(body!==undefined)headers['content-type']='application/json';
  if(token)headers.authorization=`Bearer ${token}`;
  let res:Response;

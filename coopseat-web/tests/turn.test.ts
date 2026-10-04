@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { OWNER_PERMS } from '@coopseat/ui/party-protocol';
 import { POST as turn } from '@/app/api/turn/route';
+import { signRoomToken, type RoomTokenInput } from '@/server/party/tokens';
 import { createFakeDb, type FakeDb } from './fake-db';
 
 const fake = vi.hoisted(() => ({ current: null as unknown as FakeDb }));
@@ -10,10 +12,26 @@ vi.mock('@/server/jwt', () => ({
 }));
 
 const ctx = undefined as never;
-const request = (token?: string, headers: Record<string, string> = {}) =>
+const room = { token: '' };
+const roomClaims = (sid: string, overrides: Partial<RoomTokenInput> = {}): RoomTokenInput => ({
+  sid,
+  rid: 'owner-1',
+  sub: 'user-1',
+  nick: 'player',
+  role: 'owner',
+  status: 'admitted',
+  canStream: true,
+  streamBlocked: false,
+  chat: true,
+  mod: OWNER_PERMS,
+  cfg: { cap: 10, maxStreamers: 10, ownerGraceSeconds: 120, endsAt: 0, chat: true },
+  ...overrides,
+});
+const request = (token?: string, headers: Record<string, string> = {}, body: unknown = { roomToken: room.token }) =>
   new NextRequest('https://coopseat.com/api/turn', {
     method: 'POST',
-    headers: { ...(token ? { authorization: `Bearer ${token}` } : {}), ...headers },
+    headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}), ...headers },
+    body: JSON.stringify(body),
   });
 const iceServers = [
   { urls: ['stun:stun.cloudflare.com:3478'] },
@@ -40,8 +58,10 @@ const issued = (count: number, issuedAt = new Date().toISOString()) =>
 describe('POST /api/turn', () => {
   let fetchSpy: ReturnType<typeof vi.fn>;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     fake.current = createFakeDb();
+    const session = await fake.current.db.orm.public.PartySession.create({ roomId: 'owner-1' });
+    room.token = (await signRoomToken(roomClaims(session.id as string))).token;
     vi.stubEnv('CLOUDFLARE_TURN_KEY_ID', 'key-id');
     vi.stubEnv('CLOUDFLARE_TURN_API_TOKEN', 'api-token');
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
@@ -67,6 +87,20 @@ describe('POST /api/turn', () => {
   it('requires a session', async () => {
     expect((await turn(request(), ctx)).status).toBe(401);
     expect((await turn(request('forged'), ctx)).status).toBe(401);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('requires a room token for a live session where the caller is admitted', async () => {
+    const status = async (body: unknown) => (await turn(request('valid', {}, body), ctx)).status;
+    expect(await status({})).toBe(400);
+    expect(await status({ roomToken: 'x'.repeat(40) })).toBe(403);
+
+    const sid = fake.current.data.PartySession[0]!.id as string;
+    expect(await status({ roomToken: (await signRoomToken(roomClaims(sid, { sub: 'someone-else' }))).token })).toBe(403);
+    expect(await status({ roomToken: (await signRoomToken(roomClaims(sid, { status: 'pending' }))).token })).toBe(403);
+
+    fake.current.data.PartySession[0]!.endedAt = new Date().toISOString();
+    expect(await status({ roomToken: room.token })).toBe(403);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 

@@ -14,13 +14,14 @@ export function usePictureInPicture({videoRef,enabled,setError}:Options){
  const exit=useCallback(async()=>{if(document.pictureInPictureElement)await document.exitPictureInPicture().catch(()=>{});},[]);
  const toggle=useCallback(()=>void(document.pictureInPictureElement?exit():enter()),[enter,exit]);
 
- useEffect(()=>{const v=videoRef.current;if(!v)return;
-  const on=()=>setActive(true),off=()=>setActive(false);
-  v.addEventListener('enterpictureinpicture',on);v.addEventListener('leavepictureinpicture',off);
-  return()=>{v.removeEventListener('enterpictureinpicture',on);v.removeEventListener('leavepictureinpicture',off);};
+ // The PiP events bubble, so the target video can change (e.g. the party's main tile) without rebinding.
+ useEffect(()=>{
+  const sync=()=>{const el=document.pictureInPictureElement;setActive(Boolean(el)&&el===videoRef.current);};
+  document.addEventListener('enterpictureinpicture',sync);document.addEventListener('leavepictureinpicture',sync);
+  return()=>{document.removeEventListener('enterpictureinpicture',sync);document.removeEventListener('leavepictureinpicture',sync);};
  },[videoRef]);
 
- useEffect(()=>{if(!enabled)void exit();},[enabled,exit]);
+ useEffect(()=>{if(!enabled&&document.pictureInPictureElement===videoRef.current)void exit();},[enabled,exit,videoRef]);
 
  return {supported,active,toggle};
 }

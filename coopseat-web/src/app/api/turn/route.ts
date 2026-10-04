@@ -2,7 +2,9 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { dictionaries, errorMessage, type ErrorCode } from '@/i18n/dictionaries';
 import { localeFromRequest } from '@/i18n/server';
 import { adminDb } from '@/prisma/db';
-import { route } from '@/server/http';
+import { turnSchema } from '@/lib/validation/party';
+import { ApiError, readJson, route } from '@/server/http';
+import { verifyRoomToken } from '@/server/party/tokens';
 import { rateLimit } from '@/server/rate-limit';
 import { evaluateRelay, type RelayDenyReason } from '@/server/relay-policy';
 import { requireAuth } from '@/server/session';
@@ -28,13 +30,28 @@ function appVersion(req: NextRequest): string | null {
 }
 
 /**
- * ICE servers for signed-in users. When the relay policy denies TURN, answers with STUN only
- * (`relay: false`) so direct connections keep working and only relay-dependent ones fail.
+ * A room token is issued only after the watch gate (verified 18+) and admission to a live session,
+ * so it stands in for both checks; the session must still be live.
+ */
+async function assertAdmitted(roomToken: string, profileId: string): Promise<void> {
+  const claims = await verifyRoomToken(roomToken);
+  if (!claims || claims.sub !== profileId || claims.status !== 'admitted') throw new ApiError(403, 'party_token_invalid');
+  const db = await adminDb();
+  const session = await db.orm.public.PartySession.where({ id: claims.sid }).first();
+  if (!session || session.endedAt !== null) throw new ApiError(403, 'party_token_invalid');
+}
+
+/**
+ * ICE servers for participants admitted to a live Gaming-Party session. When the relay policy denies
+ * TURN, answers with STUN only (`relay: false`) so direct connections keep working and only
+ * relay-dependent ones fail.
  */
 export const POST = route(async (req) => {
   const session = await requireAuth(req);
   const profileId = session.claims.sub;
   await rateLimit('turn', profileId);
+  const { roomToken } = await readJson(req, turnSchema);
+  await assertAdmitted(roomToken, profileId);
 
   const version = appVersion(req);
   const decision = await evaluateRelay({ audience: 'member', profileId, appVersion: version });

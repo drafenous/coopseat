@@ -60,11 +60,60 @@ O site, as mensagens da API e o `@coopseat/ui` estão em inglês (padrão) e por
 - **OAuth no desktop**: `GET /api/auth/oauth/<provedor>?client=desktop&challenge=<S256>` → callback do BFF → ticket de uso único (60 s, criptografado, ligado ao PKCE) → `coopseat://auth/callback?ticket=…` → `POST /api/auth/desktop/exchange {ticket, verifier}`.
 - O login por e-mail no desktop não usa Turnstile (não roda em `file://`) e depende do rate limit por IP e por e-mail. Cadastro e recuperação de senha do desktop abrem estas páginas no navegador.
 
+## Gaming-Party (`/party/<apelido>`)
+
+Watch party com até 10 transmissores. Cada conta verificada tem uma sala em `/party/<apelido>` (atalho "Minha sala" em `/account` e no cabeçalho do app). Quem não está logado vai para o login e volta para a sala.
+
+- **Peças**: o BFF decide o acesso e emite um *room token* (JWT Ed25519, 10 minutos, renovado a cada 8); o Worker [`coopseat-signal`](../coopseat-signal) (um Durable Object por sessão) só confere o token com a chave pública e repassa presença, chat e sinalização WebRTC. A mídia vai em malha P2P (cada transmissor envia uma cópia por espectador), com o TURN abaixo como plano B. BFF e Worker conversam por HTTP assinado com HMAC (`PARTY_SIGNAL_SECRET`, timestamp de até 60 s e nonce).
+- **Sessão**: começa quando o dono inicia a transmissão e acaba quando ele para, quando fica fora por mais de `ownerGraceSeconds`, ao atingir `sessionMaxHours` ou por sanção. No fim, todos são desconectados e o chat (só em memória no Durable Object) some. Sessões encerradas saem da lista de ativas (`party_sessions."endedAt"`).
+- **Acesso**: assistir, conversar, transmitir e moderar exigem conta verificada (e-mail, apelido, 18+); transmitir também exige 2FA na sessão quando ativado. A sala precisa de pelo menos uma proteção: senha (scrypt), aprovação ou lista de convidados (que pode liberar transmissão). Outros só transmitem enquanto o dono transmite, com permissão do dono ou por pedido aprovado, que vale só para a sessão.
+- **Moderação**: o dono escolhe moderadores com permissões granulares (remover, banir, parar transmissões, aprovar, liberar transmissão, apagar mensagens). Ninguém age sobre o dono e moderadores não agem entre si. Toda ação fica em `party_moderation_events`.
+- **Variáveis**: `PARTY_TOKEN_PRIVATE_KEY`, `PARTY_TOKEN_PUBLIC_KEY`, `PARTY_SIGNAL_URL`, `PARTY_SIGNAL_SECRET` (veja `.env.example`). No Worker: `wrangler secret put PARTY_TOKEN_PUBLIC_KEY` e `PARTY_SIGNAL_SECRET`. Localmente, `npm run dev:signal` na raiz sobe o Worker em `http://localhost:8787`.
+- **CSP**: `/party/*` recebe `Content-Security-Policy` (o `connect-src` libera a origem de `PARTY_SIGNAL_URL`) e `Referrer-Policy: no-referrer`. ICE (STUN/TURN) não passa pela CSP.
+
+### Controle da Gaming-Party
+
+Como no relay, os limites ficam no Postgres e valem na próxima requisição. Tokens já emitidos carregam os limites da sala, então mudanças chegam às sessões ao vivo em até 10 minutos (na renovação do token).
+
+| Tabela | Chave | Efeito |
+|---|---|---|
+| `party_policy` (linha `global`; sem a linha, valem os defaults) | `enabled` | Fecha todas as salas |
+| | `maxParticipants` (10, de 2 a 50) | Capacidade padrão das salas (`party_rooms."maxParticipants"` sobrescreve por sala) |
+| | `maxStreamers` (10, de 1 a 10) | Transmissores simultâneos por sessão |
+| | `sessionMaxHours` (12) / `ownerGraceSeconds` (60) | Duração máxima da sessão / tolerância de queda do dono |
+| | `chatEnabled` | Desliga o chat de todas as salas |
+| `platform_sanctions` | `scope`, `expiresAt`, `revokedAt` | Sanção do CoopSeat: `platform` (conta toda), `party_host`, `party_stream`, `party_join` ou `party_chat`; `expiresAt` null = permanente |
+
+```sql
+-- fechar todas as salas (volte com enabled = true)
+insert into party_policy (id, enabled, "updatedAt") values ('global', false, now())
+  on conflict (id) do update set enabled = excluded.enabled, "updatedAt" = now();
+
+-- capacidade padrão 6 e no máximo 4 transmissores
+update party_policy set "maxParticipants" = 6, "maxStreamers" = 4, "updatedAt" = now() where id = 'global';
+
+-- sessões ao vivo
+select s.id, p.nickname as dono, s."startedAt" from party_sessions s
+  join profiles p on p.id = s."roomId" where s."endedAt" is null order by s."startedAt";
+
+-- sanções em vigor
+select * from platform_sanctions
+  where "revokedAt" is null and ("expiresAt" is null or "expiresAt" > now()) order by "createdAt" desc;
+```
+
+Para aplicar sanções, prefira o script, que também tira a pessoa das sessões ao vivo na hora (um `insert` direto só vale na próxima renovação do token):
+
+```bash
+npm run party:sanction -- --user <uuid> --scope party_stream --hours 72 --reason "conteúdo proibido"
+npm run party:sanction -- --user <uuid> --scope platform            # permanente
+npm run party:sanction -- --revoke <id da sanção>
+```
+
 ## TURN (watch party)
 
-`POST /api/turn` devolve `{ iceServers, expiresAt, relay: true, maxRelayBitrateKbps }` com credenciais do TURN da Cloudflare Realtime (`CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`), para usar direto em `new RTCPeerConnection({ iceServers })`. Exige sessão e tem limite por usuário. O app desktop envia `X-CoopSeat-Version` para as regras de versão. Convidados anônimos vão receber credenciais pela futura rota de entrada na sala, presas a um convite válido, para que ninguém use o relay de graça.
+`POST /api/turn` recebe `{ roomToken }` e devolve `{ iceServers, expiresAt, relay: true, maxRelayBitrateKbps }` com credenciais do TURN da Cloudflare Realtime (`CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`), para usar direto em `new RTCPeerConnection({ iceServers })`. Exige sessão, um room token admitido de uma sessão ao vivo (ninguém usa o relay de graça fora de uma sala) e tem limite por usuário. O app desktop envia `X-CoopSeat-Version` para as regras de versão.
 
-Só o tráfego que passa pelo relay é cobrado; conexões diretas (P2P) não custam nada. Quando a política nega o relay, a rota responde 200 com `{ iceServers: [STUN], relay: false, reason, message }`: conexões diretas continuam funcionando e só quem depende do relay fica sem conexão. `src/lib/webrtc/relay.ts` detecta se a conexão caiu no relay (`getSelectedCandidateType`) e limita o bitrate nesse caso (`applyRelayBitrateCap`); o evento de telemetria `rtc_connected` com `candidateType` mede a taxa real de relay.
+Só o tráfego que passa pelo relay é cobrado; conexões diretas (P2P) não custam nada. Quando a política nega o relay, a rota responde 200 com `{ iceServers: [STUN], relay: false, reason, message }`: conexões diretas continuam funcionando e só quem depende do relay fica sem conexão. `@coopseat/ui/webrtc` (`packages/ui/src/lib/webrtc/relay.ts`) detecta se a conexão caiu no relay (`getSelectedCandidateType`) e limita o bitrate nesse caso (`applyRelayBitrateCap`); o evento de telemetria `rtc_connected` com `candidateType` mede a taxa real de relay.
 
 ### Controle do relay
 
@@ -134,14 +183,14 @@ Para outro provedor, implemente `IdentityProvider` (`createSession` e `parseWebh
 
 ## Testes
 
-- `npm test` (Vitest, roda no CI): criptografia e PKCE, tickets de uso único, validação, permissões, mapeamento de erros do GoTrue, rate limit, KYC (menor de idade, documento reutilizado, idempotência, limite de tentativas) e rotas (`login` web/desktop/MFA, `desktop/exchange`, `nicknames/available`, webhook assinado). O banco é substituído por um fake em memória (`tests/fake-db.ts`) que reproduz o índice único parcial de documentos.
+- `npm test` (Vitest, roda no CI): criptografia e PKCE, tickets de uso único, validação, permissões, mapeamento de erros do GoTrue, rate limit, KYC (menor de idade, documento reutilizado, idempotência, limite de tentativas), Gaming-Party (decisão de acesso, room tokens, senhas, hierarquia de moderação, sanções, HMAC, chat, alocação de bitrate e layouts) e rotas (`login` web/desktop/MFA, `desktop/exchange`, `nicknames/available`, webhook assinado). O banco é substituído por um fake em memória (`tests/fake-db.ts`) que reproduz o índice único parcial de documentos.
 - `npm run db:test`: roda `supabase/tests/*.sql` num projeto Supabase de **desenvolvimento** (`SQL_ADMIN_URL`), sempre com rollback. Cobre o trigger de perfil, as constraints de apelido, o índice de documento, o Custom Access Token Hook, a RLS e os grants. Não roda no CI porque precisa de um banco real.
 - Ponta a ponta (Playwright) ainda não existe: o fluxo cadastro → confirmação → verificação mock depende de um projeto Supabase com SMTP. O roteiro manual está em [`docs/supabase-setup.md`](docs/supabase-setup.md).
 
 ## Estrutura
 
-- `src/prisma/contract.prisma`: modelos `Profile`, `IdentityVerification`, `AuthTicket`, `RateLimitHit` e os de controle do relay (`RelayPolicy`, `RelayUserOverride`, `RelayCredential`, `RelayUsage`), com RLS.
-- `src/server/`: GoTrue, JWT (JWKS), sessões, tickets, rate limit, captcha, perfis, KYC e política do relay TURN.
+- `src/prisma/contract.prisma`: modelos `Profile`, `IdentityVerification`, `AuthTicket`, `RateLimitHit`, os de controle do relay (`RelayPolicy`, `RelayUserOverride`, `RelayCredential`, `RelayUsage`) e os da Gaming-Party (`Party*`, `PlatformSanction`), com RLS.
+- `src/server/`: GoTrue, JWT (JWKS), sessões, tickets, rate limit, captcha, perfis, KYC, política do relay TURN e `party/` (acesso, room tokens, sanções, chamadas ao signal).
 - `src/app/api/`: rotas do BFF.
 - `src/app/(main)/(auth)`, `src/app/(main)/account`, `src/app/(main)/(site)`: páginas.
 - `src/i18n/`: idiomas (inglês padrão e pt-BR), dicionários e detecção pelo cookie `locale` ou `Accept-Language`.

@@ -6,7 +6,7 @@ import { ACCESS_COOKIE, REFRESH_COOKIE, clearSessionCookies, setSessionCookies }
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-CoopSeat-Client',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-CoopSeat-Client, X-CoopSeat-Version',
   'Access-Control-Max-Age': '600',
 };
 

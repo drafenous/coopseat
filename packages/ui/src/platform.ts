@@ -1,4 +1,4 @@
-import type {AuthDeepLink,Devices,Mode,NativeEvent,OpenConfig} from './types';
+import type {AuthDeepLink,Devices,Mode,NativeEvent,OpenConfig,ScreenSource} from './types';
 
 /** API exposed by the Electron preload as `window.input`. */
 export type DesktopBridge = {
@@ -9,6 +9,8 @@ export type DesktopBridge = {
   open(config:OpenConfig):Promise<boolean>;stop():Promise<void>;
   control(key:string,value:number|boolean):Promise<void>;bounds(rect:{x:number;y:number;width:number;height:number;holes?:{x:number;y:number;width:number;height:number;radius?:number}[];dim?:number}):Promise<void>;window(action:string):Promise<boolean|void>;donate():Promise<void>;watchPointer(on:boolean):Promise<void>;onPointer(callback:()=>void):()=>void;
   onNative(callback:(event:NativeEvent)=>void):()=>void;
+  /** `pick` arms the next getDisplayMedia() call with that source; `audio` adds system loopback (Windows). */
+  screen:{sources():Promise<ScreenSource[]>;pick(id:string,audio:boolean):Promise<boolean>;protect(on:boolean):Promise<boolean>};
 };
 
 /**

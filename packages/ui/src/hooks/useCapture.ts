@@ -68,5 +68,7 @@ export function useCapture({settings:s,setSettings:setS,top,setError,setNotice}:
  const selectDevice=(key:DeviceKey,value:string)=>setS(x=>({...x,[key]:value,...(key==='video'?{mode:-1,audio:pairedAudio(x,value)}:{})}));
  const changeBackend=(backend:Backend)=>{setDevices(emptyDevices);setS(x=>({...x,video:'',audio:'',output:'',backend}));};
 
- return {devices,modes,native,loaded,busy,running,stats,locked,videoRef,audioRef,screenRef,start,stop,refresh,permit,resetDevices,selectDevice,changeBackend};
+ /** Live card tracks for streaming; null with the native backend, which renders outside the page. */
+ const mediaStream=useCallback(()=>{const tracks=[...stream.current?.getTracks()??[],...audioStream.current?.getTracks()??[]].filter(t=>t.readyState==='live');return tracks.length?new MediaStream(tracks):null;},[]);
+ return {devices,modes,native,loaded,busy,running,stats,locked,videoRef,audioRef,screenRef,start,stop,refresh,permit,resetDevices,selectDevice,changeBackend,mediaStream};
 }

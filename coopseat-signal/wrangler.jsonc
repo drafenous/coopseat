@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "coopseat-signal",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "routes": [{ "pattern": "sinal.coopseat.com", "custom_domain": true }],
+  "durable_objects": {
+    "bindings": [{ "name": "PARTY_SESSION", "class_name": "PartySession" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["PartySession"] }],
+  "vars": {
+    "ALLOWED_ORIGINS": "https://coopseat.com,https://www.coopseat.com",
+    "APP_URL": "https://coopseat.com"
+  },
+  // Secrets (wrangler secret put): PARTY_TOKEN_PUBLIC_KEY, PARTY_SIGNAL_SECRET
+  "env": {
+    "dev": {
+      "routes": [],
+      // Bindings are not inherited by environments.
+      "durable_objects": {
+        "bindings": [{ "name": "PARTY_SESSION", "class_name": "PartySession" }]
+      },
+      "vars": {
+        "ALLOWED_ORIGINS": "http://localhost:3000,http://127.0.0.1:5173",
+        "APP_URL": "http://localhost:3000"
+      }
+    }
+  }
+}
