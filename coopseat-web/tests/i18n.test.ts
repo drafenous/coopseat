@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { matchLocale, resolveLocale } from '@/i18n/config';
+import { localePath, matchLocale, resolveLocale, splitLocalePath } from '@/i18n/config';
 import { en } from '@/i18n/dictionaries/en';
 import { ptBR } from '@/i18n/dictionaries/pt-BR';
 import { en as uiEn } from '../../packages/ui/src/i18n/en';
@@ -36,6 +36,24 @@ describe('matchLocale', () => {
     expect(resolveLocale('pt-BR', 'en-US')).toBe('pt-BR');
     expect(resolveLocale('xx', 'pt-BR')).toBe('pt-BR');
     expect(resolveLocale(undefined, undefined)).toBe('en');
+  });
+});
+
+describe('locale paths', () => {
+  it('keeps English unprefixed and prefixes Portuguese', () => {
+    expect(localePath('en', '/')).toBe('/');
+    expect(localePath('en', '/download')).toBe('/download');
+    expect(localePath('pt-BR', '/')).toBe('/pt-BR');
+    expect(localePath('pt-BR', '/download')).toBe('/pt-BR/download');
+  });
+
+  it('splits only an exact prefix segment', () => {
+    expect(splitLocalePath('/pt-BR')).toEqual({ locale: 'pt-BR', path: '/' });
+    expect(splitLocalePath('/pt-BR/')).toEqual({ locale: 'pt-BR', path: '/' });
+    expect(splitLocalePath('/pt-BR/download/installer')).toEqual({ locale: 'pt-BR', path: '/download/installer' });
+    expect(splitLocalePath('/pt-BRX')).toBeNull();
+    expect(splitLocalePath('/download')).toBeNull();
+    expect(splitLocalePath('/')).toBeNull();
   });
 });
 

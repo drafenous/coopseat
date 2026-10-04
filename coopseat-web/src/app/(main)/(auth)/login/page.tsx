@@ -2,12 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ProviderButtons } from '@/components/ProviderButtons';
 import { Card, Divider } from '@/components/ui';
-import { getDictionary } from '@/i18n/server';
+import { getDictionary, getLocale } from '@/i18n/server';
+import { pageMetadata } from '@/lib/seo';
 import { safeNextPath } from '@/server/http';
 import { LoginForm } from './LoginForm';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.login };
+  const [{ meta }, locale] = await Promise.all([getDictionary(), getLocale()]);
+  return pageMetadata({ locale, path: '/login', title: meta.login, description: meta.loginDescription, imageAlt: meta.title });
 }
 
 export default async function LoginPage({ searchParams }: PageProps<'/login'>) {

@@ -7,6 +7,32 @@ export const LOCALE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 export const LOCALE_NAMES: Record<Locale, string> = { en: 'English', 'pt-BR': 'Português' };
 
+/** Set by the proxy on `/pt-BR/...` requests; wins over the cookie and Accept-Language. */
+export const LOCALE_HEADER = 'x-coopseat-locale';
+
+/**
+ * Crawlers send no cookie and usually no Accept-Language, so each non-default locale also gets
+ * its own URL prefix; that is what makes the Portuguese pages indexable.
+ */
+const LOCALE_PREFIXES: Record<Locale, string> = { en: '', 'pt-BR': '/pt-BR' };
+
+export function localePath(locale: Locale, path: string): string {
+  const prefix = LOCALE_PREFIXES[locale];
+  if (!prefix) return path;
+  return path === '/' ? prefix : `${prefix}${path}`;
+}
+
+/** Splits `/pt-BR/download` into the locale and the unprefixed path; null when there is no prefix. */
+export function splitLocalePath(pathname: string): { locale: Locale; path: string } | null {
+  for (const locale of LOCALES) {
+    const prefix = LOCALE_PREFIXES[locale];
+    if (prefix && (pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+      return { locale, path: pathname.slice(prefix.length) || '/' };
+    }
+  }
+  return null;
+}
+
 export function isLocale(value: unknown): value is Locale {
   return typeof value === 'string' && (LOCALES as readonly string[]).includes(value);
 }

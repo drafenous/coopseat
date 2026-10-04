@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/site/LegalPage';
-import { getDictionary } from '@/i18n/server';
+import { getDictionary, getLocale } from '@/i18n/server';
+import { pageMetadata } from '@/lib/seo';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.privacy };
+  const [{ meta }, locale] = await Promise.all([getDictionary(), getLocale()]);
+  return pageMetadata({ locale, path: '/privacy', title: meta.privacy, description: meta.privacyDescription, imageAlt: meta.title });
 }
 
 export default async function PrivacyPage() {

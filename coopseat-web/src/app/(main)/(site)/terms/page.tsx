@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/site/LegalPage';
-import { getDictionary } from '@/i18n/server';
+import { getDictionary, getLocale } from '@/i18n/server';
+import { pageMetadata } from '@/lib/seo';
 import { TERMS_VERSION } from '@/lib/validation/account';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.terms };
+  const [{ meta }, locale] = await Promise.all([getDictionary(), getLocale()]);
+  return pageMetadata({ locale, path: '/terms', title: meta.terms, description: meta.termsDescription, imageAlt: meta.title });
 }
 
 export default async function TermsPage() {

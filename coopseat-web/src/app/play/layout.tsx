@@ -1,15 +1,25 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { CookieConsent } from '@/components/CookieConsent';
 import { GoogleTag } from '@/app/GoogleTag';
 import { getDictionary, getLocale } from '@/i18n/server';
+import { SITE_NAME, SITE_URL, pageMetadata } from '@/lib/seo';
 import './play.css';
 
+export const viewport: Viewport = { themeColor: '#0b1016', colorScheme: 'dark' };
+
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getDictionary();
+  const [t, locale] = await Promise.all([getDictionary(), getLocale()]);
   return {
-    title: `${t.meta.play} · CoopSeat`,
-    description: t.meta.playDescription,
-    metadataBase: new URL(process.env['APP_URL'] ?? 'https://coopseat.com'),
+    metadataBase: new URL(SITE_URL),
+    applicationName: SITE_NAME,
+    ...pageMetadata({
+      locale,
+      path: '/play',
+      title: `${t.meta.play} · ${SITE_NAME}`,
+      description: t.meta.playDescription,
+      imageAlt: t.meta.title,
+      absoluteTitle: true,
+    }),
   };
 }
 

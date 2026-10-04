@@ -5,7 +5,7 @@ import { safeNextPath } from '@/server/http';
 import { MfaForm } from './MfaForm';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.mfa };
+  return { title: (await getDictionary()).meta.mfa, robots: { index: false } };
 }
 
 export default async function MfaPage({ searchParams }: PageProps<'/login/2fa'>) {

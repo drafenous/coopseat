@@ -5,7 +5,7 @@ import { getDictionary } from '@/i18n/server';
 import { ForgotForm } from './ForgotForm';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.forgotPassword };
+  return { title: (await getDictionary()).meta.forgotPassword, robots: { index: false } };
 }
 
 export default async function ForgotPage() {

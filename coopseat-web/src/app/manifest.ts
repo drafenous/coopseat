@@ -1,12 +1,14 @@
 import type { MetadataRoute } from 'next';
-import { getDictionary } from '@/i18n/server';
+import { getDictionary, getLocale } from '@/i18n/server';
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
-  const t = await getDictionary();
+  const [t, locale] = await Promise.all([getDictionary(), getLocale()]);
   return {
     name: 'CoopSeat',
     short_name: 'CoopSeat',
     description: t.meta.description,
+    lang: locale,
+    categories: ['games', 'entertainment'],
     start_url: '/',
     display: 'standalone',
     background_color: '#0b1016',

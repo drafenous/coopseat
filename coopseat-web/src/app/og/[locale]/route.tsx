@@ -1,9 +1,6 @@
 import { ImageResponse } from 'next/og';
-import { getDictionary } from '@/i18n/server';
-
-export const alt = 'CoopSeat';
-export const size = { width: 1200, height: 630 };
-export const contentType = 'image/png';
+import { DEFAULT_LOCALE, LOCALES, isLocale } from '@/i18n/config';
+import { dictionaries } from '@/i18n/dictionaries';
 
 const ARMCHAIR = [
   'M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3',
@@ -12,8 +9,16 @@ const ARMCHAIR = [
   'M19 18v2',
 ];
 
-export default async function OpengraphImage() {
-  const t = await getDictionary();
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return LOCALES.map((locale) => ({ locale }));
+}
+
+/** Social preview image, one per locale so shared Portuguese links show Portuguese copy. */
+export async function GET(_req: Request, ctx: { params: Promise<{ locale: string }> }) {
+  const { locale } = await ctx.params;
+  const t = dictionaries[isLocale(locale) ? locale : DEFAULT_LOCALE];
   return new ImageResponse(
     (
       <div
@@ -57,6 +62,6 @@ export default async function OpengraphImage() {
         <div style={{ display: 'flex', marginTop: 28, fontSize: 30, color: '#97a6b3', maxWidth: 900 }}>{t.meta.description}</div>
       </div>
     ),
-    size,
+    { width: 1200, height: 630 },
   );
 }

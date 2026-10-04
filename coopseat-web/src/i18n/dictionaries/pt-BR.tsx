@@ -2,10 +2,14 @@ import type { Dictionary } from './en';
 
 export const ptBR: Dictionary = {
   meta: {
-    description: 'Assista e jogue junto com seus amigos, com sua câmera, seu controle e sua tela.',
+    title: 'CoopSeat · Jogue seu videogame no PC com placa de captura',
+    description:
+      'App grátis para jogar PlayStation, Xbox ou Switch no PC com Windows usando placa de captura: Full HD a 60 fps, som do jogo e quase sem atraso.',
     login: 'Entrar',
+    loginDescription: 'Entre no CoopSeat com Google ou e-mail para gerenciar sua conta e a segurança dela.',
     mfa: 'Verificação em duas etapas',
     signup: 'Criar conta',
+    signupDescription: 'Crie sua conta grátis no CoopSeat e prepare-se para assistir e jogar junto com os amigos.',
     forgotPassword: 'Esqueci minha senha',
     resetPassword: 'Redefinir senha',
     emailConfirmed: 'E-mail confirmado',
@@ -13,12 +17,16 @@ export const ptBR: Dictionary = {
     openApp: 'Voltando para o app',
     account: 'Minha conta',
     privacy: 'Política de Privacidade',
+    privacyDescription: 'Como o CoopSeat trata os seus dados: o que coletamos, o que nunca gravamos e os seus direitos pela LGPD.',
     terms: 'Termos de Uso',
+    termsDescription: 'As regras de uso do app, do site e da conta CoopSeat.',
     mockVerification: 'Verificação (simulada)',
-    play: 'Jogar',
-    playDescription: 'Jogue o console numa aba do navegador pela placa de captura.',
-    download: 'Download',
-    downloadDescription: 'Baixe o CoopSeat para Windows 10 e 11 e veja os requisitos do sistema.',
+    play: 'Jogar no navegador',
+    playDescription:
+      'Jogue o videogame numa aba do Chrome ou do Edge pela placa de captura, sem instalar nada. Grátis, em Full HD e quase sem atraso.',
+    download: 'Baixar para Windows',
+    downloadDescription:
+      'Baixe o CoopSeat grátis para Windows 10 e 11: instalador ou versão portátil, instalação em três passos e requisitos da placa de captura.',
   },
   common: {
     language: 'Idioma',

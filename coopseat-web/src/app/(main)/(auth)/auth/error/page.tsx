@@ -5,7 +5,7 @@ import { errorMessage } from '@/i18n/dictionaries';
 import { getDictionary } from '@/i18n/server';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.authError };
+  return { title: (await getDictionary()).meta.authError, robots: { index: false } };
 }
 
 export default async function AuthErrorPage({ searchParams }: PageProps<'/auth/error'>) {

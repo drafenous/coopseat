@@ -1,13 +1,14 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
 import { setLocale } from '@/i18n/actions';
 import { useLocale, useT } from '@/i18n/client';
-import { LOCALES, LOCALE_NAMES } from '@/i18n/config';
+import { LOCALES, LOCALE_NAMES, isLocale, localePath, splitLocalePath } from '@/i18n/config';
 
 export function LanguageSwitcher({ className = '' }: { className?: string }) {
   const router = useRouter();
+  const pathname = usePathname();
   const locale = useLocale();
   const t = useT();
   const [pending, startTransition] = useTransition();
@@ -24,7 +25,12 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
           const next = e.target.value;
           startTransition(async () => {
             await setLocale(next);
-            router.refresh();
+            const localized = splitLocalePath(pathname);
+            if (localized && isLocale(next)) {
+              router.replace(`${localePath(next, localized.path)}${window.location.search}${window.location.hash}`);
+            } else {
+              router.refresh();
+            }
           });
         }}
       >

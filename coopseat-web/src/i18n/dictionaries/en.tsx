@@ -2,10 +2,14 @@ import type { ReactNode } from 'react';
 
 export const en = {
   meta: {
-    description: 'Watch and play together with your friends, with your camera, your controller and your screen.',
+    title: 'CoopSeat · Play your console on your PC with a capture card',
+    description:
+      'Free app to play PlayStation, Xbox or Switch on your Windows PC with a capture card: Full HD at 60 fps, game sound and almost no delay.',
     login: 'Sign in',
+    loginDescription: 'Sign in to CoopSeat with Google or e-mail to manage your account and its security.',
     mfa: 'Two-step verification',
     signup: 'Create account',
+    signupDescription: 'Create your free CoopSeat account and get ready to watch and play with your friends.',
     forgotPassword: 'Forgot password',
     resetPassword: 'Reset password',
     emailConfirmed: 'E-mail confirmed',
@@ -13,12 +17,16 @@ export const en = {
     openApp: 'Returning to the app',
     account: 'My account',
     privacy: 'Privacy Policy',
+    privacyDescription: 'How CoopSeat handles your data: what we collect, what we never record and your rights under the LGPD.',
     terms: 'Terms of Use',
+    termsDescription: 'The rules for using the CoopSeat app, website and account.',
     mockVerification: 'Verification (simulated)',
-    play: 'Play',
-    playDescription: 'Play your console in a browser tab through a capture card.',
-    download: 'Download',
-    downloadDescription: 'Download CoopSeat for Windows 10 and 11 and see the system requirements.',
+    play: 'Play in the browser',
+    playDescription:
+      'Play your console in a Chrome or Edge tab through a capture card, with nothing to install. Free, Full HD and almost no delay.',
+    download: 'Download for Windows',
+    downloadDescription:
+      'Download CoopSeat for free for Windows 10 and 11: installer or portable version, setup in three steps and capture card requirements.',
   },
   common: {
     language: 'Language',

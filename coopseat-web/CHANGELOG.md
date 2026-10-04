@@ -4,6 +4,19 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-03
+
+### Added
+- Portuguese pages have their own addresses under `/pt-BR` (for example `/pt-BR/download`), so search engines can index them. Opening one of these addresses also remembers Portuguese as your language.
+- `robots.txt` and `sitemap.xml`, listing every public page in English and Portuguese.
+- Search engines get structured data about the app (free Windows app, latest version, FAQ), and every public page declares its canonical address and its other-language version.
+- Link previews on social networks and chat apps show the page title, description and an image in the reader's language.
+
+### Changed
+- Clearer page titles and descriptions in search results, mentioning capture cards and the consoles you can play.
+- Password reset, two-step verification, e-mail confirmation and sign-in error pages are hidden from search engines.
+- The download page no longer shows a first-launch note under the portable version.
+
 ## [0.2.0] - 2026-10-03
 
 ### Added

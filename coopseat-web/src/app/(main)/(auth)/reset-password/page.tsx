@@ -6,7 +6,7 @@ import { getPageSession } from '@/server/page-session';
 import { ResetForm } from './ResetForm';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.resetPassword };
+  return { title: (await getDictionary()).meta.resetPassword, robots: { index: false } };
 }
 
 export default async function ResetPage() {

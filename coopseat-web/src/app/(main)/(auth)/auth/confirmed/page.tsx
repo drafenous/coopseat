@@ -4,7 +4,7 @@ import { Alert, Card, buttonClass } from '@/components/ui';
 import { getDictionary } from '@/i18n/server';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.emailConfirmed };
+  return { title: (await getDictionary()).meta.emailConfirmed, robots: { index: false } };
 }
 
 export default async function ConfirmedPage({ searchParams }: PageProps<'/auth/confirmed'>) {

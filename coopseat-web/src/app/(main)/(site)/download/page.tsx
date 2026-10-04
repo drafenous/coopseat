@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import { Cable, Cpu, Download, HardDrive, HardDriveDownload, Info, Monitor, Play, Sparkles, Usb, Wifi } from 'lucide-react';
+import { JsonLd } from '@/components/JsonLd';
 import { getDictionary, getLocale } from '@/i18n/server';
 import { INSTALLER_URL, PORTABLE_URL } from '@/lib/links';
+import { pageMetadata, softwareApplication } from '@/lib/seo';
 import { latestRelease, type LatestRelease } from '@/server/releases';
 
 const REQUIREMENT_ICONS = [Monitor, Cpu, Cable, Usb, HardDrive, Wifi];
@@ -12,8 +14,8 @@ const secondaryCta =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-line-strong bg-white/[0.02] px-6 py-3.5 text-[15px] font-semibold text-[#d4dee8] transition hover:-translate-y-0.5 hover:bg-white/[0.06]';
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { meta } = await getDictionary();
-  return { title: meta.download, description: meta.downloadDescription };
+  const [{ meta }, locale] = await Promise.all([getDictionary(), getLocale()]);
+  return pageMetadata({ locale, path: '/download', title: meta.download, description: meta.downloadDescription, imageAlt: meta.title });
 }
 
 async function findRelease(): Promise<LatestRelease | null> {
@@ -37,8 +39,25 @@ export default async function DownloadPage() {
       ].filter((o) => release.files[o.variant])
     : [];
 
+  const installerSize = release?.files.installer?.size;
+  const structuredData = {
+    '@context': 'https://schema.org',
+    ...softwareApplication(
+      locale,
+      t.meta.downloadDescription,
+      release
+        ? {
+            softwareVersion: release.version,
+            datePublished: release.publishedAt,
+            ...(installerSize ? { fileSize: `${Math.round(installerSize / 1_000_000)}MB` } : {}),
+          }
+        : {},
+    ),
+  };
+
   return (
     <>
+      <JsonLd data={structuredData} />
       <section className="relative overflow-hidden">
         <div aria-hidden className="absolute -top-40 left-1/2 h-[420px] w-[800px] -translate-x-1/2 rounded-full bg-accent/10 blur-[120px]" />
         <div className="relative mx-auto max-w-4xl px-6 pt-20 pb-16 text-center sm:pt-28">

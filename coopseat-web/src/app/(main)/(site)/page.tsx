@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
@@ -22,10 +23,17 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
+import { JsonLd } from '@/components/JsonLd';
 import { HeroMock } from '@/components/landing/HeroMock';
 import { PartyMock } from '@/components/landing/PartyMock';
-import { getDictionary } from '@/i18n/server';
+import { getDictionary, getLocale } from '@/i18n/server';
 import { DOWNLOAD_URL } from '@/lib/links';
+import { ORGANIZATION_ID, SITE_NAME, SITE_URL, absoluteUrl, pageMetadata, softwareApplication } from '@/lib/seo';
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [{ meta }, locale] = await Promise.all([getDictionary(), getLocale()]);
+  return pageMetadata({ locale, path: '/', title: meta.title, description: meta.description, imageAlt: meta.title, absoluteTitle: true });
+}
 
 const FEATURE_ICONS = [Zap, MonitorPlay, AudioLines, Maximize, Globe, SlidersHorizontal];
 const STEP_ICONS = [Cable, MousePointerClick, Gamepad2];
@@ -56,10 +64,24 @@ function IconTile({ children }: { children: ReactNode }) {
 }
 
 export default async function Home() {
-  const h = (await getDictionary()).home;
+  const [t, locale] = await Promise.all([getDictionary(), getLocale()]);
+  const h = t.home;
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      { '@type': 'Organization', '@id': ORGANIZATION_ID, name: SITE_NAME, url: SITE_URL, logo: absoluteUrl('/icon-512.png') },
+      { '@type': 'WebSite', name: SITE_NAME, url: SITE_URL, inLanguage: locale, publisher: { '@id': ORGANIZATION_ID } },
+      softwareApplication(locale, t.meta.description),
+      {
+        '@type': 'FAQPage',
+        mainEntity: h.faq.map((item) => ({ '@type': 'Question', name: item.q, acceptedAnswer: { '@type': 'Answer', text: item.a } })),
+      },
+    ],
+  };
 
   return (
     <>
+        <JsonLd data={structuredData} />
         <section id="hero" className="relative overflow-hidden">
           <div
             aria-hidden
