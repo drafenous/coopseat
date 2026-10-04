@@ -17,6 +17,7 @@
     "db:migrate": "prisma db migrate",
     "db:sql": "node scripts/apply-sql.mjs",
     "db:test": "node scripts/test-db.mjs",
+    "relay:revoke": "node scripts/relay-revoke.mjs",
     "supabase:configure": "node scripts/configure-supabase.mjs",
     "email:preview": "node scripts/preview-emails.mjs"
   },

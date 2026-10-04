@@ -94,4 +94,66 @@ namespace public {
     @@map("rate_limit_hits")
     @@rls
   }
+
+  model RelayPolicy {
+    id                   String                     @id @default("global")
+    enabled              Boolean                    @default(true)
+    membersEnabled       Boolean                    @default(true)
+    guestsEnabled        Boolean                    @default(true)
+    minAppVersion        String?
+    blockedAppVersions   String?
+    dailyCredentialQuota Int                        @default(12)
+    credentialTtlSeconds Int                        @default(14400)
+    maxRelayBitrateKbps  Int                        @default(4000)
+    monthlyBudgetGb      Int?                       @default(900)
+    note                 String?
+    updatedAt            temporal.updatedAtString()
+
+    @@check(expression: "id = 'global'", name: "relay_policy_singleton")
+    @@check(expression: "\"dailyCredentialQuota\" >= 0", name: "relay_policy_quota")
+    @@check(expression: "\"credentialTtlSeconds\" BETWEEN 60 AND 86400", name: "relay_policy_ttl")
+    @@map("relay_policy")
+    @@rls
+  }
+
+  model RelayUserOverride {
+    profileId  AuthUserId         @id
+    profile    Profile            @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    blocked    Boolean            @default(false)
+    dailyQuota Int?
+    reason     String?
+    expiresAt  TimestamptzString?
+    createdAt  TimestamptzString  @default(now())
+
+    @@map("relay_user_overrides")
+    @@rls
+  }
+
+  model RelayCredential {
+    id         Uuid               @id @default(uuid())
+    profileId  AuthUserId
+    profile    Profile            @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    username   String
+    audience   String
+    appVersion String?
+    issuedAt   TimestamptzString  @default(now())
+    expiresAt  TimestamptzString
+    revokedAt  TimestamptzString?
+
+    @@check(expression: "audience IN ('member', 'guest')", name: "relay_credentials_audience")
+    @@index([profileId, issuedAt])
+    @@index([expiresAt])
+    @@map("relay_credentials")
+    @@rls
+  }
+
+  model RelayUsage {
+    month       String            @id
+    egressBytes BigIntNumber
+    checkedAt   TimestamptzString
+
+    @@check(expression: "month ~ '^[0-9]{4}-[0-9]{2}$'", name: "relay_usage_month")
+    @@map("relay_usage")
+    @@rls
+  }
 }

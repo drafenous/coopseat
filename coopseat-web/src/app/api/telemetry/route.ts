@@ -8,8 +8,9 @@ const bodySchema = z.object({
   clientId: z.uuid(),
   sessionId: z.number().int().positive(),
   version: z.string().max(32),
-  event: z.enum(['app_open', 'capture_start']),
+  event: z.enum(['app_open', 'capture_start', 'rtc_connected']),
   backend: z.enum(['native', 'compat']).optional(),
+  candidateType: z.enum(['host', 'srflx', 'prflx', 'relay']).optional(),
 });
 
 /**
@@ -19,12 +20,12 @@ const bodySchema = z.object({
 export const POST = route(async (req) => {
   if (!env.gaId || !env.gaApiSecret) return new NextResponse(null, { status: 204 });
   await rateLimit('telemetry', clientIp(req));
-  const { clientId, sessionId, version, event, backend } = await readJson(req, bodySchema);
+  const { clientId, sessionId, version, event, backend, candidateType } = await readJson(req, bodySchema);
 
   const url = new URL('https://www.google-analytics.com/mp/collect');
   url.searchParams.set('measurement_id', env.gaId);
   url.searchParams.set('api_secret', env.gaApiSecret);
-  const params = { session_id: sessionId, engagement_time_msec: 1, platform: 'desktop', app_version: version, ...(backend && { backend }) };
+  const params = { session_id: sessionId, engagement_time_msec: 1, platform: 'desktop', app_version: version, ...(backend && { backend }), ...(candidateType && { candidate_type: candidateType }) };
   await fetch(url, { method: 'POST', body: JSON.stringify({ client_id: clientId, events: [{ name: event, params }] }) }).catch(
     (err: unknown) => console.error('GA telemetry failed', err),
   );

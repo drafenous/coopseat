@@ -75,6 +75,10 @@ export function createFakeDb() {
     RateLimitHit: [] as Row[],
     Profile: [] as Row[],
     IdentityVerification: [] as Row[],
+    RelayPolicy: [] as Row[],
+    RelayUserOverride: [] as Row[],
+    RelayCredential: [] as Row[],
+    RelayUsage: [] as Row[],
   };
   const orm = {
     public: {
@@ -108,6 +112,42 @@ export function createFakeDb() {
           createdAt: now(),
           completedAt: null,
         }), approvedFingerprintsUnique);
+      },
+      get RelayPolicy() {
+        return table(data.RelayPolicy, () => ({
+          id: 'global',
+          enabled: true,
+          membersEnabled: true,
+          guestsEnabled: true,
+          minAppVersion: null,
+          blockedAppVersions: null,
+          dailyCredentialQuota: 12,
+          credentialTtlSeconds: 14400,
+          maxRelayBitrateKbps: 4000,
+          monthlyBudgetGb: 900,
+          note: null,
+          updatedAt: now(),
+        }));
+      },
+      get RelayUserOverride() {
+        return table(data.RelayUserOverride, () => ({
+          blocked: false,
+          dailyQuota: null,
+          reason: null,
+          expiresAt: null,
+          createdAt: now(),
+        }));
+      },
+      get RelayCredential() {
+        return table(data.RelayCredential, () => ({
+          id: randomUUID(),
+          appVersion: null,
+          issuedAt: now(),
+          revokedAt: null,
+        }));
+      },
+      get RelayUsage() {
+        return table(data.RelayUsage, () => ({}));
       },
     },
   };

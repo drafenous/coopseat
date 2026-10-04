@@ -27,6 +27,7 @@ Primeira configuração do Supabase (projeto, role `prisma`, migrations, SQL, Au
 | `npm run migration:plan -- --name <nome>` | Planeja uma migration (offline) em `migrations/` |
 | `npm run db:migrate` | Aplica as migrations planejadas (`DIRECT_URL`) |
 | `npm run db:sql` | Aplica `supabase/sql/*.sql` (trigger, grants, Custom Access Token Hook, pg_cron) |
+| `npm run relay:revoke -- --user <uuid>` / `--all` | Revoga na Cloudflare as credenciais TURN ainda válidas |
 | `npm run supabase:configure` | Configura o Auth pela Management API (templates bilíngues, MFA, provedores, SMTP) |
 | `npm run lint` / `typecheck` / `test` / `build` | Verificações usadas no CI |
 
@@ -61,7 +62,59 @@ O site, as mensagens da API e o `@coopseat/ui` estão em inglês (padrão) e por
 
 ## TURN (watch party)
 
-`POST /api/turn` devolve `{ iceServers, expiresAt }` com credenciais de 4 horas do TURN da Cloudflare Realtime (`CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`), para usar direto em `new RTCPeerConnection({ iceServers })`. Exige sessão e tem limite por usuário. Convidados anônimos vão receber credenciais pela futura rota de entrada na sala, presas a um convite válido, para que ninguém use o relay de graça.
+`POST /api/turn` devolve `{ iceServers, expiresAt, relay: true, maxRelayBitrateKbps }` com credenciais do TURN da Cloudflare Realtime (`CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`), para usar direto em `new RTCPeerConnection({ iceServers })`. Exige sessão e tem limite por usuário. O app desktop envia `X-CoopSeat-Version` para as regras de versão. Convidados anônimos vão receber credenciais pela futura rota de entrada na sala, presas a um convite válido, para que ninguém use o relay de graça.
+
+Só o tráfego que passa pelo relay é cobrado; conexões diretas (P2P) não custam nada. Quando a política nega o relay, a rota responde 200 com `{ iceServers: [STUN], relay: false, reason, message }`: conexões diretas continuam funcionando e só quem depende do relay fica sem conexão. `src/lib/webrtc/relay.ts` detecta se a conexão caiu no relay (`getSelectedCandidateType`) e limita o bitrate nesse caso (`applyRelayBitrateCap`); o evento de telemetria `rtc_connected` com `candidateType` mede a taxa real de relay.
+
+### Controle do relay
+
+As chaves ficam no Postgres e valem na próxima requisição, sem deploy. Edite pelo SQL Editor do Supabase. As tabelas têm RLS sem policies, então só o backend as lê.
+
+| Tabela | Chave | Efeito |
+|---|---|---|
+| `relay_policy` (linha `global`; sem a linha, valem os defaults) | `enabled` | Desliga o relay para todos |
+| | `membersEnabled` / `guestsEnabled` | Desliga por público |
+| | `minAppVersion` / `blockedAppVersions` (lista separada por vírgula) | Bloqueia versões do app desktop |
+| | `dailyCredentialQuota` (12) | Credenciais por usuário em 24 horas |
+| | `credentialTtlSeconds` (14400) | Validade de cada credencial (60 a 86400) |
+| | `maxRelayBitrateKbps` (4000) | Limite de bitrate enviado ao cliente quando a conexão está no relay |
+| | `monthlyBudgetGb` (900; `null` desliga) | Teto mensal de egress do TURN; ao atingir, o relay para até o mês seguinte |
+| `relay_user_overrides` | `blocked`, `dailyQuota`, `reason`, `expiresAt` | Bloqueio ou cota por usuário; com `expiresAt` no passado, o override deixa de valer |
+| `relay_credentials` | (auditoria) | Cada credencial emitida, usada para a cota e para revogar |
+| `relay_usage` | (cache) | Egress do TURN no mês (`month` = `AAAA-MM`, UTC), atualizado pelo backend |
+
+**Teto mensal.** A Cloudflare cobra só o egress, com 1.000 GB grátis por mês (compartilhados com o SFU, que não usamos). Antes de emitir credenciais, o backend lê o egress do TURN no mês pela GraphQL Analytics API (`CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_ANALYTICS_API_TOKEN`, permissão *Account Analytics: Read*), guarda a leitura em `relay_usage` por 5 minutos e nega o relay quando ela chega em `monthlyBudgetGb`. O padrão de 900 GB deixa margem para o atraso das métricas e para as sessões que já têm credenciais, que continuam até expirar (use `relay:revoke -- --all` para cortá-las). O mês é o calendário UTC; o ciclo de cobrança da Cloudflare também é mensal. O teto falha fechado: se a Cloudflare não responder e a última leitura tiver mais de 1 hora, ou se as variáveis faltarem em produção, o relay fica desligado. Fora de produção, sem as variáveis, o teto é ignorado.
+
+```sql
+-- desligar o relay para todos (volte com enabled = true)
+insert into relay_policy (id, enabled, "updatedAt") values ('global', false, now())
+  on conflict (id) do update set enabled = excluded.enabled, "updatedAt" = now();
+
+-- só para convidados, ou só para versões antigas do app
+update relay_policy set "guestsEnabled" = false, "updatedAt" = now() where id = 'global';
+update relay_policy set "minAppVersion" = '0.3.0', "blockedAppVersions" = '0.3.2', "updatedAt" = now() where id = 'global';
+
+-- bloquear um usuário por 7 dias (expiresAt null = sem prazo)
+insert into relay_user_overrides ("profileId", blocked, reason, "expiresAt")
+  values ('<uuid>', true, 'suspeita de abuso', now() + interval '7 days')
+  on conflict ("profileId") do update set blocked = true, reason = excluded.reason, "expiresAt" = excluded."expiresAt";
+
+-- desbloquear
+delete from relay_user_overrides where "profileId" = '<uuid>';
+
+-- consumo do mês em GB e teto atual
+select u.month, round(u."egressBytes" / 1e9, 1) as gb, p."monthlyBudgetGb", u."checkedAt"
+  from relay_usage u left join relay_policy p on p.id = 'global' order by u.month desc;
+
+-- mudar o teto (ou null para desligar)
+update relay_policy set "monthlyBudgetGb" = 500, "updatedAt" = now() where id = 'global';
+
+-- quem mais pegou credenciais nas últimas 24 horas
+select "profileId", count(*) from relay_credentials
+  where "issuedAt" > now() - interval '1 day' group by 1 order by 2 desc;
+```
+
+Bloquear só impede **novas** credenciais. Para cortar as que já foram emitidas, revogue na Cloudflare: `npm run relay:revoke -- --user <uuid>` ou `npm run relay:revoke -- --all` (usa `DIRECT_URL` e as chaves do TURN). Último recurso: apagar ou rotacionar a TURN key no painel da Cloudflare.
 
 A página `/download` mostra a versão, as opções instalador e portátil e os requisitos do sistema. `GET /download/installer` e `GET /download/portable` redirecionam para o `*-Setup.exe` e o `*-Portable.exe` da última release publicada do repositório privado do app (`GITHUB_RELEASES_REPO`), usando um token fine-grained só de leitura (`GITHUB_RELEASES_TOKEN`). O GitHub entrega uma URL assinada que expira em poucos minutos, então o site acompanha cada nova release sem deploy.
 
@@ -87,8 +140,8 @@ Para outro provedor, implemente `IdentityProvider` (`createSession` e `parseWebh
 
 ## Estrutura
 
-- `src/prisma/contract.prisma`: modelos `Profile`, `IdentityVerification`, `AuthTicket` e `RateLimitHit`, com RLS.
-- `src/server/`: GoTrue, JWT (JWKS), sessões, tickets, rate limit, captcha, perfis e KYC.
+- `src/prisma/contract.prisma`: modelos `Profile`, `IdentityVerification`, `AuthTicket`, `RateLimitHit` e os de controle do relay (`RelayPolicy`, `RelayUserOverride`, `RelayCredential`, `RelayUsage`), com RLS.
+- `src/server/`: GoTrue, JWT (JWKS), sessões, tickets, rate limit, captcha, perfis, KYC e política do relay TURN.
 - `src/app/api/`: rotas do BFF.
 - `src/app/(main)/(auth)`, `src/app/(main)/account`, `src/app/(main)/(site)`: páginas.
 - `src/i18n/`: idiomas (inglês padrão e pt-BR), dicionários e detecção pelo cookie `locale` ou `Accept-Language`.

@@ -34,9 +34,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'28d6d8a8c18cfc32c238a819863fb285f0073e3f1e1c4f9a5d39f162bd9980d9'>;
+  StorageHashBase<'2ce8ed99f683ffe3565107d651e1d87d3a75403c3f72fe66d0a0d8618fa75358'>;
 export type ExecutionHash =
-  ExecutionHashBase<'a0e70ca8e82982e8416573b9303061fb867d27614abe26648dad22e5d5856070'>;
+  ExecutionHashBase<'bbaee8b25bdf57de5dfb09c146d91e32b72180c523f135d8ccf2dce99937dfa8'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -288,6 +288,43 @@ export type FieldOutputTypes = {
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly key: CodecTypes['pg/text@1']['output'];
     };
+    readonly RelayCredential: {
+      readonly appVersion: CodecTypes['pg/text@1']['output'] | null;
+      readonly audience: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly issuedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly username: CodecTypes['pg/text@1']['output'];
+    };
+    readonly RelayPolicy: {
+      readonly blockedAppVersions: CodecTypes['pg/text@1']['output'] | null;
+      readonly credentialTtlSeconds: CodecTypes['pg/int4@1']['output'];
+      readonly dailyCredentialQuota: CodecTypes['pg/int4@1']['output'];
+      readonly enabled: CodecTypes['pg/bool@1']['output'];
+      readonly guestsEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly maxRelayBitrateKbps: CodecTypes['pg/int4@1']['output'];
+      readonly membersEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly minAppVersion: CodecTypes['pg/text@1']['output'] | null;
+      readonly monthlyBudgetGb: CodecTypes['pg/int4@1']['output'] | null;
+      readonly note: CodecTypes['pg/text@1']['output'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly RelayUsage: {
+      readonly checkedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly egressBytes: CodecTypes['pg/int8number@1']['output'];
+      readonly month: CodecTypes['pg/text@1']['output'];
+    };
+    readonly RelayUserOverride: {
+      readonly blocked: CodecTypes['pg/bool@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly dailyQuota: CodecTypes['pg/int4@1']['output'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly reason: CodecTypes['pg/text@1']['output'] | null;
+    };
   };
 };
 export type FieldInputTypes = {
@@ -329,6 +366,43 @@ export type FieldInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/uuid@1']['input'];
       readonly key: CodecTypes['pg/text@1']['input'];
+    };
+    readonly RelayCredential: {
+      readonly appVersion: CodecTypes['pg/text@1']['input'] | null;
+      readonly audience: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly issuedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly username: CodecTypes['pg/text@1']['input'];
+    };
+    readonly RelayPolicy: {
+      readonly blockedAppVersions: CodecTypes['pg/text@1']['input'] | null;
+      readonly credentialTtlSeconds: CodecTypes['pg/int4@1']['input'];
+      readonly dailyCredentialQuota: CodecTypes['pg/int4@1']['input'];
+      readonly enabled: CodecTypes['pg/bool@1']['input'];
+      readonly guestsEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly maxRelayBitrateKbps: CodecTypes['pg/int4@1']['input'];
+      readonly membersEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly minAppVersion: CodecTypes['pg/text@1']['input'] | null;
+      readonly monthlyBudgetGb: CodecTypes['pg/int4@1']['input'] | null;
+      readonly note: CodecTypes['pg/text@1']['input'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly RelayUsage: {
+      readonly checkedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly egressBytes: CodecTypes['pg/int8number@1']['input'];
+      readonly month: CodecTypes['pg/text@1']['input'];
+    };
+    readonly RelayUserOverride: {
+      readonly blocked: CodecTypes['pg/bool@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly dailyQuota: CodecTypes['pg/int4@1']['input'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly reason: CodecTypes['pg/text@1']['input'] | null;
     };
   };
 };
@@ -372,6 +446,43 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/uuid@1']['output'];
       readonly key: CodecTypes['pg/text@1']['output'];
     };
+    readonly relay_credentials: {
+      readonly appVersion: CodecTypes['pg/text@1']['output'] | null;
+      readonly audience: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly issuedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly username: CodecTypes['pg/text@1']['output'];
+    };
+    readonly relay_policy: {
+      readonly blockedAppVersions: CodecTypes['pg/text@1']['output'] | null;
+      readonly credentialTtlSeconds: CodecTypes['pg/int4@1']['output'];
+      readonly dailyCredentialQuota: CodecTypes['pg/int4@1']['output'];
+      readonly enabled: CodecTypes['pg/bool@1']['output'];
+      readonly guestsEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly maxRelayBitrateKbps: CodecTypes['pg/int4@1']['output'];
+      readonly membersEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly minAppVersion: CodecTypes['pg/text@1']['output'] | null;
+      readonly monthlyBudgetGb: CodecTypes['pg/int4@1']['output'] | null;
+      readonly note: CodecTypes['pg/text@1']['output'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
+    readonly relay_usage: {
+      readonly checkedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly egressBytes: CodecTypes['pg/int8number@1']['output'];
+      readonly month: CodecTypes['pg/text@1']['output'];
+    };
+    readonly relay_user_overrides: {
+      readonly blocked: CodecTypes['pg/bool@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly dailyQuota: CodecTypes['pg/int4@1']['output'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly reason: CodecTypes['pg/text@1']['output'] | null;
+    };
   };
 };
 export type StorageColumnInputTypes = {
@@ -413,6 +524,43 @@ export type StorageColumnInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly id: CodecTypes['pg/uuid@1']['input'];
       readonly key: CodecTypes['pg/text@1']['input'];
+    };
+    readonly relay_credentials: {
+      readonly appVersion: CodecTypes['pg/text@1']['input'] | null;
+      readonly audience: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly issuedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly revokedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly username: CodecTypes['pg/text@1']['input'];
+    };
+    readonly relay_policy: {
+      readonly blockedAppVersions: CodecTypes['pg/text@1']['input'] | null;
+      readonly credentialTtlSeconds: CodecTypes['pg/int4@1']['input'];
+      readonly dailyCredentialQuota: CodecTypes['pg/int4@1']['input'];
+      readonly enabled: CodecTypes['pg/bool@1']['input'];
+      readonly guestsEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly maxRelayBitrateKbps: CodecTypes['pg/int4@1']['input'];
+      readonly membersEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly minAppVersion: CodecTypes['pg/text@1']['input'] | null;
+      readonly monthlyBudgetGb: CodecTypes['pg/int4@1']['input'] | null;
+      readonly note: CodecTypes['pg/text@1']['input'] | null;
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly relay_usage: {
+      readonly checkedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly egressBytes: CodecTypes['pg/int8number@1']['input'];
+      readonly month: CodecTypes['pg/text@1']['input'];
+    };
+    readonly relay_user_overrides: {
+      readonly blocked: CodecTypes['pg/bool@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly dailyQuota: CodecTypes['pg/int4@1']['input'] | null;
+      readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly reason: CodecTypes['pg/text@1']['input'] | null;
     };
   };
 };
@@ -461,6 +609,49 @@ export namespace Models {
     key: CodecTypes['pg/text@1']['output'];
     readonly [RelationKeys]?: never;
   };
+  export type public_RelayCredential = {
+    appVersion: CodecTypes['pg/text@1']['output'] | null;
+    audience: CodecTypes['pg/text@1']['output'];
+    expiresAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/uuid@1']['output'];
+    issuedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    profileId: CodecTypes['pg/uuid@1']['output'];
+    revokedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    username: CodecTypes['pg/text@1']['output'];
+    profile: public_Profile;
+    readonly [RelationKeys]?: 'profile';
+  };
+  export type public_RelayPolicy = {
+    blockedAppVersions: CodecTypes['pg/text@1']['output'] | null;
+    credentialTtlSeconds: CodecTypes['pg/int4@1']['output'];
+    dailyCredentialQuota: CodecTypes['pg/int4@1']['output'];
+    enabled: CodecTypes['pg/bool@1']['output'];
+    guestsEnabled: CodecTypes['pg/bool@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    maxRelayBitrateKbps: CodecTypes['pg/int4@1']['output'];
+    membersEnabled: CodecTypes['pg/bool@1']['output'];
+    minAppVersion: CodecTypes['pg/text@1']['output'] | null;
+    monthlyBudgetGb: CodecTypes['pg/int4@1']['output'] | null;
+    note: CodecTypes['pg/text@1']['output'] | null;
+    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    readonly [RelationKeys]?: never;
+  };
+  export type public_RelayUsage = {
+    checkedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    egressBytes: CodecTypes['pg/int8number@1']['output'];
+    month: CodecTypes['pg/text@1']['output'];
+    readonly [RelationKeys]?: never;
+  };
+  export type public_RelayUserOverride = {
+    blocked: CodecTypes['pg/bool@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    dailyQuota: CodecTypes['pg/int4@1']['output'] | null;
+    expiresAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    profileId: CodecTypes['pg/uuid@1']['output'];
+    reason: CodecTypes['pg/text@1']['output'] | null;
+    profile: public_Profile;
+    readonly [RelationKeys]?: 'profile';
+  };
 }
 
 export declare const models: {
@@ -469,6 +660,10 @@ export declare const models: {
     IdentityVerification: Models.public_IdentityVerification;
     Profile: Models.public_Profile;
     RateLimitHit: Models.public_RateLimitHit;
+    RelayCredential: Models.public_RelayCredential;
+    RelayPolicy: Models.public_RelayPolicy;
+    RelayUsage: Models.public_RelayUsage;
+    RelayUserOverride: Models.public_RelayUserOverride;
   };
 };
 
@@ -740,6 +935,268 @@ type ContractBase = Omit<
               ];
               foreignKeys: readonly [];
             };
+            readonly relay_credentials: {
+              columns: {
+                readonly appVersion: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly audience: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly issuedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly profileId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly revokedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly username: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'relay_credentials_expiresAt_idx_6b6b8c10';
+                  readonly prefix: 'relay_credentials_expiresAt_idx';
+                  readonly columns: readonly ['expiresAt'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'relay_credentials_profileId_idx_d9cdfcaf';
+                  readonly prefix: 'relay_credentials_profileId_idx';
+                  readonly columns: readonly ['profileId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'relay_credentials_profileId_issuedAt_idx_04cadad5';
+                  readonly prefix: 'relay_credentials_profileId_issuedAt_idx';
+                  readonly columns: readonly ['profileId', 'issuedAt'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'relay_credentials';
+                    readonly columns: readonly ['profileId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'profiles';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly relay_policy: {
+              columns: {
+                readonly blockedAppVersions: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly credentialTtlSeconds: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 14400>;
+                  };
+                };
+                readonly dailyCredentialQuota: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 12>;
+                  };
+                };
+                readonly enabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly guestsEnabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly id: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'global'>;
+                  };
+                };
+                readonly maxRelayBitrateKbps: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 4000>;
+                  };
+                };
+                readonly membersEnabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
+                readonly minAppVersion: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly monthlyBudgetGb: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/int4@1', 900>;
+                  };
+                };
+                readonly note: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
+            readonly relay_usage: {
+              columns: {
+                readonly checkedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+                readonly egressBytes: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8number@1';
+                  readonly nullable: false;
+                };
+                readonly month: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['month'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
+            readonly relay_user_overrides: {
+              columns: {
+                readonly blocked: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly dailyQuota: {
+                  readonly nativeType: 'int4';
+                  readonly codecId: 'pg/int4@1';
+                  readonly nullable: true;
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+                readonly profileId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly reason: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['profileId'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'relay_user_overrides';
+                    readonly columns: readonly ['profileId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'profiles';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
           };
           readonly valueSet: {
             readonly age_status: {
@@ -785,6 +1242,22 @@ type ContractBase = Omit<
     readonly rate_limit_hits: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'RateLimitHit';
+    };
+    readonly relay_credentials: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'RelayCredential';
+    };
+    readonly relay_policy: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'RelayPolicy';
+    };
+    readonly relay_usage: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'RelayUsage';
+    };
+    readonly relay_user_overrides: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'RelayUserOverride';
     };
   };
   readonly domain: {
@@ -1028,6 +1501,242 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly RelayCredential: {
+            readonly fields: {
+              readonly appVersion: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly audience: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly issuedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly profileId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly revokedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly username: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly profile: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Profile';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['profileId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'relay_credentials';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly appVersion: { readonly column: 'appVersion' };
+                readonly audience: { readonly column: 'audience' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly id: { readonly column: 'id' };
+                readonly issuedAt: { readonly column: 'issuedAt' };
+                readonly profileId: { readonly column: 'profileId' };
+                readonly revokedAt: { readonly column: 'revokedAt' };
+                readonly username: { readonly column: 'username' };
+              };
+            };
+          };
+          readonly RelayPolicy: {
+            readonly fields: {
+              readonly blockedAppVersions: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly credentialTtlSeconds: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly dailyCredentialQuota: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly enabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly guestsEnabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly maxRelayBitrateKbps: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly membersEnabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly minAppVersion: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly monthlyBudgetGb: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly note: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'relay_policy';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly blockedAppVersions: { readonly column: 'blockedAppVersions' };
+                readonly credentialTtlSeconds: { readonly column: 'credentialTtlSeconds' };
+                readonly dailyCredentialQuota: { readonly column: 'dailyCredentialQuota' };
+                readonly enabled: { readonly column: 'enabled' };
+                readonly guestsEnabled: { readonly column: 'guestsEnabled' };
+                readonly id: { readonly column: 'id' };
+                readonly maxRelayBitrateKbps: { readonly column: 'maxRelayBitrateKbps' };
+                readonly membersEnabled: { readonly column: 'membersEnabled' };
+                readonly minAppVersion: { readonly column: 'minAppVersion' };
+                readonly monthlyBudgetGb: { readonly column: 'monthlyBudgetGb' };
+                readonly note: { readonly column: 'note' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly RelayUsage: {
+            readonly fields: {
+              readonly checkedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly egressBytes: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8number@1' };
+              };
+              readonly month: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'relay_usage';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly checkedAt: { readonly column: 'checkedAt' };
+                readonly egressBytes: { readonly column: 'egressBytes' };
+                readonly month: { readonly column: 'month' };
+              };
+            };
+          };
+          readonly RelayUserOverride: {
+            readonly fields: {
+              readonly blocked: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly dailyQuota: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly profileId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly reason: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly profile: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Profile';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['profileId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'relay_user_overrides';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly blocked: { readonly column: 'blocked' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly dailyQuota: { readonly column: 'dailyQuota' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly profileId: { readonly column: 'profileId' };
+                readonly reason: { readonly column: 'reason' };
+              };
+            };
+          };
         };
         readonly enum: {
           readonly age_status: {
@@ -1114,6 +1823,23 @@ type ContractBase = Omit<
           readonly ref: {
             readonly entry: 'rate_limit_hits';
             readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'relay_credentials';
+            readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'relay_policy';
+            readonly field: 'updatedAt';
             readonly namespace: 'public';
           };
         },

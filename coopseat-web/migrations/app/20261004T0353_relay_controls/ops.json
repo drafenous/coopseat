@@ -1,0 +1,437 @@
+[
+  {
+    "id": "table.relay_credentials",
+    "label": "Create table \"relay_credentials\"",
+    "summary": "Creates table \"relay_credentials\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "relay_credentials"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"relay_credentials\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_credentials\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"relay_credentials\"",
+        "sql": "CREATE TABLE \"public\".\"relay_credentials\" (\n  \"appVersion\" text,\n  \"audience\" text NOT NULL,\n  \"expiresAt\" timestamptz NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"issuedAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"profileId\" \"uuid\" NOT NULL,\n  \"revokedAt\" timestamptz,\n  \"username\" text NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"relay_credentials_audience_95bb5f2d\" CHECK (audience IN ('member', 'guest'))\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"relay_credentials\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_credentials\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.relay_policy",
+    "label": "Create table \"relay_policy\"",
+    "summary": "Creates table \"relay_policy\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "relay_policy"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"relay_policy\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_policy\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"relay_policy\"",
+        "sql": "CREATE TABLE \"public\".\"relay_policy\" (\n  \"blockedAppVersions\" text,\n  \"credentialTtlSeconds\" int4 DEFAULT 14400 NOT NULL,\n  \"dailyCredentialQuota\" int4 DEFAULT 12 NOT NULL,\n  \"enabled\" bool DEFAULT true NOT NULL,\n  \"guestsEnabled\" bool DEFAULT true NOT NULL,\n  \"id\" text DEFAULT 'global' NOT NULL,\n  \"maxRelayBitrateKbps\" int4 DEFAULT 4000 NOT NULL,\n  \"membersEnabled\" bool DEFAULT true NOT NULL,\n  \"minAppVersion\" text,\n  \"note\" text,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"relay_policy_quota_52d2783f\" CHECK (\"dailyCredentialQuota\" >= 0),\n  CONSTRAINT \"relay_policy_singleton_3422eee5\" CHECK (id = 'global'),\n  CONSTRAINT \"relay_policy_ttl_d42b9ef6\" CHECK (\"credentialTtlSeconds\" BETWEEN 60 AND 86400)\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"relay_policy\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_policy\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.relay_user_overrides",
+    "label": "Create table \"relay_user_overrides\"",
+    "summary": "Creates table \"relay_user_overrides\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "relay_user_overrides"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"relay_user_overrides\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_user_overrides\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"relay_user_overrides\"",
+        "sql": "CREATE TABLE \"public\".\"relay_user_overrides\" (\n  \"blocked\" bool DEFAULT false NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"dailyQuota\" int4,\n  \"expiresAt\" timestamptz,\n  \"profileId\" \"uuid\" NOT NULL,\n  \"reason\" text,\n  PRIMARY KEY (\"profileId\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"relay_user_overrides\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_user_overrides\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.relay_credentials.relay_credentials_expiresAt_idx_6b6b8c10",
+    "label": "Create index \"relay_credentials_expiresAt_idx_6b6b8c10\" on \"relay_credentials\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "relay_credentials_expiresAt_idx_6b6b8c10",
+        "table": "relay_credentials"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"relay_credentials_expiresAt_idx_6b6b8c10\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_credentials_expiresAt_idx_6b6b8c10\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"relay_credentials_expiresAt_idx_6b6b8c10\"",
+        "sql": "CREATE INDEX \"relay_credentials_expiresAt_idx_6b6b8c10\" ON \"public\".\"relay_credentials\" (\"expiresAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"relay_credentials_expiresAt_idx_6b6b8c10\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_credentials_expiresAt_idx_6b6b8c10\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.relay_credentials.relay_credentials_profileId_idx_d9cdfcaf",
+    "label": "Create index \"relay_credentials_profileId_idx_d9cdfcaf\" on \"relay_credentials\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "relay_credentials_profileId_idx_d9cdfcaf",
+        "table": "relay_credentials"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"relay_credentials_profileId_idx_d9cdfcaf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_credentials_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"relay_credentials_profileId_idx_d9cdfcaf\"",
+        "sql": "CREATE INDEX \"relay_credentials_profileId_idx_d9cdfcaf\" ON \"public\".\"relay_credentials\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"relay_credentials_profileId_idx_d9cdfcaf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_credentials_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.relay_credentials.relay_credentials_profileId_issuedAt_idx_04cadad5",
+    "label": "Create index \"relay_credentials_profileId_issuedAt_idx_04cadad5\" on \"relay_credentials\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "relay_credentials_profileId_issuedAt_idx_04cadad5",
+        "table": "relay_credentials"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"relay_credentials_profileId_issuedAt_idx_04cadad5\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_credentials_profileId_issuedAt_idx_04cadad5\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"relay_credentials_profileId_issuedAt_idx_04cadad5\"",
+        "sql": "CREATE INDEX \"relay_credentials_profileId_issuedAt_idx_04cadad5\" ON \"public\".\"relay_credentials\" (\"profileId\", \"issuedAt\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"relay_credentials_profileId_issuedAt_idx_04cadad5\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"relay_credentials_profileId_issuedAt_idx_04cadad5\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.relay_credentials.relay_credentials_profileId_fkey",
+    "label": "Add foreign key \"relay_credentials_profileId_fkey\" on \"relay_credentials\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "relay_credentials_profileId_fkey",
+        "table": "relay_credentials"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"relay_credentials_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "relay_credentials_profileId_fkey",
+          "public",
+          "\"public\".\"relay_credentials\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"relay_credentials_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"relay_credentials\"\nADD CONSTRAINT \"relay_credentials_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"relay_credentials_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "relay_credentials_profileId_fkey",
+          "public",
+          "\"public\".\"relay_credentials\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.relay_user_overrides.relay_user_overrides_profileId_fkey",
+    "label": "Add foreign key \"relay_user_overrides_profileId_fkey\" on \"relay_user_overrides\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "relay_user_overrides_profileId_fkey",
+        "table": "relay_user_overrides"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"relay_user_overrides_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "relay_user_overrides_profileId_fkey",
+          "public",
+          "\"public\".\"relay_user_overrides\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"relay_user_overrides_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"relay_user_overrides\"\nADD CONSTRAINT \"relay_user_overrides_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"relay_user_overrides_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "relay_user_overrides_profileId_fkey",
+          "public",
+          "\"public\".\"relay_user_overrides\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.relay_credentials",
+    "label": "Enable row-level security on \"relay_credentials\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "relay_credentials"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"relay_credentials\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "relay_credentials"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"relay_credentials\"",
+        "sql": "ALTER TABLE \"public\".\"relay_credentials\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"relay_credentials\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "relay_credentials"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.relay_policy",
+    "label": "Enable row-level security on \"relay_policy\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "relay_policy"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"relay_policy\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "relay_policy"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"relay_policy\"",
+        "sql": "ALTER TABLE \"public\".\"relay_policy\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"relay_policy\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "relay_policy"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.relay_user_overrides",
+    "label": "Enable row-level security on \"relay_user_overrides\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "relay_user_overrides"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"relay_user_overrides\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "relay_user_overrides"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"relay_user_overrides\"",
+        "sql": "ALTER TABLE \"public\".\"relay_user_overrides\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"relay_user_overrides\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "relay_user_overrides"
+        ]
+      }
+    ]
+  }
+]

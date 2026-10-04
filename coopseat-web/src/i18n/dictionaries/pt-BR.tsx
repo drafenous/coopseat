@@ -579,6 +579,10 @@ export const ptBR: Dictionary = {
     captcha_required: 'Confirme que você não é um robô.',
     captcha_failed: 'Não foi possível validar o captcha. Tente de novo.',
     turn_unavailable: 'Não foi possível preparar a conexão agora. Tente novamente.',
+    relay_unavailable:
+      'Sua rede exige um relay para a conexão, e ele está indisponível no momento. Tente outra rede (por exemplo, Wi-Fi em vez de dados móveis).',
+    relay_quota_exceeded: 'Você atingiu o limite diário de conexões via relay. Tente novamente amanhã ou use outra rede.',
+    relay_app_outdated: 'Esta versão do app não pode usar o relay. Atualize o CoopSeat para continuar.',
     download_unavailable: 'O download não está disponível agora. Tente novamente em alguns minutos.',
     email_unavailable: 'Não foi possível enviar o e-mail agora. Tente novamente.',
     invalid_credentials: 'E-mail ou senha incorretos.',

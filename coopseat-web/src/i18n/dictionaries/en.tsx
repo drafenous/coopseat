@@ -590,6 +590,10 @@ export const en = {
     captcha_required: "Confirm you're not a robot.",
     captcha_failed: "Couldn't validate the captcha. Try again.",
     turn_unavailable: "Couldn't prepare the connection right now. Please try again.",
+    relay_unavailable:
+      'Your network needs a relay to connect, and it is unavailable right now. Try another network (for example, Wi-Fi instead of mobile data).',
+    relay_quota_exceeded: "You've reached today's limit of relayed connections. Try again tomorrow or use another network.",
+    relay_app_outdated: "This app version can't use the relay. Update CoopSeat to continue.",
     download_unavailable: "The download isn't available right now. Please try again in a few minutes.",
     email_unavailable: "Couldn't send the e-mail right now. Please try again.",
     invalid_credentials: 'Incorrect e-mail or password.',

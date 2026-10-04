@@ -53,6 +53,12 @@ export const env = {
   get turnApiToken() {
     return required('CLOUDFLARE_TURN_API_TOKEN');
   },
+  get cloudflareAccountId() {
+    return process.env['CLOUDFLARE_ACCOUNT_ID'] ?? '';
+  },
+  get cloudflareAnalyticsToken() {
+    return process.env['CLOUDFLARE_ANALYTICS_API_TOKEN'] ?? '';
+  },
   get githubReleasesToken() {
     return required('GITHUB_RELEASES_TOKEN');
   },

@@ -19,6 +19,22 @@
     "rate_limit_hits": {
       "model": "RateLimitHit",
       "namespace": "public"
+    },
+    "relay_credentials": {
+      "model": "RelayCredential",
+      "namespace": "public"
+    },
+    "relay_policy": {
+      "model": "RelayPolicy",
+      "namespace": "public"
+    },
+    "relay_usage": {
+      "model": "RelayUsage",
+      "namespace": "public"
+    },
+    "relay_user_overrides": {
+      "model": "RelayUserOverride",
+      "namespace": "public"
     }
   },
   "domain": {
@@ -478,6 +494,374 @@
               "namespaceId": "public",
               "table": "rate_limit_hits"
             }
+          },
+          "RelayCredential": {
+            "fields": {
+              "appVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "audience": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiresAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "issuedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "revokedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "username": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Profile",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "appVersion": {
+                  "column": "appVersion"
+                },
+                "audience": {
+                  "column": "audience"
+                },
+                "expiresAt": {
+                  "column": "expiresAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "issuedAt": {
+                  "column": "issuedAt"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "revokedAt": {
+                  "column": "revokedAt"
+                },
+                "username": {
+                  "column": "username"
+                }
+              },
+              "namespaceId": "public",
+              "table": "relay_credentials"
+            }
+          },
+          "RelayPolicy": {
+            "fields": {
+              "blockedAppVersions": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "credentialTtlSeconds": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "dailyCredentialQuota": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "enabled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "guestsEnabled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "maxRelayBitrateKbps": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "membersEnabled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "minAppVersion": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "monthlyBudgetGb": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "note": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "blockedAppVersions": {
+                  "column": "blockedAppVersions"
+                },
+                "credentialTtlSeconds": {
+                  "column": "credentialTtlSeconds"
+                },
+                "dailyCredentialQuota": {
+                  "column": "dailyCredentialQuota"
+                },
+                "enabled": {
+                  "column": "enabled"
+                },
+                "guestsEnabled": {
+                  "column": "guestsEnabled"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "maxRelayBitrateKbps": {
+                  "column": "maxRelayBitrateKbps"
+                },
+                "membersEnabled": {
+                  "column": "membersEnabled"
+                },
+                "minAppVersion": {
+                  "column": "minAppVersion"
+                },
+                "monthlyBudgetGb": {
+                  "column": "monthlyBudgetGb"
+                },
+                "note": {
+                  "column": "note"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "relay_policy"
+            }
+          },
+          "RelayUsage": {
+            "fields": {
+              "checkedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "egressBytes": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8number@1",
+                  "kind": "scalar"
+                }
+              },
+              "month": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "checkedAt": {
+                  "column": "checkedAt"
+                },
+                "egressBytes": {
+                  "column": "egressBytes"
+                },
+                "month": {
+                  "column": "month"
+                }
+              },
+              "namespaceId": "public",
+              "table": "relay_usage"
+            }
+          },
+          "RelayUserOverride": {
+            "fields": {
+              "blocked": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "dailyQuota": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "reason": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Profile",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "blocked": {
+                  "column": "blocked"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "dailyQuota": {
+                  "column": "dailyQuota"
+                },
+                "expiresAt": {
+                  "column": "expiresAt"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "reason": {
+                  "column": "reason"
+                }
+              },
+              "namespaceId": "public",
+              "table": "relay_user_overrides"
+            }
           }
         }
       }
@@ -522,6 +906,26 @@
               "kind": "rls",
               "namespaceId": "public",
               "tableName": "rate_limit_hits"
+            },
+            "relay_credentials": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "relay_credentials"
+            },
+            "relay_policy": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "relay_policy"
+            },
+            "relay_usage": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "relay_usage"
+            },
+            "relay_user_overrides": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "relay_user_overrides"
             }
           },
           "table": {
@@ -883,6 +1287,338 @@
                 ]
               },
               "uniques": []
+            },
+            "relay_credentials": {
+              "checks": [
+                {
+                  "expression": "audience IN ('member', 'guest')",
+                  "name": "relay_credentials_audience_95bb5f2d",
+                  "prefix": "relay_credentials_audience"
+                }
+              ],
+              "columns": {
+                "appVersion": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "audience": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "expiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "issuedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "profileId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "revokedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "username": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "relay_credentials"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "profiles"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "expiresAt"
+                  ],
+                  "name": "relay_credentials_expiresAt_idx_6b6b8c10",
+                  "prefix": "relay_credentials_expiresAt_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "relay_credentials_profileId_idx_d9cdfcaf",
+                  "prefix": "relay_credentials_profileId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "profileId",
+                    "issuedAt"
+                  ],
+                  "name": "relay_credentials_profileId_issuedAt_idx_04cadad5",
+                  "prefix": "relay_credentials_profileId_issuedAt_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "relay_policy": {
+              "checks": [
+                {
+                  "expression": "\"dailyCredentialQuota\" >= 0",
+                  "name": "relay_policy_quota_52d2783f",
+                  "prefix": "relay_policy_quota"
+                },
+                {
+                  "expression": "id = 'global'",
+                  "name": "relay_policy_singleton_3422eee5",
+                  "prefix": "relay_policy_singleton"
+                },
+                {
+                  "expression": "\"credentialTtlSeconds\" BETWEEN 60 AND 86400",
+                  "name": "relay_policy_ttl_d42b9ef6",
+                  "prefix": "relay_policy_ttl"
+                }
+              ],
+              "columns": {
+                "blockedAppVersions": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "credentialTtlSeconds": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 14400
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "dailyCredentialQuota": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 12
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "enabled": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "guestsEnabled": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "global"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "maxRelayBitrateKbps": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 4000
+                  },
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "membersEnabled": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "minAppVersion": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "monthlyBudgetGb": {
+                  "codecId": "pg/int4@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": 900
+                  },
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "note": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
+            "relay_usage": {
+              "checks": [
+                {
+                  "expression": "month ~ '^[0-9]{4}-[0-9]{2}$'",
+                  "name": "relay_usage_month_1c19c2a5",
+                  "prefix": "relay_usage_month"
+                }
+              ],
+              "columns": {
+                "checkedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "egressBytes": {
+                  "codecId": "pg/int8number@1",
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "month": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "month"
+                ]
+              },
+              "uniques": []
+            },
+            "relay_user_overrides": {
+              "columns": {
+                "blocked": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "dailyQuota": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": true
+                },
+                "expiresAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "profileId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "reason": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "relay_user_overrides"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "profiles"
+                  }
+                }
+              ],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "profileId"
+                ]
+              },
+              "uniques": []
             }
           },
           "valueSet": {
@@ -917,7 +1653,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "28d6d8a8c18cfc32c238a819863fb285f0073e3f1e1c4f9a5d39f162bd9980d9",
+    "storageHash": "2ce8ed99f683ffe3565107d651e1d87d3a75403c3f72fe66d0a0d8618fa75358",
     "types": {
       "AuthUserId": {
         "codecId": "pg/uuid@1",
@@ -927,7 +1663,7 @@
     }
   },
   "execution": {
-    "executionHash": "a0e70ca8e82982e8416573b9303061fb867d27614abe26648dad22e5d5856070",
+    "executionHash": "bbaee8b25bdf57de5dfb09c146d91e32b72180c523f135d8ccf2dce99937dfa8",
     "mutations": {
       "defaults": [
         {
@@ -964,6 +1700,32 @@
           "ref": {
             "entry": "rate_limit_hits",
             "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "relay_credentials",
+            "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "relay_policy",
+            "field": "updatedAt",
             "namespace": "public"
           }
         }
