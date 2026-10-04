@@ -113,8 +113,8 @@ export const ptBR: Dictionary = {
       title: 'O sofá, agora online.',
       body: 'Abra uma sala e chame os amigos para ver você jogar e conversar pelo chat, como se eles estivessem no sofá do seu lado.',
       points: [
-        'Os amigos assistem direto pelo navegador, sem conta e sem instalar nada.',
-        'O chat é só para contas de maiores de 18 anos verificadas, como a lei brasileira exige.',
+        'Os amigos assistem direto pelo navegador, sem instalar nada.',
+        'Assistir e usar o chat é só para contas de maiores de 18 anos verificadas, como a lei brasileira exige.',
         'Você decide quem entra na sala e pode tirar qualquer pessoa quando quiser.',
       ],
       cta: 'Criar minha conta',
@@ -140,7 +140,7 @@ export const ptBR: Dictionary = {
       },
       {
         title: 'Verificação de idade sem exposição',
-        body: 'Para o chat guardamos só se você é maior de idade e a data, nunca fotos ou dados do documento.',
+        body: 'Para a watch party guardamos só se você é maior de idade e a data, nunca fotos ou dados do documento.',
       },
     ],
     faqTitle: 'Perguntas frequentes',
@@ -155,7 +155,7 @@ export const ptBR: Dictionary = {
       },
       {
         q: 'Preciso de conta para jogar?',
-        a: 'Não. Dá para jogar sem conta. Ela só vai ser necessária para assistir e conversar com os amigos, que chega em breve.',
+        a: 'Não. Dá para jogar sem conta. Para assistir e conversar com os amigos, que chega em breve, vai ser preciso uma conta de maior de 18 anos verificada.',
       },
       {
         q: 'Quais placas de captura funcionam?',
@@ -219,7 +219,7 @@ export const ptBR: Dictionary = {
     submit: 'Criar conta',
     pending: 'Criando…',
     failed: 'Não foi possível criar a conta.',
-    confirmAdult: 'Tenho 18 anos ou mais. Vou verificar minha idade para usar o chat e criar salas.',
+    confirmMinAge: 'Tenho 12 anos ou mais. Para usar a watch party (assistir, chat e criar salas), vou precisar verificar que tenho 18 anos ou mais.',
     acceptTerms: (terms, privacy) => (
       <>
         Li e aceito os {terms} e a {privacy}.
@@ -287,7 +287,7 @@ export const ptBR: Dictionary = {
       REJECTED: 'Recusada',
     },
     ageExplainer:
-      'Exigida por lei (ECA Digital) para usar o chat e criar salas. Guardamos apenas o resultado (maior de idade) e a data, nunca fotos ou dados do documento.',
+      'Exigida por lei (ECA Digital) para assistir, usar o chat e criar salas. Guardamos apenas o resultado (maior de idade) e a data, nunca fotos ou dados do documento.',
     verifyAge: 'Verificar minha idade',
     linkedTitle: 'Contas vinculadas',
     emailAndPassword: 'E-mail e senha',
@@ -303,7 +303,7 @@ export const ptBR: Dictionary = {
     acceptTermsRequired: 'É preciso aceitar os Termos de Uso e a Política de Privacidade.',
     acceptTerms: (terms, privacy) => (
       <>
-        Tenho 18 anos ou mais e aceito os {terms} e a {privacy}.
+        Tenho 12 anos ou mais e aceito os {terms} e a {privacy}.
       </>
     ),
     terms: 'Termos',
@@ -429,8 +429,11 @@ export const ptBR: Dictionary = {
         heading: '1. Quem pode usar',
         body: (
           <p>
-            O CoopSeat é exclusivo para maiores de 18 anos. Para usar o chat e criar salas, você precisa verificar a idade com
-            documento e selfie por meio de um parceiro de verificação. Contas de menores serão encerradas.
+            Jogar no navegador (a página Jogar) e o app para Windows são livres para todos, sem conta. Para criar uma conta é
+            preciso ter 12 anos ou mais. A watch party (assistir, transmitir, usar o chat e criar salas) é exclusiva para maiores
+            de 18 anos, que precisam verificar a idade com documento e selfie por meio de um parceiro de verificação. Contas de
+            menores de 12 anos serão encerradas. Se você tem menos de 18 anos, use o CoopSeat com a orientação dos seus pais ou
+            responsáveis.
           </p>
         ),
       },
@@ -553,6 +556,7 @@ export const ptBR: Dictionary = {
     already_verified: 'Sua idade já foi verificada.',
     kyc_locked: 'Limite de tentativas atingido. Fale com o suporte.',
     kyc_attempts: 'Você atingiu o limite de 3 tentativas em 30 dias.',
+    kyc_unavailable: 'Não foi possível iniciar a verificação de idade agora. Tente novamente em alguns minutos.',
     nickname_required: 'Informe um apelido.',
     nickname_format: 'O apelido deve ter de 3 a 20 caracteres: letras, números ou _.',
     nickname_reserved: 'Esse apelido é reservado.',
@@ -564,7 +568,7 @@ export const ptBR: Dictionary = {
     password_too_long: 'A senha deve ter no máximo 72 caracteres.',
     password_weak: 'A senha deve ter letras e números.',
     terms_required: 'É preciso aceitar os Termos de Uso e a Política de Privacidade.',
-    adult_required: 'O CoopSeat é exclusivo para maiores de 18 anos.',
+    min_age_required: 'É preciso ter 12 anos ou mais para criar uma conta no CoopSeat.',
     nothing_to_update: 'Nada para atualizar.',
     confirm_required: 'Digite seu apelido para confirmar.',
     provider_unsupported: 'Provedor não suportado.',

@@ -32,7 +32,7 @@ export function SignupForm() {
           password: form.get('password'),
           nickname,
           acceptTerms: form.get('acceptTerms') === 'on',
-          confirmAdult: form.get('confirmAdult') === 'on',
+          confirmMinAge: form.get('confirmMinAge') === 'on',
           captchaToken: captcha,
         },
       });
@@ -71,8 +71,8 @@ export function SignupForm() {
         hint={t.common.passwordHint}
       />
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" name="confirmAdult" className="mt-1" required />
-        <span>{t.signup.confirmAdult}</span>
+        <input type="checkbox" name="confirmMinAge" className="mt-1" required />
+        <span>{t.signup.confirmMinAge}</span>
       </label>
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" name="acceptTerms" className="mt-1" required />

@@ -1,7 +1,8 @@
 /**
- * Watch-party permissions. Guests may watch anonymously; chat needs an
- * age-verified account; hosting also needs a confirmed email, a nickname and,
- * when 2FA is enabled, an aal2 session.
+ * Watch-party permissions. Watching and chat need an age-verified (18+) account
+ * with a confirmed email and a nickname; hosting also needs an aal2 session when
+ * 2FA is enabled. Accounts themselves are 12+, so a verified age is the only
+ * thing keeping minors out of rooms.
  */
 export type GateInput = {
   emailConfirmed: boolean;
@@ -26,7 +27,7 @@ export function permissionsFor(input: GateInput) {
     ['age', input.ageVerified],
   ];
   return {
-    watch: gate([]),
+    watch: gate(base),
     chat: gate(base),
     /** Voice chat isn't offered; kept because desktop 0.1 reads `permissions.voice` unguarded. */
     voice: gate(base),

@@ -113,8 +113,8 @@ export const en = {
       title: 'The couch, now online.',
       body: 'Open a room and invite your friends to watch you play and chat along, as if they were sitting on the couch with you.',
       points: [
-        'Friends watch straight from the browser, with no account and nothing to install.',
-        'Chat is only for verified adult accounts (18+), as Brazilian law requires.',
+        'Friends watch straight from the browser, with nothing to install.',
+        'Watching and chat are only for verified adult accounts (18+), as Brazilian law requires.',
         'You decide who joins the room and can remove anyone at any time.',
       ],
       cta: 'Create your account',
@@ -140,7 +140,7 @@ export const en = {
       },
       {
         title: 'Age check without exposure',
-        body: 'For chat we only keep whether you are an adult and the date, never photos or document data.',
+        body: 'For the watch party we only keep whether you are an adult and the date, never photos or document data.',
       },
     ],
     faqTitle: 'Frequently asked questions',
@@ -155,7 +155,7 @@ export const en = {
       },
       {
         q: 'Do I need an account to play?',
-        a: 'No. You can play without an account. It will only be needed to watch and chat with friends, which is coming soon.',
+        a: 'No. You can play without an account. To watch and chat with friends, which is coming soon, you will need a verified adult account (18+).',
       },
       {
         q: 'Which capture cards work?',
@@ -219,7 +219,7 @@ export const en = {
     submit: 'Create account',
     pending: 'Creating…',
     failed: 'Could not create the account.',
-    confirmAdult: "I'm 18 or older. I'll verify my age to use chat and create rooms.",
+    confirmMinAge: "I'm 12 or older. To use the watch party (watch, chat and create rooms) I'll need to verify that I'm 18 or older.",
     acceptTerms: (terms: ReactNode, privacy: ReactNode): ReactNode => (
       <>
         I have read and accept the {terms} and the {privacy}.
@@ -291,7 +291,7 @@ export const en = {
       REJECTED: 'Rejected',
     },
     ageExplainer:
-      'Required by law (ECA Digital) for chat and creating rooms. We only keep the result (adult) and the date, never photos or document data.',
+      'Required by law (ECA Digital) to watch, chat and create rooms. We only keep the result (adult) and the date, never photos or document data.',
     verifyAge: 'Verify my age',
     linkedTitle: 'Linked accounts',
     emailAndPassword: 'E-mail and password',
@@ -307,7 +307,7 @@ export const en = {
     acceptTermsRequired: 'You must accept the Terms of Use and the Privacy Policy.',
     acceptTerms: (terms: ReactNode, privacy: ReactNode): ReactNode => (
       <>
-        I&apos;m 18 or older and accept the {terms} and the {privacy}.
+        I&apos;m 12 or older and accept the {terms} and the {privacy}.
       </>
     ),
     terms: 'Terms',
@@ -437,8 +437,11 @@ export const en = {
         heading: '1. Who can use it',
         body: (
           <p>
-            CoopSeat is exclusively for people aged 18 or older. To use chat and create rooms, you must verify your age
-            with a document and a selfie through a verification partner. Accounts belonging to minors will be closed.
+            Playing in the browser (the Play page) and the Windows app are open to everyone, with no account. To create an
+            account you must be 12 or older. The watch party (watching, streaming, chat and creating rooms) is exclusively for
+            people aged 18 or older, who must verify their age with a document and a selfie through a verification partner.
+            Accounts of people under 12 will be closed. If you are under 18, use CoopSeat with the guidance of a parent or
+            guardian.
           </p>
         ) as ReactNode,
       },
@@ -564,6 +567,7 @@ export const en = {
     already_verified: 'Your age has already been verified.',
     kyc_locked: 'Attempt limit reached. Contact support.',
     kyc_attempts: 'You reached the limit of 3 attempts in 30 days.',
+    kyc_unavailable: "Couldn't start the age verification right now. Please try again in a few minutes.",
     nickname_required: 'Enter a nickname.',
     nickname_format: 'The nickname must be 3 to 20 characters: letters, numbers or _.',
     nickname_reserved: 'That nickname is reserved.',
@@ -575,7 +579,7 @@ export const en = {
     password_too_long: 'The password must be at most 72 characters.',
     password_weak: 'The password must contain letters and numbers.',
     terms_required: 'You must accept the Terms of Use and the Privacy Policy.',
-    adult_required: 'CoopSeat is exclusively for people aged 18 or older.',
+    min_age_required: 'You must be 12 or older to create a CoopSeat account.',
     nothing_to_update: 'Nothing to update.',
     confirm_required: 'Type your nickname to confirm.',
     provider_unsupported: 'Provider not supported.',

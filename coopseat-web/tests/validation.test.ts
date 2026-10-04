@@ -6,7 +6,7 @@ const signup = {
   password: 'senhaForte1',
   nickname: 'rodri_01',
   acceptTerms: true,
-  confirmAdult: true,
+  confirmMinAge: true,
 };
 
 describe('account validation', () => {
@@ -24,10 +24,10 @@ describe('account validation', () => {
     }
   });
 
-  it('normalizes the email and requires terms and the 18+ declaration', () => {
+  it('normalizes the email and requires terms and the 12+ declaration', () => {
     const parsed = signupSchema.parse(signup);
     expect(parsed.email).toBe('pessoa@exemplo.com');
-    expect(signupSchema.safeParse({ ...signup, confirmAdult: false }).success).toBe(false);
+    expect(signupSchema.safeParse({ ...signup, confirmMinAge: false }).success).toBe(false);
     expect(signupSchema.safeParse({ ...signup, acceptTerms: false }).success).toBe(false);
   });
 

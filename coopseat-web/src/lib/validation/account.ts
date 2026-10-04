@@ -54,14 +54,14 @@ export const passwordSchema = z
 
 export const captchaSchema = z.string().max(4096).optional();
 
-export const TERMS_VERSION = '2026-10-01';
+export const TERMS_VERSION = '2026-10-03';
 
 export const signupSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   nickname: nicknameSchema,
   acceptTerms: z.literal(true, { error: 'terms_required' }),
-  confirmAdult: z.literal(true, { error: 'adult_required' }),
+  confirmMinAge: z.literal(true, { error: 'min_age_required' }),
   captchaToken: captchaSchema,
 });
 

@@ -4,10 +4,7 @@ import { rateLimit } from '@/server/rate-limit';
 import { requireAuth } from '@/server/session';
 import { createIceServers, TURN_TTL_SECONDS } from '@/server/turn';
 
-/**
- * TURN credentials for signed-in users. Anonymous guests will receive theirs from the
- * room join route, scoped to a valid invite, so the relay can't be used freely.
- */
+/** TURN credentials for signed-in users. */
 export const POST = route(async (req) => {
   const session = await requireAuth(req);
   await rateLimit('turn', session.claims.sub);
