@@ -201,7 +201,7 @@ export const en = {
     },
     portable: {
       title: 'Portable',
-      body: "Runs without installing, from any folder or a USB stick. Good for computers where you can't install programs. The first launch takes a bit longer.",
+      body: "Runs without installing, from any folder or a USB stick. Good for computers where you can't install programs.",
       button: 'Download portable',
     },
     stepsTitle: 'After downloading',

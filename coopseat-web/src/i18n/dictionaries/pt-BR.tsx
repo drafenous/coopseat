@@ -201,7 +201,7 @@ export const ptBR: Dictionary = {
     },
     portable: {
       title: 'Portátil',
-      body: 'Roda sem instalar, de qualquer pasta ou pendrive. Bom para computadores onde você não pode instalar programas. A primeira abertura demora um pouco mais.',
+      body: 'Roda sem instalar, de qualquer pasta ou pendrive. Bom para computadores onde você não pode instalar programas.',
       button: 'Baixar portátil',
     },
     stepsTitle: 'Depois de baixar',
