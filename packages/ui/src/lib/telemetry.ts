@@ -31,9 +31,14 @@ function clientId(){
 const sessionId=Math.floor(Date.now()/1000);
 let version:Promise<string>|null=null;
 
-/** Desktop only, and only after an explicit opt-in. Failures are silent: telemetry must never disturb the app. */
+/**
+ * On the site, goes to the host page's gtag, which the cookie banner gates. On desktop, only after an
+ * explicit opt-in. Failures are silent: telemetry must never disturb the app.
+ */
 export function track(e:TelemetryEvent){
- const b=bridge();if(!b||consent!=='granted')return;
+ const b=bridge();
+ if(!b){const {event,...params}=e;(window as {gtag?:(...args:unknown[])=>void}).gtag?.('event',event,{...params,platform:'web'});return;}
+ if(consent!=='granted')return;
  version??=b.info().then(i=>i.version,()=>'');
  void version.then(v=>api('/api/telemetry',{method:'POST',auth:false,body:{...e,clientId:clientId(),sessionId,version:v}})).catch(()=>{});
 }

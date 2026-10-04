@@ -8,6 +8,7 @@ import { Alert, Button, Field, buttonClass } from '@/components/ui';
 import { DOWNLOAD_URL } from '@/lib/links';
 import { useLocale, useT } from '@/i18n/client';
 import type { Dictionary } from '@/i18n/dictionaries';
+import { trackEvent } from '@/lib/analytics';
 import { api, ApiClientError } from '@/lib/client/api';
 import { OAUTH_PROVIDERS, PROVIDER_LABELS, type OAuthProvider } from '@/lib/validation/account';
 import type { AccountSummary } from '@/server/account';
@@ -104,6 +105,7 @@ function PartySection({ account, busy, run }: Omit<SectionProps, 'setFlash'>) {
           onClick={() =>
             run('kyc', async () => {
               const { url } = await api<{ url: string }>('/api/identity/sessions', { method: 'POST', body: {} });
+              trackEvent({ name: 'age_verification_start' });
               window.location.href = url;
             })
           }
@@ -317,6 +319,7 @@ function NicknameSetup({ needsTerms, onDone }: { needsTerms: boolean; onDone: (a
     setError(undefined);
     try {
       onDone(await api<AccountSummary>('/api/me', { method: 'PATCH', body: { nickname, ...(needsTerms ? { acceptTerms: true } : {}) } }));
+      trackEvent({ name: 'nickname_set' });
     } catch (err) {
       setError(message(err, t));
     } finally {
@@ -472,6 +475,7 @@ function SecuritySection({ account, busy, run, reload, setFlash }: SectionProps 
               onClick={() =>
                 run('mfa-verify', async () => {
                   await api('/api/auth/mfa/verify', { body: { factorId: enroll.factorId, code } });
+                  trackEvent({ name: 'mfa_enable' });
                   setEnroll(undefined);
                   setCode('');
                   await reload();
@@ -522,6 +526,7 @@ function DeleteAccount({ account, run, busy }: Omit<SectionProps, 'setFlash'>) {
         onClick={() =>
           run('delete', async () => {
             await api('/api/me', { method: 'DELETE', body: { confirm } });
+            trackEvent({ name: 'account_delete' });
             router.push('/');
             router.refresh();
           })

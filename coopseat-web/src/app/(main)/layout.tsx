@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { CookieConsent } from '@/components/CookieConsent';
-import { DownloadTracking } from '@/components/DownloadTracking';
+import { ClickTracking } from '@/components/ClickTracking';
 import { GoogleTag } from '@/app/GoogleTag';
 import { I18nProvider } from '@/i18n/client';
 import { getDictionary, getLocale } from '@/i18n/server';
@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: LayoutProps<'/'>) {
         <GoogleTag />
         <I18nProvider locale={locale}>{children}</I18nProvider>
         <CookieConsent locale={locale} />
-        <DownloadTracking />
+        <ClickTracking />
       </body>
     </html>
   );

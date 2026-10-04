@@ -7,3 +7,19 @@ declare global {
     gtag?: (...args: unknown[]) => void;
   }
 }
+
+/** `sign_up` and `login` follow GA4's recommended event names so they show up in the standard reports. */
+export type AnalyticsEvent =
+  | { name: 'download_click'; link_location: string }
+  | { name: 'oauth_start'; provider: string; link_location: string }
+  | { name: 'sign_up'; method: 'email' }
+  | { name: 'login'; method: 'email' }
+  | { name: 'nickname_set' }
+  | { name: 'age_verification_start' }
+  | { name: 'mfa_enable' }
+  | { name: 'account_delete' };
+
+/** Events queue in the dataLayer and only reach Google once the user accepts analytics cookies. */
+export function trackEvent({ name, ...params }: AnalyticsEvent) {
+  window.gtag?.('event', name, params);
+}

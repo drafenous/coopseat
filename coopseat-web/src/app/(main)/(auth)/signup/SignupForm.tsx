@@ -6,6 +6,7 @@ import { NicknameField } from '@/components/NicknameField';
 import { Turnstile } from '@/components/Turnstile';
 import { Alert, Button, Field } from '@/components/ui';
 import { useT } from '@/i18n/client';
+import { trackEvent } from '@/lib/analytics';
 import { api, ApiClientError } from '@/lib/client/api';
 
 export function SignupForm() {
@@ -35,6 +36,7 @@ export function SignupForm() {
           captchaToken: captcha,
         },
       });
+      trackEvent({ name: 'sign_up', method: 'email' });
       setSentTo(String(form.get('email')));
     } catch (err) {
       if (err instanceof ApiClientError) {

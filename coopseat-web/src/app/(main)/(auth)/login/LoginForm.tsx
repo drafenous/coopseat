@@ -5,6 +5,7 @@ import { useState, type FormEvent } from 'react';
 import { Turnstile } from '@/components/Turnstile';
 import { Alert, Button, Field } from '@/components/ui';
 import { useT } from '@/i18n/client';
+import { trackEvent } from '@/lib/analytics';
 import { api, ApiClientError } from '@/lib/client/api';
 
 export function LoginForm({ next }: { next: string }) {
@@ -24,6 +25,7 @@ export function LoginForm({ next }: { next: string }) {
       const res = await api<{ mfaRequired?: boolean }>('/api/auth/login', {
         body: { email: form.get('email'), password: form.get('password'), captchaToken: captcha },
       });
+      trackEvent({ name: 'login', method: 'email' });
       router.push(res.mfaRequired ? `/login/2fa?next=${encodeURIComponent(next)}` : next);
       router.refresh();
     } catch (err) {
