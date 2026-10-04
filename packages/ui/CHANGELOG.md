@@ -4,6 +4,19 @@ All notable changes to `@coopseat/ui` are documented here. The format is based o
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-03
+
+### Added
+- `Platform` for the web accepts an optional `cookiePreferences()` that opens the host's cookie dialog from Preferences.
+- `DesktopBridge.bounds()` accepts optional `holes` and `dim`, so menus and dialogs show over the native video.
+- `CoopSeatPage` has Preferences, an opt-in anonymous telemetry prompt, a cinema mode menu and an account menu.
+
+### Changed
+- Effects and filters moved to their own settings section, and automatic cinema mode waits 1 to 5 seconds or never.
+
+### Removed
+- The in-app account window and the social sign-in buttons other than Google.
+
 ## [0.2.0] - 2026-10-03
 
 ### Added

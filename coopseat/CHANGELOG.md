@@ -4,12 +4,24 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-03
+
 ### Added
+- Portable version (`CoopSeat-<version>-Portable.exe`) next to the installer, which runs without installing.
+- Preferences (gear icon at the top) with the language, which moved out of the header, and anonymous usage statistics.
+- Optional anonymous usage statistics: the app asks once, and only reports when it opens and when a capture starts, with the app version and capture mode. Never gameplay, images, audio, devices or your account.
+- Cinema mode options in the arrow next to the Cinema button: enter it automatically after 1 to 5 seconds without keyboard or mouse activity, or never.
 - Age verification can open the Didit verification page in the browser.
-- Each release also includes the portable version (`CoopSeat-<version>-Portable.exe`), which runs without installing.
+
+### Changed
+- Menus, dialogs and notifications now show on top of the video in native mode, and dialogs dim the video behind them.
+- Effects and filters have their own section in the settings panel.
+- "Connect on open" is now called "Capture on open".
+- The avatar in the header opens a menu with My account, which opens the account page on the website, and Sign out.
 
 ### Removed
-- Sign-in with Facebook, X and Discord. Google and email and password are the only ways to sign in.
+- **Breaking:** Sign-in with Facebook, X and Discord. Google and email and password are the only ways to sign in.
+- **Breaking:** The account window inside the app. Profile, age verification and security are managed on the website through My account.
 
 ## [0.1.1] - 2026-10-03
 
