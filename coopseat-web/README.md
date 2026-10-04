@@ -65,7 +65,17 @@ O site, as mensagens da API e o `@coopseat/ui` estão em inglês (padrão) e por
 
 ## KYC
 
-`KYC_PROVIDER=mock` usa a página `/verification/mock`, permitida apenas fora de produção ou com `ALLOW_MOCK_KYC=1`. Para um provedor real, implemente `IdentityProvider` (`createSession` e `parseWebhook` com verificação de assinatura) em `src/server/identity/providers/` e registre-o em `src/server/identity/index.ts`. O webhook fica em `POST /api/identity/webhooks/<provedor>`.
+`KYC_PROVIDER=mock` usa a página `/verification/mock`, permitida apenas fora de produção ou com `ALLOW_MOCK_KYC=1`.
+
+`KYC_PROVIDER=didit` usa o fluxo hospedado do [Didit](https://didit.me) (500 verificações completas grátis por mês). No console do Didit:
+
+1. Crie um workflow com verificação de documento (prova de vida e comparação de rosto recomendadas) e copie o id para `DIDIT_WORKFLOW_ID`. Os checks grátis só valem dentro de workflows.
+2. Em *API & Webhooks*, copie a API key para `DIDIT_API_KEY` e adicione o destino `<APP_URL>/api/identity/webhooks/didit` (versão v3, evento `status.updated`). O segredo de assinatura vai em `DIDIT_WEBHOOK_SECRET`.
+3. Para testar localmente, exponha o servidor com um túnel HTTPS (`cloudflared tunnel --url http://localhost:3000`) e use *Try Webhook* no console.
+
+O webhook confere `X-Signature-V2` (HMAC-SHA256 do JSON canônico) e `X-Timestamp` (até 5 minutos). Eventos intermediários (*Not Started*, *In Progress*) recebem 200 e são ignorados; *Abandoned* e *Expired* contam como recusa para o perfil não ficar preso em `PENDING`. A maioridade vem do campo `age` do documento, e a impressão do documento usa `issuing_state` + `document_number`.
+
+Para outro provedor, implemente `IdentityProvider` (`createSession` e `parseWebhook` com verificação de assinatura) em `src/server/identity/providers/` e registre-o em `src/server/identity/index.ts`. O webhook fica em `POST /api/identity/webhooks/<provedor>`.
 
 ## Testes
 

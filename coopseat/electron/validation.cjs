@@ -54,7 +54,7 @@ function findDeepLink(argv) {
 }
 
 // KYC vendors the account flow may send the user to (exact host or subdomain).
-const KYC_HOSTS = ['veriff.me','veriff.com','unico.io','unico.app','idwall.co'];
+const KYC_HOSTS = ['didit.me','veriff.me','veriff.com','unico.io','unico.app','idwall.co'];
 /** Only the CoopSeat BFF and known KYC vendors may be opened in the system browser. */
 function validateExternalUrl(raw, bffOrigins) {
   if (typeof raw !== 'string' || raw.length > 4096) throw Error('Endereço inválido.');

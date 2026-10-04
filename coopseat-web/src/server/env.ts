@@ -38,6 +38,15 @@ export const env = {
   get kycProvider() {
     return process.env['KYC_PROVIDER'] ?? 'mock';
   },
+  get diditApiKey() {
+    return required('DIDIT_API_KEY');
+  },
+  get diditWorkflowId() {
+    return required('DIDIT_WORKFLOW_ID');
+  },
+  get diditWebhookSecret() {
+    return required('DIDIT_WEBHOOK_SECRET');
+  },
   get turnKeyId() {
     return required('CLOUDFLARE_TURN_KEY_ID');
   },

@@ -4,7 +4,11 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+### Added
+- Real age verification through Didit (ID document, liveness and face match), enabled with `KYC_PROVIDER=didit`.
+
 ### Changed
+- Accounts are open from age 12. The watch party (watching, chat and creating rooms) needs an account verified as 18+.
 - The Google sign-in screen now shows the CoopSeat address instead of the Supabase one.
 
 ### Removed

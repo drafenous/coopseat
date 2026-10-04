@@ -1,9 +1,11 @@
 import { env } from '../env';
+import { diditProvider } from './providers/didit';
 import { mockProvider } from './providers/mock';
 import type { IdentityProvider } from './types';
 
 const providers: Record<string, IdentityProvider> = {
   [mockProvider.id]: mockProvider,
+  [diditProvider.id]: diditProvider,
 };
 
 export function isMockAllowed(): boolean {

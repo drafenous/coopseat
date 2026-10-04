@@ -4,6 +4,9 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+### Added
+- Age verification can open the Didit verification page in the browser.
+
 ### Removed
 - Sign-in with Facebook, X and Discord. Google and email and password are the only ways to sign in.
 

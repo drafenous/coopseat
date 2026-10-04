@@ -17,6 +17,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     if (err instanceof WebhookAuthError) return NextResponse.json({ error: 'invalid_signature' }, { status: 401 });
     return NextResponse.json({ error: 'invalid_payload' }, { status: 400 });
   }
+  if (!result) return NextResponse.json({ applied: false, reason: 'ignored' });
 
   const outcome = await applyVerificationResult(provider.id, result);
   return NextResponse.json(outcome);
