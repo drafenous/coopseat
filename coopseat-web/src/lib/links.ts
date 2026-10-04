@@ -1,2 +1,3 @@
-export const DOWNLOAD_URL = 'https://github.com/drafenous/coopseat/releases/latest';
-export const SOURCE_URL = 'https://github.com/drafenous/coopseat';
+export const DOWNLOAD_URL = '/download';
+export const INSTALLER_URL = '/download/installer';
+export const PORTABLE_URL = '/download/portable';

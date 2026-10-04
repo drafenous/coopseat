@@ -16,7 +16,9 @@ export const en = {
     terms: 'Terms of Use',
     mockVerification: 'Verification (simulated)',
     play: 'Play',
-    playDescription: 'Play your console in a browser tab through a USB capture card.',
+    playDescription: 'Play your console in a browser tab through a capture card.',
+    download: 'Download',
+    downloadDescription: 'Download CoopSeat for Windows 10 and 11 and see the system requirements.',
   },
   common: {
     language: 'Language',
@@ -96,7 +98,7 @@ export const en = {
     steps: [
       {
         title: 'Plug it in',
-        body: 'Connect the console to the capture card with the HDMI cable, and the capture card to the computer with the USB cable.',
+        body: 'Connect the console to the capture card with the HDMI cable. If the card is external, plug it into the computer with the USB cable.',
       },
       {
         title: 'Open CoopSeat',
@@ -151,7 +153,7 @@ export const en = {
       },
       {
         q: 'What do I need to play?',
-        a: 'A computer with Windows 10 or 11, a USB capture card and the HDMI cable from your console. That’s all.',
+        a: 'A computer with Windows 10 or 11, a capture card (external USB or internal) and the HDMI cable from your console. That’s all.',
       },
       {
         q: 'Do I need an account to play?',
@@ -159,7 +161,7 @@ export const en = {
       },
       {
         q: 'Which capture cards work?',
-        a: 'Most USB capture cards that Windows recognizes. Some copy-protected content, like movie streaming apps, will not show up.',
+        a: 'Most capture cards that Windows recognizes as a video device, whether external (USB) or internal (PCIe). Some copy-protected content, like movie streaming apps, will not show up.',
       },
       {
         q: 'Is there any delay?',
@@ -181,9 +183,58 @@ export const en = {
       product: 'Product',
       legal: 'Legal',
       account: 'My account',
-      source: 'GitHub',
       rights: (year: number) => `© ${year} CoopSeat`,
     },
+  },
+  download: {
+    kicker: 'Download',
+    title: 'Download CoopSeat for Windows',
+    subtitle: 'Free, with no account needed to play. Install it, plug in your capture card and start playing.',
+    version: (version: string) => `Version ${version}`,
+    released: (date: string) => `Released on ${date}`,
+    unavailable: "The download isn't available right now. Please try again in a few minutes.",
+    recommended: 'Recommended',
+    installer: {
+      title: 'Installer',
+      body: 'Installs CoopSeat with Start menu and desktop shortcuts and opens CoopSeat links from the website.',
+      button: 'Download installer',
+    },
+    portable: {
+      title: 'Portable',
+      body: "Runs without installing, from any folder or a USB stick. Good for computers where you can't install programs. The first launch takes a bit longer.",
+      button: 'Download portable',
+    },
+    stepsTitle: 'After downloading',
+    steps: [
+      {
+        title: 'Open the file',
+        body: 'Run the installer, or the portable file. CoopSeat does not have a digital signature yet, so if Windows shows a protection notice, click "More info" and then "Run anyway".',
+      },
+      {
+        title: 'Connect your capture card',
+        body: "Plug the console's HDMI into the capture card's HDMI IN. If the card is external, plug its USB into the computer. Close OBS, Camera or Discord if they are using the card.",
+      },
+      {
+        title: 'Open CoopSeat and play',
+        body: 'Choose your capture card and the audio input, then click Start capture.',
+      },
+    ],
+    requirementsTitle: 'System requirements',
+    requirementsSubtitle: 'CoopSeat is light, but the picture quality also depends on your capture card and computer.',
+    requirements: [
+      { label: 'System', value: 'Windows 10 or 11, 64-bit' },
+      { label: 'Graphics', value: 'Graphics card compatible with DirectX 11' },
+      { label: 'Capture card', value: 'External (USB) or internal (PCIe) capture card recognized by Windows, with HDMI input' },
+      { label: 'Connection', value: 'For external cards, USB 3.0 recommended for Full HD at 60 fps' },
+      { label: 'Disk space', value: 'About 400 MB free' },
+      { label: 'Internet', value: 'Only to download and for account features' },
+    ],
+    notesTitle: 'Good to know',
+    notes: [
+      'Windows N editions need the Media Feature Pack, a free download from Microsoft.',
+      "Copy-protected content (HDCP), like movie streaming apps, doesn't show up.",
+      'Mac and Linux are not supported yet.',
+    ],
   },
   providers: {
     signInWith: 'Sign in with',
@@ -531,6 +582,7 @@ export const en = {
     captcha_required: "Confirm you're not a robot.",
     captcha_failed: "Couldn't validate the captcha. Try again.",
     turn_unavailable: "Couldn't prepare the connection right now. Please try again.",
+    download_unavailable: "The download isn't available right now. Please try again in a few minutes.",
     email_unavailable: "Couldn't send the e-mail right now. Please try again.",
     invalid_credentials: 'Incorrect e-mail or password.',
     email_not_confirmed: 'Confirm your e-mail before signing in. Check your inbox.',

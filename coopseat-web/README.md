@@ -63,6 +63,8 @@ O site, as mensagens da API e o `@coopseat/ui` estão em inglês (padrão) e por
 
 `POST /api/turn` devolve `{ iceServers, expiresAt }` com credenciais de 4 horas do TURN da Cloudflare Realtime (`CLOUDFLARE_TURN_KEY_ID` e `CLOUDFLARE_TURN_API_TOKEN`), para usar direto em `new RTCPeerConnection({ iceServers })`. Exige sessão e tem limite por usuário. Convidados anônimos vão receber credenciais pela futura rota de entrada na sala, presas a um convite válido, para que ninguém use o relay de graça.
 
+A página `/download` mostra a versão, as opções instalador e portátil e os requisitos do sistema. `GET /download/installer` e `GET /download/portable` redirecionam para o `*-Setup.exe` e o `*-Portable.exe` da última release publicada do repositório privado do app (`GITHUB_RELEASES_REPO`), usando um token fine-grained só de leitura (`GITHUB_RELEASES_TOKEN`). O GitHub entrega uma URL assinada que expira em poucos minutos, então o site acompanha cada nova release sem deploy.
+
 ## KYC
 
 `KYC_PROVIDER=mock` usa a página `/verification/mock`, permitida apenas fora de produção ou com `ALLOW_MOCK_KYC=1`.

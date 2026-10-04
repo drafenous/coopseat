@@ -53,6 +53,12 @@ export const env = {
   get turnApiToken() {
     return required('CLOUDFLARE_TURN_API_TOKEN');
   },
+  get githubReleasesToken() {
+    return required('GITHUB_RELEASES_TOKEN');
+  },
+  get githubReleasesRepo() {
+    return process.env['GITHUB_RELEASES_REPO'] || 'drafenous/coopseat';
+  },
   get resendApiKey() {
     return required('RESEND_API_KEY');
   },

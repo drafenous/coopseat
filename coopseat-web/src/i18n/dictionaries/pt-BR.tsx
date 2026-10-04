@@ -16,7 +16,9 @@ export const ptBR: Dictionary = {
     terms: 'Termos de Uso',
     mockVerification: 'Verificação (simulada)',
     play: 'Jogar',
-    playDescription: 'Jogue o console numa aba do navegador pela placa de captura USB.',
+    playDescription: 'Jogue o console numa aba do navegador pela placa de captura.',
+    download: 'Download',
+    downloadDescription: 'Baixe o CoopSeat para Windows 10 e 11 e veja os requisitos do sistema.',
   },
   common: {
     language: 'Idioma',
@@ -96,7 +98,7 @@ export const ptBR: Dictionary = {
     steps: [
       {
         title: 'Conecte',
-        body: 'Ligue o videogame na placa de captura com o cabo HDMI, e a placa no computador com o cabo USB.',
+        body: 'Ligue o videogame na placa de captura com o cabo HDMI. Se a placa for externa, ligue-a no computador com o cabo USB.',
       },
       {
         title: 'Abra o CoopSeat',
@@ -151,7 +153,7 @@ export const ptBR: Dictionary = {
       },
       {
         q: 'O que eu preciso para jogar?',
-        a: 'Um computador com Windows 10 ou 11, uma placa de captura USB e o cabo HDMI do seu videogame. Só isso.',
+        a: 'Um computador com Windows 10 ou 11, uma placa de captura (externa USB ou interna) e o cabo HDMI do seu videogame. Só isso.',
       },
       {
         q: 'Preciso de conta para jogar?',
@@ -159,7 +161,7 @@ export const ptBR: Dictionary = {
       },
       {
         q: 'Quais placas de captura funcionam?',
-        a: 'A maioria das placas de captura USB que o Windows reconhece. Alguns conteúdos protegidos contra cópia, como apps de filmes e séries, não aparecem.',
+        a: 'A maioria das placas de captura que o Windows reconhece como dispositivo de vídeo, sejam externas (USB) ou internas (PCIe). Alguns conteúdos protegidos contra cópia, como apps de filmes e séries, não aparecem.',
       },
       {
         q: 'Tem atraso?',
@@ -181,9 +183,58 @@ export const ptBR: Dictionary = {
       product: 'Produto',
       legal: 'Legal',
       account: 'Minha conta',
-      source: 'GitHub',
       rights: (year: number) => `© ${year} CoopSeat`,
     },
+  },
+  download: {
+    kicker: 'Download',
+    title: 'Baixe o CoopSeat para Windows',
+    subtitle: 'Grátis e sem precisar de conta para jogar. Instale, conecte sua placa de captura e comece a jogar.',
+    version: (version: string) => `Versão ${version}`,
+    released: (date: string) => `Lançada em ${date}`,
+    unavailable: 'O download não está disponível agora. Tente novamente em alguns minutos.',
+    recommended: 'Recomendado',
+    installer: {
+      title: 'Instalador',
+      body: 'Instala o CoopSeat com atalhos no menu Iniciar e na área de trabalho e abre os links do CoopSeat vindos do site.',
+      button: 'Baixar instalador',
+    },
+    portable: {
+      title: 'Portátil',
+      body: 'Roda sem instalar, de qualquer pasta ou pendrive. Bom para computadores onde você não pode instalar programas. A primeira abertura demora um pouco mais.',
+      button: 'Baixar portátil',
+    },
+    stepsTitle: 'Depois de baixar',
+    steps: [
+      {
+        title: 'Abra o arquivo',
+        body: 'Execute o instalador, ou o arquivo portátil. O CoopSeat ainda não tem assinatura digital, então, se o Windows mostrar um aviso de proteção, clique em "Mais informações" e depois em "Executar assim mesmo".',
+      },
+      {
+        title: 'Conecte a placa de captura',
+        body: 'Ligue o HDMI do console no HDMI IN da placa. Se a placa for externa, ligue o USB dela no computador. Feche OBS, Câmera ou Discord se estiverem usando a placa.',
+      },
+      {
+        title: 'Abra o CoopSeat e jogue',
+        body: 'Escolha sua placa de captura e a entrada de áudio e clique em Iniciar captura.',
+      },
+    ],
+    requirementsTitle: 'Requisitos do sistema',
+    requirementsSubtitle: 'O CoopSeat é leve, mas a qualidade da imagem também depende da sua placa de captura e do computador.',
+    requirements: [
+      { label: 'Sistema', value: 'Windows 10 ou 11, 64 bits' },
+      { label: 'Vídeo', value: 'Placa de vídeo compatível com DirectX 11' },
+      { label: 'Placa de captura', value: 'Placa de captura externa (USB) ou interna (PCIe) reconhecida pelo Windows, com entrada HDMI' },
+      { label: 'Conexão', value: 'Para placas externas, USB 3.0 recomendado para Full HD a 60 fps' },
+      { label: 'Espaço em disco', value: 'Cerca de 400 MB livres' },
+      { label: 'Internet', value: 'Só para baixar e para os recursos de conta' },
+    ],
+    notesTitle: 'Bom saber',
+    notes: [
+      'As edições N do Windows precisam do Media Feature Pack, gratuito no site da Microsoft.',
+      'Conteúdo protegido contra cópia (HDCP), como apps de streaming de filmes, não aparece.',
+      'Mac e Linux ainda não são suportados.',
+    ],
   },
   providers: {
     signInWith: 'Entrar com',
@@ -520,6 +571,7 @@ export const ptBR: Dictionary = {
     captcha_required: 'Confirme que você não é um robô.',
     captcha_failed: 'Não foi possível validar o captcha. Tente de novo.',
     turn_unavailable: 'Não foi possível preparar a conexão agora. Tente novamente.',
+    download_unavailable: 'O download não está disponível agora. Tente novamente em alguns minutos.',
     email_unavailable: 'Não foi possível enviar o e-mail agora. Tente novamente.',
     invalid_credentials: 'E-mail ou senha incorretos.',
     email_not_confirmed: 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.',
