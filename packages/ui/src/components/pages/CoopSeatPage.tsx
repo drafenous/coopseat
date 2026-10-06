@@ -245,6 +245,11 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         else setPartyNick(myNick);
       }
     : undefined;
+  const partyHref = myNick
+    ? `/party/${encodeURIComponent(myNick)}`
+    : auth.available && auth.status === 'signedOut'
+      ? '/signup'
+      : undefined;
   const leaveParty = () => {
     party.leave();
     if (auth.web) location.assign('/play');
@@ -501,6 +506,16 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
               )
             }
             transport={transport}
+            partyHref={partyHref}
+            onPartyClick={
+              auth.web
+                ? undefined
+                : (e) => {
+                    e.preventDefault();
+                    if (myNick) setPartyNick(myNick);
+                    else signUp();
+                  }
+            }
           />
         )
       }

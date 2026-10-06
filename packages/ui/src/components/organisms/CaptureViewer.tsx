@@ -1,5 +1,5 @@
-import { useRef, type ReactNode, type RefObject } from 'react';
-import { Clapperboard, Monitor } from 'lucide-react';
+import { useRef, type MouseEvent, type ReactNode, type RefObject } from 'react';
+import { Clapperboard, Monitor, Tv } from 'lucide-react';
 import type { EffectIndex, NativeEvent, SmoothingLevel } from '../../types';
 import type { Backend } from '../../lib/settings';
 import { useVideoFilters } from '../../hooks/useVideoFilters';
@@ -18,6 +18,8 @@ type Props = {
   audioRef: RefObject<HTMLAudioElement | null>;
   emptyState: ReactNode;
   transport: ReactNode;
+  partyHref?: string;
+  onPartyClick?(event: MouseEvent<HTMLAnchorElement>): void;
 };
 
 const grid =
@@ -35,6 +37,8 @@ export function CaptureViewer({
   audioRef,
   emptyState,
   transport,
+  partyHref,
+  onPartyClick,
 }: Props) {
   const t = useT().viewer;
   const compatLive = running && backend === 'compat';
@@ -49,10 +53,11 @@ export function CaptureViewer({
   return (
     <section className="relative flex flex-col overflow-hidden rounded-[14px] border border-[#2c3743] bg-[#0a0e13] immersive:fixed immersive:inset-0 immersive:z-9 immersive:rounded-none immersive:border-0">
       <div className="flex h-[50px] flex-none items-center justify-between border-b border-[#ffffff0a] bg-[#111821] px-[18px] immersive:hidden">
-        <span className="flex items-center gap-[9px] text-[14px] text-[#c3cedb] min-[1800px]:text-[15px]">
-          <Monitor size={16} /> {t.monitor}
+        <span className="flex min-w-0 items-center gap-[9px] text-[14px] text-[#c3cedb] min-[1800px]:text-[15px]">
+          <Monitor size={16} className="shrink-0" />
+          <span className="truncate">{t.monitor}</span>
         </span>
-        <span className="flex items-center gap-3">
+        <span className="flex shrink-0 items-center gap-3">
           {running && stats?.width ? (
             <span className="text-[12px] text-accent tabular-nums">
               {stats.width} × {stats.height}
@@ -60,6 +65,16 @@ export function CaptureViewer({
             </span>
           ) : null}
           <Tag>{backend === 'native' ? t.native : t.compat}</Tag>
+          {partyHref && (
+            <a
+              href={partyHref}
+              onClick={onPartyClick}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-accent-border bg-accent px-3 text-[13px] font-[650] whitespace-nowrap text-accent-ink no-underline shadow-[0_3px_18px_#9aedc40a] hover:bg-accent-hover"
+            >
+              <Tv size={14} />
+              {t.startParty}
+            </a>
+          )}
         </span>
       </div>
       <div

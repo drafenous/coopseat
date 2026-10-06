@@ -179,6 +179,7 @@ export const ptBR: UiDictionary = {
     monitor: 'Monitor de captura',
     native: 'NATIVO',
     compat: 'COMPATIBILIDADE',
+    startParty: 'Iniciar uma gaming-party',
     cinemaHint: (
       <>
         Modo cinema · mexa o mouse para sair · <Kbd>F11</Kbd> monitor inteiro

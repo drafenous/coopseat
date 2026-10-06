@@ -184,6 +184,7 @@ export const en = {
     monitor: 'Capture monitor',
     native: 'NATIVE',
     compat: 'COMPATIBILITY',
+    startParty: 'Start a gaming-party',
     cinemaHint: (
       <>
         Cinema mode · move the mouse to exit · <Kbd>F11</Kbd> whole monitor
