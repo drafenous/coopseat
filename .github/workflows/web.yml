@@ -3,9 +3,23 @@ name: Web
 on:
   push:
     branches: [main]
-    paths: ['coopseat-web/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/web.yml']
+    paths:
+      [
+        'coopseat-web/**',
+        'packages/**',
+        'package.json',
+        'package-lock.json',
+        '.github/workflows/web.yml',
+      ]
   pull_request:
-    paths: ['coopseat-web/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/web.yml']
+    paths:
+      [
+        'coopseat-web/**',
+        'packages/**',
+        'package.json',
+        'package-lock.json',
+        '.github/workflows/web.yml',
+      ]
 
 concurrency:
   group: web-${{ github.ref }}

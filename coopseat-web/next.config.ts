@@ -4,18 +4,31 @@ const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'X-Frame-Options', value: 'DENY' },
-  { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), display-capture=(self), geolocation=()' },
-  { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+  {
+    key: 'Permissions-Policy',
+    value:
+      'camera=(self), microphone=(self), display-capture=(self), geolocation=()',
+  },
+  {
+    key: 'Strict-Transport-Security',
+    value: 'max-age=63072000; includeSubDomains; preload',
+  },
 ];
 
 const signalOrigin = (() => {
   const url = process.env['PARTY_SIGNAL_URL'];
   if (!url) return [];
   const { host, protocol } = new URL(url);
-  return [`${protocol}//${host}`, `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}`];
+  return [
+    `${protocol}//${host}`,
+    `${protocol === 'https:' ? 'wss:' : 'ws:'}//${host}`,
+  ];
 })();
 const isDev = process.env.NODE_ENV !== 'production';
-const googleAnalytics = ['https://www.googletagmanager.com', 'https://*.google-analytics.com'];
+const googleAnalytics = [
+  'https://www.googletagmanager.com',
+  'https://*.google-analytics.com',
+];
 
 /**
  * Party rooms render chat from other users, so they get a CSP on top of React's escaping. ICE traffic
@@ -58,7 +71,11 @@ const legacyRoutes: [string, string][] = [
 
 const nextConfig: NextConfig = {
   transpilePackages: ['@coopseat/ui'],
-  serverExternalPackages: ['pg', '@prisma/orm-postgres', '@prisma/orm-extension-supabase'],
+  serverExternalPackages: [
+    'pg',
+    '@prisma/orm-postgres',
+    '@prisma/orm-extension-supabase',
+  ],
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
@@ -66,7 +83,11 @@ const nextConfig: NextConfig = {
     ];
   },
   async redirects() {
-    return legacyRoutes.map(([source, destination]) => ({ source, destination, permanent: true }));
+    return legacyRoutes.map(([source, destination]) => ({
+      source,
+      destination,
+      permanent: true,
+    }));
   },
 };
 

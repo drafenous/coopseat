@@ -6,7 +6,9 @@ import { readJson, route } from '@/server/http';
 import { rateLimit } from '@/server/rate-limit';
 import { requireAuth } from '@/server/session';
 
-const bodySchema = z.object({ name: z.string().trim().min(1).max(40).optional() });
+const bodySchema = z.object({
+  name: z.string().trim().min(1).max(40).optional(),
+});
 
 export const POST = route(async (req) => {
   const session = await requireAuth(req, { aal2IfEnrolled: true });
@@ -15,10 +17,16 @@ export const POST = route(async (req) => {
 
   const user = await auth(gotrue.getUser(session.token));
   for (const factor of user.factors ?? []) {
-    if (factor.status === 'unverified') await gotrue.unenroll(session.token, factor.id).catch(() => undefined);
+    if (factor.status === 'unverified')
+      await gotrue.unenroll(session.token, factor.id).catch(() => undefined);
   }
 
-  const factor = await auth(gotrue.enrollTotp(session.token, name ?? `Autenticador ${new Date().toLocaleDateString('pt-BR')}`));
+  const factor = await auth(
+    gotrue.enrollTotp(
+      session.token,
+      name ?? `Autenticador ${new Date().toLocaleDateString('pt-BR')}`,
+    ),
+  );
   return NextResponse.json({
     factorId: factor.id,
     qrCode: factor.totp.qr_code,

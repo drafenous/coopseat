@@ -1,4 +1,11 @@
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  createHmac,
+  randomBytes,
+  timingSafeEqual,
+} from 'node:crypto';
 import { env } from './env';
 
 export function randomToken(bytes = 32): string {
@@ -25,7 +32,8 @@ export function hmacHex(secret: string, value: string): string {
 
 function key(): Buffer {
   const raw = Buffer.from(env.ticketKey, 'base64');
-  if (raw.length !== 32) throw new Error('TICKET_ENCRYPTION_KEY precisa ter 32 bytes em base64.');
+  if (raw.length !== 32)
+    throw new Error('TICKET_ENCRYPTION_KEY precisa ter 32 bytes em base64.');
   return raw;
 }
 
@@ -40,12 +48,17 @@ export function decrypt(sealed: string): string {
   const raw = Buffer.from(sealed, 'base64url');
   const decipher = createDecipheriv('aes-256-gcm', key(), raw.subarray(0, 12));
   decipher.setAuthTag(raw.subarray(12, 28));
-  return Buffer.concat([decipher.update(raw.subarray(28)), decipher.final()]).toString('utf8');
+  return Buffer.concat([
+    decipher.update(raw.subarray(28)),
+    decipher.final(),
+  ]).toString('utf8');
 }
 
 /** Stateless, encrypted and expiring token for short handoffs (MFA step, PKCE state). */
 export function seal(data: unknown, ttlSeconds: number): string {
-  return encrypt(JSON.stringify({ d: data, e: Date.now() + ttlSeconds * 1000 }));
+  return encrypt(
+    JSON.stringify({ d: data, e: Date.now() + ttlSeconds * 1000 }),
+  );
 }
 
 export function unseal<T>(token: string): T | null {

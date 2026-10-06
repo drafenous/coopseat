@@ -5,9 +5,14 @@ import { getDictionary, getLocale } from '@/i18n/server';
 import { SITE_NAME, SITE_URL } from '@/lib/seo';
 import '../../play/play.css';
 
-export const viewport: Viewport = { themeColor: '#0b1016', colorScheme: 'dark' };
+export const viewport: Viewport = {
+  themeColor: '#0b1016',
+  colorScheme: 'dark',
+};
 
-export async function generateMetadata({ params }: LayoutProps<'/party/[nickname]'>): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: LayoutProps<'/party/[nickname]'>): Promise<Metadata> {
   const [t, { nickname }] = await Promise.all([getDictionary(), params]);
   return {
     metadataBase: new URL(SITE_URL),
@@ -20,7 +25,9 @@ export async function generateMetadata({ params }: LayoutProps<'/party/[nickname
 }
 
 /** Same isolated root layout as /play: the app's element defaults must not leak into the site. */
-export default async function PartyLayout({ children }: LayoutProps<'/party/[nickname]'>) {
+export default async function PartyLayout({
+  children,
+}: LayoutProps<'/party/[nickname]'>) {
   const locale = await getLocale();
   return (
     <html lang={locale}>

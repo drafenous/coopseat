@@ -13,5 +13,8 @@ export async function changePassword(req: NextRequest): Promise<NextResponse> {
   await rateLimit('account', session.claims.sub);
   const { password } = await readJson(req, setPasswordSchema);
   await auth(gotrue.updateUser(session.token, { password }));
-  return NextResponse.json({ ok: true, message: dictionaryFor(req).messages.passwordUpdated });
+  return NextResponse.json({
+    ok: true,
+    message: dictionaryFor(req).messages.passwordUpdated,
+  });
 }

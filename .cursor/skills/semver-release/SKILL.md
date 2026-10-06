@@ -7,11 +7,11 @@ description: Versions and releases the CoopSeat monorepo packages (desktop app, 
 
 Three packages, each versioned and tagged independently:
 
-| Key | Directory | Tag | What the tag triggers |
-|-----|-----------|-----|-----------------------|
-| `desktop` | `coopseat/` | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installer and creates a GitHub Release |
-| `web` | `coopseat-web/` | `web-vX.Y.Z` | Nothing; marks what is deployed from `main` |
-| `ui` | `packages/ui/` | `ui-vX.Y.Z` | Nothing; `@coopseat/ui` is private and consumed through npm workspaces |
+| Key       | Directory       | Tag              | What the tag triggers                                                             |
+| --------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
+| `desktop` | `coopseat/`     | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installer and creates a GitHub Release |
+| `web`     | `coopseat-web/` | `web-vX.Y.Z`     | Nothing; marks what is deployed from `main`                                       |
+| `ui`      | `packages/ui/`  | `ui-vX.Y.Z`      | Nothing; `@coopseat/ui` is private and consumed through npm workspaces            |
 
 All commands run from the repository root. The helper script is the only way to change versions:
 
@@ -42,6 +42,7 @@ If a package has no tag yet, its first release is the current version as-is (`bu
 **3. Confirm.** Present one line per package: current version, proposed version, the one change that drove the level. Wait for the user's go-ahead or override.
 
 **4. Bump, changelog, verify.** Release `ui` first when it is part of the batch, since the bump rewrites its dependents. For each package:
+
 1. Run `bump`.
 2. Update `<dir>/CHANGELOG.md` (format below).
 3. Run `npm test -w <name>` and `npm run typecheck -w <name>` (names: `coopseat`, `coopseat-web`, `@coopseat/ui`; `ui` has no tests). Stop on failure.
@@ -70,6 +71,7 @@ While a package is below 1.0.0, a breaking change bumps **minor** and everything
 From 1.0.0 on: breaking → major, new user-visible capability → minor, fix or internal change → patch.
 
 Breaking means:
+
 - **desktop**: removes a feature or setting, raises the minimum Windows version, changes the `coopseat://` deep links, or stops reading settings saved by older versions.
 - **web**: changes or removes a BFF route, field or auth flow that already-installed desktop versions call (they keep running old code), or ships a destructive database migration.
 - **ui**: removes or renames an export, a prop, or a CSS token from `src/index.ts`, `src/design.ts`, `base.css` or `theme.css`.
@@ -90,12 +92,15 @@ Move entries from `## [Unreleased]` into a new section under it, dated with toda
 ## [0.2.0] - 2026-10-03
 
 ### Added
+
 - Microphone is requested together with the camera, so audio inputs show up in the device list.
 
 ### Changed
+
 - The app picks the account server from the build environment instead of a machine variable.
 
 ### Fixed
+
 - ...
 ```
 

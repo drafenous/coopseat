@@ -8,14 +8,21 @@ const URL_TTL_MS = 60_000;
 
 export const VARIANTS = ['installer', 'portable'] as const;
 export type Variant = (typeof VARIANTS)[number];
-const ASSET_PATTERNS: Record<Variant, RegExp> = { installer: /-Setup\.exe$/i, portable: /-Portable\.exe$/i };
+const ASSET_PATTERNS: Record<Variant, RegExp> = {
+  installer: /-Setup\.exe$/i,
+  portable: /-Portable\.exe$/i,
+};
 
 export function isVariant(value: string): value is Variant {
   return (VARIANTS as readonly string[]).includes(value);
 }
 
 export type ReleaseFile = { fileName: string; size: number };
-export type LatestRelease = { version: string; publishedAt: string; files: Partial<Record<Variant, ReleaseFile>> };
+export type LatestRelease = {
+  version: string;
+  publishedAt: string;
+  files: Partial<Record<Variant, ReleaseFile>>;
+};
 
 type Cache = {
   release: LatestRelease;
@@ -42,10 +49,13 @@ function unavailable(reason: string, status?: number): ApiError {
 
 async function loadLatest(now: number): Promise<Cache> {
   if (cache && cache.expiresAt > now) return cache;
-  const res = await fetch(`${GITHUB_API}/repos/${env.githubReleasesRepo}/releases/latest`, {
-    headers: githubHeaders(),
-    cache: 'no-store',
-  });
+  const res = await fetch(
+    `${GITHUB_API}/repos/${env.githubReleasesRepo}/releases/latest`,
+    {
+      headers: githubHeaders(),
+      cache: 'no-store',
+    },
+  );
   if (!res.ok) throw unavailable('latest release', res.status);
   const body = (await res.json()) as {
     tag_name: string;
@@ -60,9 +70,14 @@ async function loadLatest(now: number): Promise<Cache> {
     files[variant] = { fileName: asset.name, size: asset.size };
     assetIds[variant] = asset.id;
   }
-  if (!files.installer && !files.portable) throw unavailable('no Windows assets');
+  if (!files.installer && !files.portable)
+    throw unavailable('no Windows assets');
   cache = {
-    release: { version: body.tag_name.replace(/^desktop-v/, ''), publishedAt: body.published_at, files },
+    release: {
+      version: body.tag_name.replace(/^desktop-v/, ''),
+      publishedAt: body.published_at,
+      files,
+    },
     assetIds,
     expiresAt: now + RELEASE_TTL_MS,
     urls: {},
@@ -84,13 +99,17 @@ export async function latestDownloadUrl(variant: Variant): Promise<string> {
   const cached = latest.urls[variant];
   if (cached && cached.expiresAt > now) return cached.url;
 
-  const res = await fetch(`${GITHUB_API}/repos/${env.githubReleasesRepo}/releases/assets/${assetId}`, {
-    headers: githubHeaders('application/octet-stream'),
-    redirect: 'manual',
-    cache: 'no-store',
-  });
+  const res = await fetch(
+    `${GITHUB_API}/repos/${env.githubReleasesRepo}/releases/assets/${assetId}`,
+    {
+      headers: githubHeaders('application/octet-stream'),
+      redirect: 'manual',
+      cache: 'no-store',
+    },
+  );
   const location = res.headers.get('location');
-  if (res.status < 300 || res.status >= 400 || !location) throw unavailable('asset redirect', res.status);
+  if (res.status < 300 || res.status >= 400 || !location)
+    throw unavailable('asset redirect', res.status);
   latest.urls[variant] = { url: location, expiresAt: now + URL_TTL_MS };
   return location;
 }

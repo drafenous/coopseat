@@ -6,10 +6,12 @@ export const en = {
     description:
       'Free app to play PlayStation, Xbox or Switch on your Windows PC with a capture card: Full HD at 60 fps, game sound and almost no delay.',
     login: 'Sign in',
-    loginDescription: 'Sign in to CoopSeat with Google or e-mail to manage your account and its security.',
+    loginDescription:
+      'Sign in to CoopSeat with Google or e-mail to manage your account and its security.',
     mfa: 'Two-step verification',
     signup: 'Create account',
-    signupDescription: 'Create your free CoopSeat account and get ready to watch and play with your friends.',
+    signupDescription:
+      'Create your free CoopSeat account and get ready to watch and play with your friends.',
     forgotPassword: 'Forgot password',
     resetPassword: 'Reset password',
     emailConfirmed: 'E-mail confirmed',
@@ -17,9 +19,11 @@ export const en = {
     openApp: 'Returning to the app',
     account: 'My account',
     privacy: 'Privacy Policy',
-    privacyDescription: 'How CoopSeat handles your data: what we collect, what we never record and your rights under the LGPD.',
+    privacyDescription:
+      'How CoopSeat handles your data: what we collect, what we never record and your rights under the LGPD.',
     terms: 'Terms of Use',
-    termsDescription: 'The rules for using the CoopSeat app, website and account.',
+    termsDescription:
+      'The rules for using the CoopSeat app, website and account.',
     mockVerification: 'Verification (simulated)',
     play: 'Play in the browser',
     playDescription:
@@ -45,7 +49,12 @@ export const en = {
     genericError: 'Something went wrong. Please try again.',
   },
   home: {
-    nav: { features: 'Features', how: 'How it works', party: 'Watch party', faq: 'FAQ' },
+    nav: {
+      features: 'Features',
+      how: 'How it works',
+      party: 'Watch party',
+      faq: 'FAQ',
+    },
     signIn: 'Sign in',
     myAccount: 'My account',
     createAccount: 'Create account',
@@ -66,7 +75,10 @@ export const en = {
       chain: 'Console → capture card → PC',
     },
     stats: [
-      { value: 'Full HD', label: 'sharp, smooth picture, just like on your TV' },
+      {
+        value: 'Full HD',
+        label: 'sharp, smooth picture, just like on your TV',
+      },
       { value: '3 steps', label: 'from plugging in to playing' },
       { value: 'Free', label: 'no subscription and no hidden fees' },
       { value: '0', label: 'recordings: what you play stays with you' },
@@ -185,7 +197,8 @@ export const en = {
       },
     ],
     ctaTitle: 'Ready to take your seat?',
-    ctaBody: 'Download CoopSeat, plug in your capture card and start playing in minutes.',
+    ctaBody:
+      'Download CoopSeat, plug in your capture card and start playing in minutes.',
     footer: {
       tagline: 'Play and watch together, as if you were on the same couch.',
       product: 'Product',
@@ -197,10 +210,12 @@ export const en = {
   download: {
     kicker: 'Download',
     title: 'Download CoopSeat for Windows',
-    subtitle: 'Free, with no account needed to play. Install it, plug in your capture card and start playing.',
+    subtitle:
+      'Free, with no account needed to play. Install it, plug in your capture card and start playing.',
     version: (version: string) => `Version ${version}`,
     released: (date: string) => `Released on ${date}`,
-    unavailable: "The download isn't available right now. Please try again in a few minutes.",
+    unavailable:
+      "The download isn't available right now. Please try again in a few minutes.",
     recommended: 'Recommended',
     installer: {
       title: 'Installer',
@@ -228,12 +243,20 @@ export const en = {
       },
     ],
     requirementsTitle: 'System requirements',
-    requirementsSubtitle: 'CoopSeat is light, but the picture quality also depends on your capture card and computer.',
+    requirementsSubtitle:
+      'CoopSeat is light, but the picture quality also depends on your capture card and computer.',
     requirements: [
       { label: 'System', value: 'Windows 10 or 11, 64-bit' },
       { label: 'Graphics', value: 'Graphics card compatible with DirectX 11' },
-      { label: 'Capture card', value: 'External (USB) or internal (PCIe) capture card recognized by Windows, with HDMI input' },
-      { label: 'Connection', value: 'For external cards, USB 3.0 recommended for Full HD at 60 fps' },
+      {
+        label: 'Capture card',
+        value:
+          'External (USB) or internal (PCIe) capture card recognized by Windows, with HDMI input',
+      },
+      {
+        label: 'Connection',
+        value: 'For external cards, USB 3.0 recommended for Full HD at 60 fps',
+      },
       { label: 'Disk space', value: 'About 400 MB free' },
       { label: 'Internet', value: 'Only to download and for account features' },
     ],
@@ -278,7 +301,8 @@ export const en = {
     submit: 'Create account',
     pending: 'Creating…',
     failed: 'Could not create the account.',
-    confirmMinAge: "I'm 12 or older. To use the watch party (watch, chat and create rooms) I'll need to verify that I'm 18 or older.",
+    confirmMinAge:
+      "I'm 12 or older. To use the watch party (watch, chat and create rooms) I'll need to verify that I'm 18 or older.",
     acceptTerms: (terms: ReactNode, privacy: ReactNode): ReactNode => (
       <>
         I have read and accept the {terms} and the {privacy}.
@@ -286,7 +310,8 @@ export const en = {
     ),
     sent: (email: ReactNode): ReactNode => (
       <>
-        Almost there! We sent a confirmation link to <strong>{email}</strong>. Open the e-mail to activate your account.
+        Almost there! We sent a confirmation link to <strong>{email}</strong>.
+        Open the e-mail to activate your account.
       </>
     ),
   },
@@ -301,22 +326,29 @@ export const en = {
   reset: {
     title: 'Create a new password',
     expired: (link: (label: string) => ReactNode): ReactNode => (
-      <>The link has expired or was already used. {link('Request a new one')}.</>
+      <>
+        The link has expired or was already used. {link('Request a new one')}.
+      </>
     ),
     mismatch: "Passwords don't match.",
     failed: 'Could not save the password.',
     submit: 'Save password',
     pending: 'Saving…',
     done: (link: (label: string) => ReactNode): ReactNode => (
-      <>Password updated. {link('Go to my account')} or return to the app and sign in with the new password.</>
+      <>
+        Password updated. {link('Go to my account')} or return to the app and
+        sign in with the new password.
+      </>
     ),
   },
   confirmed: {
     invalidTitle: 'Invalid link',
-    invalidBody: 'The link has expired or was already used. Sign in to your account to request a new one.',
+    invalidBody:
+      'The link has expired or was already used. Sign in to your account to request a new one.',
     emailUpdated: 'E-mail updated',
     emailConfirmed: 'E-mail confirmed!',
-    emailUpdatedBody: 'If you confirmed on both addresses, the change is complete.',
+    emailUpdatedBody:
+      'If you confirmed on both addresses, the change is complete.',
     emailConfirmedBody: 'Your account is active. You can now use CoopSeat.',
     continueInBrowser: 'Continue in the browser',
   },
@@ -325,7 +357,8 @@ export const en = {
   },
   openApp: {
     title: 'Returning to CoopSeat',
-    subtitle: "If the app doesn't open on its own, use the button below. Then you can close this tab.",
+    subtitle:
+      "If the app doesn't open on its own, use the button below. Then you can close this tab.",
     invalid: 'Invalid link.',
   },
   party: {
@@ -336,15 +369,21 @@ export const en = {
     myRoomLink: 'Link to your room',
     greeting: (name: string) => `Hi, ${name}!`,
     welcome: 'Welcome to CoopSeat!',
-    playBody: 'Plug in your capture card and play your console right in the browser, nothing to install.',
+    playBody:
+      'Plug in your capture card and play your console right in the browser, nothing to install.',
     playCta: 'Play now',
     play: 'Play',
-    tabs: { profile: 'Profile', security: 'Sign-in & security', account: 'Account' },
+    tabs: {
+      profile: 'Profile',
+      security: 'Sign-in & security',
+      account: 'Account',
+    },
     partyBody: 'Finish the steps below to unlock each watch-party feature.',
     partyUnlocked: 'All set! You can watch, chat and create rooms.',
     dangerTitle: 'Danger zone',
     linked: 'Account linked successfully.',
-    verificationReceived: 'We received your verification. The result will show up here shortly.',
+    verificationReceived:
+      'We received your verification. The result will show up here shortly.',
     nicknameSaved: 'Nickname saved. Welcome to CoopSeat!',
     ageTitle: 'Age verification',
     ageStatus: 'Status:',
@@ -367,8 +406,10 @@ export const en = {
     sessionTitle: 'Session',
     signOut: 'Sign out',
     chooseNickname: 'Choose your nickname',
-    nicknameExplainer: "It's how your friends will see you in rooms. It's unique.",
-    acceptTermsRequired: 'You must accept the Terms of Use and the Privacy Policy.',
+    nicknameExplainer:
+      "It's how your friends will see you in rooms. It's unique.",
+    acceptTermsRequired:
+      'You must accept the Terms of Use and the Privacy Policy.',
     acceptTerms: (terms: ReactNode, privacy: ReactNode): ReactNode => (
       <>
         I&apos;m 12 or older and accept the {terms} and the {privacy}.
@@ -386,7 +427,8 @@ export const en = {
         Confirm the link sent to <strong>{email}</strong>.
       </>
     ),
-    xNoEmail: "Your X account didn't share an e-mail. It's needed to recover the account and verify your age.",
+    xNoEmail:
+      "Your X account didn't share an e-mail. It's needed to recover the account and verify your age.",
     checkEmail: 'Check your e-mail.',
     sendConfirmation: 'Send confirmation',
     securityTitle: 'Security',
@@ -396,7 +438,8 @@ export const en = {
     totpTitle: 'Two-step verification (TOTP)',
     authenticatorRemoved: 'Authenticator removed.',
     remove: 'Remove',
-    scanQr: 'Scan the QR code with your authenticator app and enter the generated code.',
+    scanQr:
+      'Scan the QR code with your authenticator app and enter the generated code.',
     qrAlt: 'Authenticator QR code',
     totpEnabled: 'Two-step verification enabled.',
     activate: 'Activate',
@@ -404,7 +447,8 @@ export const en = {
     deleteAccount: 'Delete account',
     deleteWarning: (name: ReactNode): ReactNode => (
       <>
-        This deletes your account and your data forever. Type <strong>{name}</strong> to confirm.
+        This deletes your account and your data forever. Type{' '}
+        <strong>{name}</strong> to confirm.
       </>
     ),
     confirmation: 'Confirmation',
@@ -434,18 +478,27 @@ export const en = {
   },
   privacy: {
     title: 'Privacy Policy',
-    compliance: 'In compliance with the LGPD (Law 13.709/2018) and ECA Digital (Law 15.211/2025).',
+    compliance:
+      'In compliance with the LGPD (Law 13.709/2018) and ECA Digital (Law 15.211/2025).',
     sections: [
       {
         heading: 'What we collect',
         body: (
           <ul className="list-disc space-y-1 pl-5">
-            <li>Account: e-mail, nickname, profile picture from the provider (when you sign in with Google).</li>
-            <li>Security: access logs and attempts, to prevent abuse (kept for up to 30 days).</li>
             <li>
-              Age verification: only the result (adult or not), the date and an irreversible cryptographic fingerprint of the
-              document, used to prevent the same document from verifying several accounts. Photos, selfie and document data stay
-              with the verification partner and are not stored by CoopSeat.
+              Account: e-mail, nickname, profile picture from the provider (when
+              you sign in with Google).
+            </li>
+            <li>
+              Security: access logs and attempts, to prevent abuse (kept for up
+              to 30 days).
+            </li>
+            <li>
+              Age verification: only the result (adult or not), the date and an
+              irreversible cryptographic fingerprint of the document, used to
+              prevent the same document from verifying several accounts. Photos,
+              selfie and document data stay with the verification partner and
+              are not stored by CoopSeat.
             </li>
           </ul>
         ) as ReactNode,
@@ -454,8 +507,10 @@ export const en = {
         heading: "What we don't collect",
         body: (
           <p>
-            We don&apos;t record your streams, camera or controllers. Media travels peer-to-peer between participants, or through
-            an encrypted relay (Cloudflare) when a direct connection isn&apos;t possible; the relay can&apos;t see the content.
+            We don&apos;t record your streams, camera or controllers. Media
+            travels peer-to-peer between participants, or through an encrypted
+            relay (Cloudflare) when a direct connection isn&apos;t possible; the
+            relay can&apos;t see the content.
           </p>
         ) as ReactNode,
       },
@@ -464,15 +519,20 @@ export const en = {
         body: (
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              Your IP address is visible to other participants. Peer-to-peer connections need it: whoever is in the room with
-              you can see the IP address of your connection, as in any video call. Only join rooms of people you trust.
+              Your IP address is visible to other participants. Peer-to-peer
+              connections need it: whoever is in the room with you can see the
+              IP address of your connection, as in any video call. Only join
+              rooms of people you trust.
             </li>
             <li>
-              Room chat is not stored: messages live only in memory on the room server and are erased when the session ends.
+              Room chat is not stored: messages live only in memory on the room
+              server and are erased when the session ends.
             </li>
             <li>
-              We keep a record of sessions (start, end, who took part) and of moderation actions (kicks, bans, stopped streams)
-              to handle reports, appeals and abuse. Room passwords are stored only as an irreversible hash.
+              We keep a record of sessions (start, end, who took part) and of
+              moderation actions (kicks, bans, stopped streams) to handle
+              reports, appeals and abuse. Room passwords are stored only as an
+              irreversible hash.
             </li>
           </ul>
         ) as ReactNode,
@@ -480,16 +540,21 @@ export const en = {
       {
         heading: 'How we use it',
         body: (
-          <p>To authenticate you, keep your account secure, meet the legal age-verification obligation and run the rooms.</p>
+          <p>
+            To authenticate you, keep your account secure, meet the legal
+            age-verification obligation and run the rooms.
+          </p>
         ) as ReactNode,
       },
       {
         heading: 'Cookies',
         body: (
           <p>
-            Essential cookies keep your session, chosen language and sign-in security working. With your permission, we also use
-            Google Analytics to see, in aggregate, which pages are visited. You can change your choice at any time under Cookie
-            preferences, at the bottom of the site.
+            Essential cookies keep your session, chosen language and sign-in
+            security working. With your permission, we also use Google Analytics
+            to see, in aggregate, which pages are visited. You can change your
+            choice at any time under Cookie preferences, at the bottom of the
+            site.
           </p>
         ) as ReactNode,
       },
@@ -497,9 +562,12 @@ export const en = {
         heading: 'Windows app statistics',
         body: (
           <p>
-            Only if you allow it, the app reports when it is opened and when a capture starts, with the app version, the capture mode
-            and a random identifier that is not linked to your account. This data goes through our server before reaching Google
-            Analytics, so Google never receives your IP. You can turn it off in the app&apos;s Preferences, which deletes the identifier.
+            Only if you allow it, the app reports when it is opened and when a
+            capture starts, with the app version, the capture mode and a random
+            identifier that is not linked to your account. This data goes
+            through our server before reaching Google Analytics, so Google never
+            receives your IP. You can turn it off in the app&apos;s Preferences,
+            which deletes the identifier.
           </p>
         ) as ReactNode,
       },
@@ -507,8 +575,9 @@ export const en = {
         heading: 'Your rights',
         body: (
           <p>
-            You can access, correct and delete your data at any time in My account. Deletion removes your profile, links and
-            verifications. Questions: privacidade@coopseat.com.
+            You can access, correct and delete your data at any time in My
+            account. Deletion removes your profile, links and verifications.
+            Questions: privacidade@coopseat.com.
           </p>
         ) as ReactNode,
       },
@@ -522,11 +591,13 @@ export const en = {
         heading: '1. Who can use it',
         body: (
           <p>
-            Playing in the browser (the Play page) and the Windows app are open to everyone, with no account. To create an
-            account you must be 12 or older. The watch party (watching, streaming, chat and creating rooms) is exclusively for
-            people aged 18 or older, who must verify their age with a document and a selfie through a verification partner.
-            Accounts of people under 12 will be closed. If you are under 18, use CoopSeat with the guidance of a parent or
-            guardian.
+            Playing in the browser (the Play page) and the Windows app are open
+            to everyone, with no account. To create an account you must be 12 or
+            older. The watch party (watching, streaming, chat and creating
+            rooms) is exclusively for people aged 18 or older, who must verify
+            their age with a document and a selfie through a verification
+            partner. Accounts of people under 12 will be closed. If you are
+            under 18, use CoopSeat with the guidance of a parent or guardian.
           </p>
         ) as ReactNode,
       },
@@ -534,8 +605,9 @@ export const en = {
         heading: '2. Your account',
         body: (
           <p>
-            You are responsible for your account and for what happens in the rooms you create. Nicknames and e-mails are unique.
-            We recommend enabling two-step verification. Do not share your password.
+            You are responsible for your account and for what happens in the
+            rooms you create. Nicknames and e-mails are unique. We recommend
+            enabling two-step verification. Do not share your password.
           </p>
         ) as ReactNode,
       },
@@ -545,17 +617,31 @@ export const en = {
           <>
             <p>In rooms, streams and chat, the following is prohibited:</p>
             <ul className="mt-2 list-disc space-y-1 pl-5">
-              <li>any sexual content or material involving minors, which will be reported to the authorities;</li>
-              <li>sexual or pornographic content, gore and graphic violence;</li>
-              <li>illegal content, including piracy, and third-party content (films, series, sports, paid streams) without authorization;</li>
-              <li>hate speech, threats, harassment and incitement to violence;</li>
-              <li>exposing other people&apos;s personal data, including the IP addresses seen in a room;</li>
+              <li>
+                any sexual content or material involving minors, which will be
+                reported to the authorities;
+              </li>
+              <li>
+                sexual or pornographic content, gore and graphic violence;
+              </li>
+              <li>
+                illegal content, including piracy, and third-party content
+                (films, series, sports, paid streams) without authorization;
+              </li>
+              <li>
+                hate speech, threats, harassment and incitement to violence;
+              </li>
+              <li>
+                exposing other people&apos;s personal data, including the IP
+                addresses seen in a room;
+              </li>
               <li>spam, scams, malware and links to them;</li>
               <li>evading bans or suspensions with another account.</li>
             </ul>
             <p className="mt-2">
-              CoopSeat may suspend accounts that break these rules, permanently or only for some features (creating rooms,
-              streaming, joining or chatting), and cooperates with authorities.
+              CoopSeat may suspend accounts that break these rules, permanently
+              or only for some features (creating rooms, streaming, joining or
+              chatting), and cooperates with authorities.
             </p>
           </>
         ) as ReactNode,
@@ -564,18 +650,24 @@ export const en = {
         heading: '4. Rooms and streams',
         body: (
           <p>
-            Streams are peer-to-peer between participants and are not recorded by CoopSeat. Each verified account has its own room;
-            the owner decides who joins (password, approval or allow list), who can stream (up to 10 people at a time, only
-            while the owner is streaming) and who moderates. The owner and moderators can remove, ban and stop the streams of
-            participants. When the owner stops streaming, the session ends for everyone and the chat is erased. Participants can
-            see each other&apos;s IP address, as described in the Privacy Policy.
+            Streams are peer-to-peer between participants and are not recorded
+            by CoopSeat. Each verified account has its own room; the owner
+            decides who joins (password, approval or allow list), who can stream
+            (up to 10 people at a time, only while the owner is streaming) and
+            who moderates. The owner and moderators can remove, ban and stop the
+            streams of participants. When the owner stops streaming, the session
+            ends for everyone and the chat is erased. Participants can see each
+            other&apos;s IP address, as described in the Privacy Policy.
           </p>
         ) as ReactNode,
       },
       {
         heading: '5. Termination',
         body: (
-          <p>You can delete your account at any time in My account. Data is erased as described in the Privacy Policy.</p>
+          <p>
+            You can delete your account at any time in My account. Data is
+            erased as described in the Privacy Policy.
+          </p>
         ) as ReactNode,
       },
       {
@@ -596,10 +688,12 @@ export const en = {
         'Essential cookies keep the site working. With your permission, we also use Google Analytics to understand how the site is used. You can change this at any time.',
       customize: 'Customize',
     },
-    intro: 'Choose which cookies CoopSeat may use. Essential ones are always on, because the site does not work without them.',
+    intro:
+      'Choose which cookies CoopSeat may use. Essential ones are always on, because the site does not work without them.',
     necessary: {
       title: 'Essential',
-      description: 'Keep your session, chosen language and sign-in security. They cannot be turned off.',
+      description:
+        'Keep your session, chosen language and sign-in security. They cannot be turned off.',
     },
     analytics: {
       title: 'Analytics',
@@ -608,15 +702,18 @@ export const en = {
     },
     more: {
       title: 'More information',
-      description: (privacyLink: string) => `Read our ${privacyLink} to learn how we handle your data.`,
+      description: (privacyLink: string) =>
+        `Read our ${privacyLink} to learn how we handle your data.`,
     },
   },
   messages: {
     confirmationSent: 'We sent a confirmation link to your e-mail.',
     emailChangeSent: 'We sent a confirmation link to the new e-mail.',
     passwordUpdated: 'Password updated.',
-    resetLinkSent: 'If an account exists with that e-mail, we sent a link to reset the password.',
-    resendSent: 'If there is a pending sign-up for that e-mail, we sent the link again.',
+    resetLinkSent:
+      'If an account exists with that e-mail, we sent a link to reset the password.',
+    resendSent:
+      'If there is a pending sign-up for that e-mail, we sent the link again.',
   },
   errors: {
     generic: 'Something went wrong. Please try again.',
@@ -629,30 +726,38 @@ export const en = {
     auth_unavailable: "Couldn't finish right now. Please try again.",
     captcha_required: "Confirm you're not a robot.",
     captcha_failed: "Couldn't validate the captcha. Try again.",
-    turn_unavailable: "Couldn't prepare the connection right now. Please try again.",
+    turn_unavailable:
+      "Couldn't prepare the connection right now. Please try again.",
     relay_unavailable:
       'Your network needs a relay to connect, and it is unavailable right now. Try another network (for example, Wi-Fi instead of mobile data).',
-    relay_quota_exceeded: "You've reached today's limit of relayed connections. Try again tomorrow or use another network.",
-    relay_app_outdated: "This app version can't use the relay. Update CoopSeat to continue.",
-    download_unavailable: "The download isn't available right now. Please try again in a few minutes.",
+    relay_quota_exceeded:
+      "You've reached today's limit of relayed connections. Try again tomorrow or use another network.",
+    relay_app_outdated:
+      "This app version can't use the relay. Update CoopSeat to continue.",
+    download_unavailable:
+      "The download isn't available right now. Please try again in a few minutes.",
     email_unavailable: "Couldn't send the e-mail right now. Please try again.",
     invalid_credentials: 'Incorrect e-mail or password.',
-    email_not_confirmed: 'Confirm your e-mail before signing in. Check your inbox.',
+    email_not_confirmed:
+      'Confirm your e-mail before signing in. Check your inbox.',
     email_unconfirmed: 'Confirm your e-mail before verifying your age.',
     user_already_exists: 'That e-mail is already in use.',
     email_exists: 'That e-mail is already in use.',
-    weak_password: 'Weak password or leaked from another service. Choose another one.',
+    weak_password:
+      'Weak password or leaked from another service. Choose another one.',
     same_password: 'The new password must be different from the current one.',
     over_email_send_rate_limit: 'Too many e-mails sent. Wait a few minutes.',
     over_request_rate_limit: 'Too many attempts. Wait a few minutes.',
     otp_expired: 'The link has expired or was already used. Request a new one.',
-    mfa_verification_failed: 'Invalid code. Check your authenticator app and try again.',
+    mfa_verification_failed:
+      'Invalid code. Check your authenticator app and try again.',
     mfa_challenge_expired: 'The code has expired. Try again.',
     mfa_factor_name_conflict: 'An authenticator with that name already exists.',
     mfa_required: 'Confirm the two-step verification code to continue.',
     mfa_expired: 'The time to confirm the code ran out. Please sign in again.',
     mfa_not_enrolled: 'No authenticator found.',
-    identity_already_exists: 'That provider account is already linked to another user.',
+    identity_already_exists:
+      'That provider account is already linked to another user.',
     identity_not_found: 'Link not found.',
     single_identity_not_deletable: 'You must keep at least one sign-in method.',
     manual_linking_disabled: 'Account linking is unavailable right now.',
@@ -660,7 +765,8 @@ export const en = {
     reauthentication_needed: 'Sign in again to change the password.',
     session_not_found: 'Your session has expired. Please sign in again.',
     refresh_token_not_found: 'Your session has expired. Please sign in again.',
-    refresh_token_already_used: 'Your session has expired. Please sign in again.',
+    refresh_token_already_used:
+      'Your session has expired. Please sign in again.',
     bad_jwt: 'Your session has expired. Please sign in again.',
     user_not_found: 'Account not found.',
     signup_disabled: 'Sign-ups are temporarily disabled.',
@@ -671,9 +777,11 @@ export const en = {
     already_verified: 'Your age has already been verified.',
     kyc_locked: 'Attempt limit reached. Contact support.',
     kyc_attempts: 'You reached the limit of 3 attempts in 30 days.',
-    kyc_unavailable: "Couldn't start the age verification right now. Please try again in a few minutes.",
+    kyc_unavailable:
+      "Couldn't start the age verification right now. Please try again in a few minutes.",
     nickname_required: 'Enter a nickname.',
-    nickname_format: 'The nickname must be 3 to 20 characters: letters, numbers or _.',
+    nickname_format:
+      'The nickname must be 3 to 20 characters: letters, numbers or _.',
     nickname_reserved: 'That nickname is reserved.',
     email_required: 'Enter an e-mail.',
     email_too_long: 'E-mail too long.',
@@ -691,15 +799,18 @@ export const en = {
     pkce_verifier_invalid: 'Invalid PKCE verifier.',
     totp_format: 'The code has 6 digits.',
     login_expired: 'The sign-in has expired. Go back and try again.',
-    provider_already_linked: 'That provider account is already linked to another CoopSeat user.',
+    provider_already_linked:
+      'That provider account is already linked to another CoopSeat user.',
     provider_refused: 'The provider refused the sign-in. Try again.',
     provider_bad_response: 'Invalid response from the provider.',
     login_failed: "Couldn't finish signing in. Try again.",
     oauth_start_failed: "Couldn't start signing in with that provider.",
     link_expired: 'The linking link has expired. Try again from the app.',
     link_failed: "Couldn't start linking. Sign in again and retry.",
-    account_suspended: 'This account is suspended. Contact suporte@coopseat.com.',
-    party_unavailable: 'Gaming-Party is unavailable for this account right now.',
+    account_suspended:
+      'This account is suspended. Contact suporte@coopseat.com.',
+    party_unavailable:
+      'Gaming-Party is unavailable for this account right now.',
     party_disabled: 'Gaming-Party is temporarily unavailable.',
     party_not_found: 'Room not found.',
     party_forbidden: "You don't have permission to do that in this room.",
@@ -707,9 +818,11 @@ export const en = {
     party_no_session: "This room isn't live right now.",
     party_password_invalid: 'Wrong room password.',
     party_password_format: 'The password must be 4 to 64 characters.',
-    party_protection_required: 'Keep at least one protection on: password, approval or allow list.',
+    party_protection_required:
+      'Keep at least one protection on: password, approval or allow list.',
     party_target_invalid: "You can't do that to this person.",
-    party_target_unverified: 'Only people with a verified identity can be added.',
+    party_target_unverified:
+      'Only people with a verified identity can be added.',
     party_token_invalid: 'Your room access expired. Join the room again.',
     party_signal_invalid: 'Invalid signature.',
   },

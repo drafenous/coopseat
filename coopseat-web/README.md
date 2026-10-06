@@ -21,15 +21,15 @@ npm run dev                  # emite o contrato Prisma e sobe em http://localhos
 
 Primeira configuração do Supabase (projeto, role `prisma`, migrations, SQL, Auth, provedores OAuth, SMTP e Turnstile): veja [`docs/supabase-setup.md`](docs/supabase-setup.md).
 
-| Script | O que faz |
-|---|---|
-| `npm run contract:emit` | Gera `src/prisma/contract.json` e `contract.d.ts` a partir de `contract.prisma` |
-| `npm run migration:plan -- --name <nome>` | Planeja uma migration (offline) em `migrations/` |
-| `npm run db:migrate` | Aplica as migrations planejadas (`DIRECT_URL`) |
-| `npm run db:sql` | Aplica `supabase/sql/*.sql` (trigger, grants, Custom Access Token Hook, pg_cron) |
-| `npm run relay:revoke -- --user <uuid>` / `--all` | Revoga na Cloudflare as credenciais TURN ainda válidas |
-| `npm run supabase:configure` | Configura o Auth pela Management API (templates bilíngues, MFA, provedores, SMTP) |
-| `npm run lint` / `typecheck` / `test` / `build` | Verificações usadas no CI |
+| Script                                            | O que faz                                                                         |
+| ------------------------------------------------- | --------------------------------------------------------------------------------- |
+| `npm run contract:emit`                           | Gera `src/prisma/contract.json` e `contract.d.ts` a partir de `contract.prisma`   |
+| `npm run migration:plan -- --name <nome>`         | Planeja uma migration (offline) em `migrations/`                                  |
+| `npm run db:migrate`                              | Aplica as migrations planejadas (`DIRECT_URL`)                                    |
+| `npm run db:sql`                                  | Aplica `supabase/sql/*.sql` (trigger, grants, Custom Access Token Hook, pg_cron)  |
+| `npm run relay:revoke -- --user <uuid>` / `--all` | Revoga na Cloudflare as credenciais TURN ainda válidas                            |
+| `npm run supabase:configure`                      | Configura o Auth pela Management API (templates bilíngues, MFA, provedores, SMTP) |
+| `npm run lint` / `typecheck` / `test` / `build`   | Verificações usadas no CI                                                         |
 
 ## Idiomas
 
@@ -45,10 +45,10 @@ O site, as mensagens da API e o `@coopseat/ui` estão em inglês (padrão) e por
 
 ### Permissões na watch party (`src/lib/gates.ts`)
 
-| Ação | Requisitos |
-|---|---|
-| Assistir | Nenhum (convidado anônimo) |
-| Chat | E-mail confirmado, apelido, idade verificada |
+| Ação              | Requisitos                                        |
+| ----------------- | ------------------------------------------------- |
+| Assistir          | Nenhum (convidado anônimo)                        |
+| Chat              | E-mail confirmado, apelido, idade verificada      |
 | Criar sala (host) | Os mesmos, e sessão `aal2` se o 2FA estiver ativo |
 
 `GET /api/me` devolve `permissions` já calculadas, e o Custom Access Token Hook adiciona `age_verified` e `nickname_set` ao JWT para validação nos serviços da sessão.
@@ -64,7 +64,7 @@ O site, as mensagens da API e o `@coopseat/ui` estão em inglês (padrão) e por
 
 Watch party com até 10 transmissores. Cada conta verificada tem uma sala em `/party/<apelido>` (atalho "Minha sala" em `/account` e no cabeçalho do app). Quem não está logado vai para o login e volta para a sala.
 
-- **Peças**: o BFF decide o acesso e emite um *room token* (JWT Ed25519, 10 minutos, renovado a cada 8); o Worker [`coopseat-signal`](../coopseat-signal) (um Durable Object por sessão) só confere o token com a chave pública e repassa presença, chat e sinalização WebRTC. A mídia vai em malha P2P (cada transmissor envia uma cópia por espectador), com o TURN abaixo como plano B. BFF e Worker conversam por HTTP assinado com HMAC (`PARTY_SIGNAL_SECRET`, timestamp de até 60 s e nonce).
+- **Peças**: o BFF decide o acesso e emite um _room token_ (JWT Ed25519, 10 minutos, renovado a cada 8); o Worker [`coopseat-signal`](../coopseat-signal) (um Durable Object por sessão) só confere o token com a chave pública e repassa presença, chat e sinalização WebRTC. A mídia vai em malha P2P (cada transmissor envia uma cópia por espectador), com o TURN abaixo como plano B. BFF e Worker conversam por HTTP assinado com HMAC (`PARTY_SIGNAL_SECRET`, timestamp de até 60 s e nonce).
 - **Sessão**: começa quando o dono inicia a transmissão e acaba quando ele para, quando fica fora por mais de `ownerGraceSeconds`, ao atingir `sessionMaxHours` ou por sanção. No fim, todos são desconectados e o chat (só em memória no Durable Object) some. Sessões encerradas saem da lista de ativas (`party_sessions."endedAt"`).
 - **Acesso**: assistir, conversar, transmitir e moderar exigem conta verificada (e-mail, apelido, 18+); transmitir também exige 2FA na sessão quando ativado. A sala precisa de pelo menos uma proteção: senha (scrypt), aprovação ou lista de convidados (que pode liberar transmissão). Outros só transmitem enquanto o dono transmite, com permissão do dono ou por pedido aprovado, que vale só para a sessão.
 - **Moderação**: o dono escolhe moderadores com permissões granulares (remover, banir, parar transmissões, aprovar, liberar transmissão, apagar mensagens). Ninguém age sobre o dono e moderadores não agem entre si. Toda ação fica em `party_moderation_events`.
@@ -75,14 +75,14 @@ Watch party com até 10 transmissores. Cada conta verificada tem uma sala em `/p
 
 Como no relay, os limites ficam no Postgres e valem na próxima requisição. Tokens já emitidos carregam os limites da sala, então mudanças chegam às sessões ao vivo em até 10 minutos (na renovação do token).
 
-| Tabela | Chave | Efeito |
-|---|---|---|
-| `party_policy` (linha `global`; sem a linha, valem os defaults) | `enabled` | Fecha todas as salas |
-| | `maxParticipants` (10, de 2 a 50) | Capacidade padrão das salas (`party_rooms."maxParticipants"` sobrescreve por sala) |
-| | `maxStreamers` (10, de 1 a 10) | Transmissores simultâneos por sessão |
-| | `sessionMaxHours` (12) / `ownerGraceSeconds` (60) | Duração máxima da sessão / tolerância de queda do dono |
-| | `chatEnabled` | Desliga o chat de todas as salas |
-| `platform_sanctions` | `scope`, `expiresAt`, `revokedAt` | Sanção do CoopSeat: `platform` (conta toda), `party_host`, `party_stream`, `party_join` ou `party_chat`; `expiresAt` null = permanente |
+| Tabela                                                          | Chave                                             | Efeito                                                                                                                                 |
+| --------------------------------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `party_policy` (linha `global`; sem a linha, valem os defaults) | `enabled`                                         | Fecha todas as salas                                                                                                                   |
+|                                                                 | `maxParticipants` (10, de 2 a 50)                 | Capacidade padrão das salas (`party_rooms."maxParticipants"` sobrescreve por sala)                                                     |
+|                                                                 | `maxStreamers` (10, de 1 a 10)                    | Transmissores simultâneos por sessão                                                                                                   |
+|                                                                 | `sessionMaxHours` (12) / `ownerGraceSeconds` (60) | Duração máxima da sessão / tolerância de queda do dono                                                                                 |
+|                                                                 | `chatEnabled`                                     | Desliga o chat de todas as salas                                                                                                       |
+| `platform_sanctions`                                            | `scope`, `expiresAt`, `revokedAt`                 | Sanção do CoopSeat: `platform` (conta toda), `party_host`, `party_stream`, `party_join` ou `party_chat`; `expiresAt` null = permanente |
 
 ```sql
 -- fechar todas as salas (volte com enabled = true)
@@ -119,20 +119,20 @@ Só o tráfego que passa pelo relay é cobrado; conexões diretas (P2P) não cus
 
 As chaves ficam no Postgres e valem na próxima requisição, sem deploy. Edite pelo SQL Editor do Supabase. As tabelas têm RLS sem policies, então só o backend as lê.
 
-| Tabela | Chave | Efeito |
-|---|---|---|
-| `relay_policy` (linha `global`; sem a linha, valem os defaults) | `enabled` | Desliga o relay para todos |
-| | `membersEnabled` / `guestsEnabled` | Desliga por público |
-| | `minAppVersion` / `blockedAppVersions` (lista separada por vírgula) | Bloqueia versões do app desktop |
-| | `dailyCredentialQuota` (12) | Credenciais por usuário em 24 horas |
-| | `credentialTtlSeconds` (14400) | Validade de cada credencial (60 a 86400) |
-| | `maxRelayBitrateKbps` (4000) | Limite de bitrate enviado ao cliente quando a conexão está no relay |
-| | `monthlyBudgetGb` (900; `null` desliga) | Teto mensal de egress do TURN; ao atingir, o relay para até o mês seguinte |
-| `relay_user_overrides` | `blocked`, `dailyQuota`, `reason`, `expiresAt` | Bloqueio ou cota por usuário; com `expiresAt` no passado, o override deixa de valer |
-| `relay_credentials` | (auditoria) | Cada credencial emitida, usada para a cota e para revogar |
-| `relay_usage` | (cache) | Egress do TURN no mês (`month` = `AAAA-MM`, UTC), atualizado pelo backend |
+| Tabela                                                          | Chave                                                               | Efeito                                                                              |
+| --------------------------------------------------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `relay_policy` (linha `global`; sem a linha, valem os defaults) | `enabled`                                                           | Desliga o relay para todos                                                          |
+|                                                                 | `membersEnabled` / `guestsEnabled`                                  | Desliga por público                                                                 |
+|                                                                 | `minAppVersion` / `blockedAppVersions` (lista separada por vírgula) | Bloqueia versões do app desktop                                                     |
+|                                                                 | `dailyCredentialQuota` (12)                                         | Credenciais por usuário em 24 horas                                                 |
+|                                                                 | `credentialTtlSeconds` (14400)                                      | Validade de cada credencial (60 a 86400)                                            |
+|                                                                 | `maxRelayBitrateKbps` (4000)                                        | Limite de bitrate enviado ao cliente quando a conexão está no relay                 |
+|                                                                 | `monthlyBudgetGb` (900; `null` desliga)                             | Teto mensal de egress do TURN; ao atingir, o relay para até o mês seguinte          |
+| `relay_user_overrides`                                          | `blocked`, `dailyQuota`, `reason`, `expiresAt`                      | Bloqueio ou cota por usuário; com `expiresAt` no passado, o override deixa de valer |
+| `relay_credentials`                                             | (auditoria)                                                         | Cada credencial emitida, usada para a cota e para revogar                           |
+| `relay_usage`                                                   | (cache)                                                             | Egress do TURN no mês (`month` = `AAAA-MM`, UTC), atualizado pelo backend           |
 
-**Teto mensal.** A Cloudflare cobra só o egress, com 1.000 GB grátis por mês (compartilhados com o SFU, que não usamos). Antes de emitir credenciais, o backend lê o egress do TURN no mês pela GraphQL Analytics API (`CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_ANALYTICS_API_TOKEN`, permissão *Account Analytics: Read*), guarda a leitura em `relay_usage` por 5 minutos e nega o relay quando ela chega em `monthlyBudgetGb`. O padrão de 900 GB deixa margem para o atraso das métricas e para as sessões que já têm credenciais, que continuam até expirar (use `relay:revoke -- --all` para cortá-las). O mês é o calendário UTC; o ciclo de cobrança da Cloudflare também é mensal. O teto falha fechado: se a Cloudflare não responder e a última leitura tiver mais de 1 hora, ou se as variáveis faltarem em produção, o relay fica desligado. Fora de produção, sem as variáveis, o teto é ignorado.
+**Teto mensal.** A Cloudflare cobra só o egress, com 1.000 GB grátis por mês (compartilhados com o SFU, que não usamos). Antes de emitir credenciais, o backend lê o egress do TURN no mês pela GraphQL Analytics API (`CLOUDFLARE_ACCOUNT_ID` e `CLOUDFLARE_ANALYTICS_API_TOKEN`, permissão _Account Analytics: Read_), guarda a leitura em `relay_usage` por 5 minutos e nega o relay quando ela chega em `monthlyBudgetGb`. O padrão de 900 GB deixa margem para o atraso das métricas e para as sessões que já têm credenciais, que continuam até expirar (use `relay:revoke -- --all` para cortá-las). O mês é o calendário UTC; o ciclo de cobrança da Cloudflare também é mensal. O teto falha fechado: se a Cloudflare não responder e a última leitura tiver mais de 1 hora, ou se as variáveis faltarem em produção, o relay fica desligado. Fora de produção, sem as variáveis, o teto é ignorado.
 
 ```sql
 -- desligar o relay para todos (volte com enabled = true)
@@ -174,10 +174,10 @@ A página `/download` mostra a versão, as opções instalador e portátil e os 
 `KYC_PROVIDER=didit` usa o fluxo hospedado do [Didit](https://didit.me) (500 verificações completas grátis por mês). No console do Didit:
 
 1. Crie um workflow com verificação de documento (prova de vida e comparação de rosto recomendadas) e copie o id para `DIDIT_WORKFLOW_ID`. Os checks grátis só valem dentro de workflows.
-2. Em *API & Webhooks*, copie a API key para `DIDIT_API_KEY` e adicione o destino `<APP_URL>/api/identity/webhooks/didit` (versão v3, evento `status.updated`). O segredo de assinatura vai em `DIDIT_WEBHOOK_SECRET`.
-3. Para testar localmente, exponha o servidor com um túnel HTTPS (`cloudflared tunnel --url http://localhost:3000`) e use *Try Webhook* no console.
+2. Em _API & Webhooks_, copie a API key para `DIDIT_API_KEY` e adicione o destino `<APP_URL>/api/identity/webhooks/didit` (versão v3, evento `status.updated`). O segredo de assinatura vai em `DIDIT_WEBHOOK_SECRET`.
+3. Para testar localmente, exponha o servidor com um túnel HTTPS (`cloudflared tunnel --url http://localhost:3000`) e use _Try Webhook_ no console.
 
-O webhook confere `X-Signature-V2` (HMAC-SHA256 do JSON canônico) e `X-Timestamp` (até 5 minutos). Eventos intermediários (*Not Started*, *In Progress*) recebem 200 e são ignorados; *Abandoned* e *Expired* contam como recusa para o perfil não ficar preso em `PENDING`. A maioridade vem do campo `age` do documento, e a impressão do documento usa `issuing_state` + `document_number`.
+O webhook confere `X-Signature-V2` (HMAC-SHA256 do JSON canônico) e `X-Timestamp` (até 5 minutos). Eventos intermediários (_Not Started_, _In Progress_) recebem 200 e são ignorados; _Abandoned_ e _Expired_ contam como recusa para o perfil não ficar preso em `PENDING`. A maioridade vem do campo `age` do documento, e a impressão do documento usa `issuing_state` + `document_number`.
 
 Para outro provedor, implemente `IdentityProvider` (`createSession` e `parseWebhook` com verificação de assinatura) em `src/server/identity/providers/` e registre-o em `src/server/identity/index.ts`. O webhook fica em `POST /api/identity/webhooks/<provedor>`.
 

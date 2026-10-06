@@ -15,14 +15,17 @@ export type AccessClaims = {
 
 let jwks: ReturnType<typeof createRemoteJWKSet> | undefined;
 
-export async function verifyAccessToken(token: string): Promise<AccessClaims | null> {
+export async function verifyAccessToken(
+  token: string,
+): Promise<AccessClaims | null> {
   jwks ??= createRemoteJWKSet(new URL(env.jwksUrl));
   try {
     const { payload } = await jwtVerify(token, jwks, {
       issuer: `${env.supabaseUrl}/auth/v1`,
       audience: 'authenticated',
     });
-    if (typeof payload.sub !== 'string' || payload['role'] !== 'authenticated') return null;
+    if (typeof payload.sub !== 'string' || payload['role'] !== 'authenticated')
+      return null;
     return payload as unknown as AccessClaims;
   } catch {
     return null;

@@ -8,10 +8,15 @@ import { getPageAccount } from '@/server/page-session';
 import { AccountPanel } from './AccountPanel';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.account, robots: { index: false } };
+  return {
+    title: (await getDictionary()).meta.account,
+    robots: { index: false },
+  };
 }
 
-export default async function AccountPage({ searchParams }: PageProps<'/account'>) {
+export default async function AccountPage({
+  searchParams,
+}: PageProps<'/account'>) {
   const account = await getPageAccount();
   if (!account) redirect('/login?next=/account');
   const [params, t] = await Promise.all([searchParams, getDictionary()]);
@@ -31,7 +36,10 @@ export default async function AccountPage({ searchParams }: PageProps<'/account'
               {t.account.myRoom}
             </a>
           )}
-          <a href="/play" className={buttonClass({ variant: 'secondary', compact: true })}>
+          <a
+            href="/play"
+            className={buttonClass({ variant: 'secondary', compact: true })}
+          >
             <Play size={14} />
             {t.account.play}
           </a>
@@ -41,7 +49,13 @@ export default async function AccountPage({ searchParams }: PageProps<'/account'
       <AccountPanel
         initial={account}
         initialTab={params['linked'] ? 'security' : undefined}
-        notice={params['linked'] ? t.account.linked : params['verified'] ? t.account.verificationReceived : undefined}
+        notice={
+          params['linked']
+            ? t.account.linked
+            : params['verified']
+              ? t.account.verificationReceived
+              : undefined
+        }
       />
     </main>
   );

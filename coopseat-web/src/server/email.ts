@@ -18,7 +18,8 @@ export async function sendEmail(message: EmailMessage): Promise<string> {
     Authorization: `Bearer ${env.resendApiKey}`,
     'Content-Type': 'application/json',
   };
-  if (message.idempotencyKey) headers['Idempotency-Key'] = message.idempotencyKey;
+  if (message.idempotencyKey)
+    headers['Idempotency-Key'] = message.idempotencyKey;
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',

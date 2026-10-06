@@ -8,5 +8,8 @@ type Ctx = { params: Promise<{ variant: string }> };
 export const GET = route<Ctx>(async (_req, ctx) => {
   const { variant } = await ctx.params;
   if (!isVariant(variant)) throw new ApiError(404, 'download_unavailable');
-  return NextResponse.redirect(await latestDownloadUrl(variant), { status: 302, headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.redirect(await latestDownloadUrl(variant), {
+    status: 302,
+    headers: { 'Cache-Control': 'no-store' },
+  });
 });

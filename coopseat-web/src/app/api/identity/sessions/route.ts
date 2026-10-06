@@ -21,7 +21,9 @@ export const POST = route(async (req) => {
   if (!profile?.nickname) throw new ApiError(403, 'nickname_required');
 
   const returnUrl =
-    session.mode === 'bearer' ? `${env.appUrl}/auth/open-app?to=${encodeURIComponent('coopseat://auth/verified')}` : `${env.appUrl}/account?verified=1`;
+    session.mode === 'bearer'
+      ? `${env.appUrl}/auth/open-app?to=${encodeURIComponent('coopseat://auth/verified')}`
+      : `${env.appUrl}/account?verified=1`;
   const { url } = await startVerification(user.id, returnUrl);
   return NextResponse.json({ url });
 });

@@ -4,7 +4,9 @@
   "private": true,
   "description": "Interface do CoopSeat compartilhada entre o app desktop (Electron) e o site",
   "type": "module",
-  "sideEffects": ["**/*.css"],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "exports": {
     ".": "./src/index.ts",
     "./design": "./src/design.ts",

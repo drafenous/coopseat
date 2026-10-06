@@ -14,7 +14,9 @@ export function SignupForm() {
   const [nickname, setNickname] = useState('');
   const [captcha, setCaptcha] = useState<string>();
   const [captchaReset, setCaptchaReset] = useState(0);
-  const [fields, setFields] = useState<Record<string, string[] | undefined>>({});
+  const [fields, setFields] = useState<Record<string, string[] | undefined>>(
+    {},
+  );
   const [error, setError] = useState<string>();
   const [sentTo, setSentTo] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -41,7 +43,10 @@ export function SignupForm() {
     } catch (err) {
       if (err instanceof ApiClientError) {
         setError(err.message);
-        setFields(err.fields ?? (err.code === 'nickname_taken' ? { nickname: [err.message] } : {}));
+        setFields(
+          err.fields ??
+            (err.code === 'nickname_taken' ? { nickname: [err.message] } : {}),
+        );
       } else {
         setError(t.signup.failed);
       }
@@ -58,8 +63,19 @@ export function SignupForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {error ? <Alert>{error}</Alert> : null}
-      <NicknameField value={nickname} onChange={setNickname} error={fields['nickname']?.[0]} />
-      <Field label={t.common.email} name="email" type="email" autoComplete="email" required error={fields['email']?.[0]} />
+      <NicknameField
+        value={nickname}
+        onChange={setNickname}
+        error={fields['nickname']?.[0]}
+      />
+      <Field
+        label={t.common.email}
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+        error={fields['email']?.[0]}
+      />
       <Field
         label={t.common.password}
         name="password"
@@ -78,13 +94,19 @@ export function SignupForm() {
         <input type="checkbox" name="acceptTerms" className="mt-1" required />
         <span>
           {t.signup.acceptTerms(
-            <Link href="/terms" className="text-accent" target="_blank">{t.common.termsOfUse}</Link>,
-            <Link href="/privacy" className="text-accent" target="_blank">{t.common.privacyPolicy}</Link>,
+            <Link href="/terms" className="text-accent" target="_blank">
+              {t.common.termsOfUse}
+            </Link>,
+            <Link href="/privacy" className="text-accent" target="_blank">
+              {t.common.privacyPolicy}
+            </Link>,
           )}
         </span>
       </label>
       <Turnstile onToken={setCaptcha} resetKey={captchaReset} />
-      <Button type="submit" disabled={pending}>{pending ? t.signup.pending : t.signup.submit}</Button>
+      <Button type="submit" disabled={pending}>
+        {pending ? t.signup.pending : t.signup.submit}
+      </Button>
     </form>
   );
 }

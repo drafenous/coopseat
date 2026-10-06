@@ -1,5 +1,5 @@
-import {CoopSeatPage} from '@coopseat/ui';
+import { CoopSeatPage } from '@coopseat/ui';
 
-export default function App(){
- return <CoopSeatPage/>;
+export default function App() {
+  return <CoopSeatPage />;
 }

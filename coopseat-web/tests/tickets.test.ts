@@ -4,7 +4,10 @@ import { consumeTicket, createTicket } from '@/server/tickets';
 import { createFakeDb, type FakeDb } from './fake-db';
 
 const fake = vi.hoisted(() => ({ current: null as unknown as FakeDb }));
-vi.mock('@/prisma/db', () => ({ adminDb: async () => fake.current.db, getDb: async () => fake.current.db }));
+vi.mock('@/prisma/db', () => ({
+  adminDb: async () => fake.current.db,
+  getDb: async () => fake.current.db,
+}));
 
 describe('auth tickets', () => {
   beforeEach(() => {
@@ -26,14 +29,30 @@ describe('auth tickets', () => {
 
   it('requires the matching PKCE verifier and burns the ticket on a wrong one', async () => {
     const verifier = randomToken(32);
-    const ticket = await createTicket('desktop_login', { ok: true }, pkceChallenge(verifier));
-    expect(await consumeTicket(ticket, 'desktop_login', randomToken(32))).toBeNull();
+    const ticket = await createTicket(
+      'desktop_login',
+      { ok: true },
+      pkceChallenge(verifier),
+    );
+    expect(
+      await consumeTicket(ticket, 'desktop_login', randomToken(32)),
+    ).toBeNull();
     expect(await consumeTicket(ticket, 'desktop_login', verifier)).toBeNull();
 
-    const again = await createTicket('desktop_login', { ok: true }, pkceChallenge(verifier));
+    const again = await createTicket(
+      'desktop_login',
+      { ok: true },
+      pkceChallenge(verifier),
+    );
     expect(await consumeTicket(again, 'desktop_login')).toBeNull();
-    const third = await createTicket('desktop_login', { ok: true }, pkceChallenge(verifier));
-    expect(await consumeTicket(third, 'desktop_login', verifier)).toEqual({ ok: true });
+    const third = await createTicket(
+      'desktop_login',
+      { ok: true },
+      pkceChallenge(verifier),
+    );
+    expect(await consumeTicket(third, 'desktop_login', verifier)).toEqual({
+      ok: true,
+    });
   });
 
   it('rejects the wrong kind, malformed tickets and expired tickets', async () => {
@@ -42,7 +61,9 @@ describe('auth tickets', () => {
     expect(await consumeTicket('curto', 'link')).toBeNull();
 
     const expired = await createTicket('link', {});
-    fake.current.data.AuthTicket[0]!.expiresAt = new Date(Date.now() - 1000).toISOString();
+    fake.current.data.AuthTicket[0]!.expiresAt = new Date(
+      Date.now() - 1000,
+    ).toISOString();
     expect(await consumeTicket(expired, 'link')).toBeNull();
   });
 });

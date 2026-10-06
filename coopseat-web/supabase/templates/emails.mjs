@@ -16,7 +16,8 @@ const COLORS = {
 const FONT = 'Arial,Helvetica,sans-serif';
 
 /** Our BFF route verifies the token server-side, so the session lands in an httpOnly cookie instead of a URL fragment. */
-const confirmUrl = (type) => `{{ .SiteURL }}/api/auth/confirm?token_hash={{ .TokenHash }}&type=${type}`;
+const confirmUrl = (type) =>
+  `{{ .SiteURL }}/api/auth/confirm?token_hash={{ .TokenHash }}&type=${type}`;
 
 function button(href, label) {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px"><tr>
@@ -37,7 +38,9 @@ function heading({ title, body }, level) {
 }
 
 function note(text) {
-  return text ? `<p style="margin:0 0 16px;font-size:12px;line-height:1.5;color:${COLORS.muted}">${text}</p>` : '';
+  return text
+    ? `<p style="margin:0 0 16px;font-size:12px;line-height:1.5;color:${COLORS.muted}">${text}</p>`
+    : '';
 }
 
 /**
@@ -116,8 +119,18 @@ const NOT_YOU_PT = `Se não foi você, redefina sua senha agora e escreva para $
 export function authEmails(appUrl) {
   const siteUrl = appUrl.replace(/\/$/, '');
   const forgot = `${siteUrl}/forgot-password`;
-  const securityAlert = (/** @type {Omit<Parameters<typeof renderEmail>[0], 'siteUrl' | 'action'>} */ email) =>
-    renderEmail({ siteUrl, ...email, action: { href: forgot, label: 'Reset password / Redefinir senha', fallback: false } });
+  const securityAlert = (
+    /** @type {Omit<Parameters<typeof renderEmail>[0], 'siteUrl' | 'action'>} */ email,
+  ) =>
+    renderEmail({
+      siteUrl,
+      ...email,
+      action: {
+        href: forgot,
+        label: 'Reset password / Redefinir senha',
+        fallback: false,
+      },
+    });
 
   return {
     confirmation: {
@@ -136,12 +149,16 @@ export function authEmails(appUrl) {
           body: 'Confirme seu e-mail pelo botão acima para ativar a conta. O link vale por 1 hora.',
           note: 'Se você não criou uma conta no CoopSeat, ignore este e-mail.',
         },
-        action: { href: confirmUrl('signup'), label: 'Confirm e-mail / Confirmar e-mail' },
+        action: {
+          href: confirmUrl('signup'),
+          label: 'Confirm e-mail / Confirmar e-mail',
+        },
       }),
     },
     invite: {
       kind: 'auth',
-      subject: "You're invited to CoopSeat / Você foi convidado para o CoopSeat",
+      subject:
+        "You're invited to CoopSeat / Você foi convidado para o CoopSeat",
       html: renderEmail({
         siteUrl,
         preheader: 'Accept the invite · Aceite o convite',
@@ -155,7 +172,10 @@ export function authEmails(appUrl) {
           body: 'Aceite o convite pelo botão acima para ativar a conta e depois crie uma senha em Minha conta. O link vale por 1 hora.',
           note: 'Se você não esperava este convite, ignore este e-mail.',
         },
-        action: { href: confirmUrl('invite'), label: 'Accept invite / Aceitar convite' },
+        action: {
+          href: confirmUrl('invite'),
+          label: 'Accept invite / Aceitar convite',
+        },
       }),
     },
     magic_link: {
@@ -193,13 +213,17 @@ export function authEmails(appUrl) {
           body: 'Recebemos um pedido para redefinir a senha da sua conta CoopSeat. Use o botão acima; o link vale por 1 hora.',
           note: 'Se não foi você, ignore este e-mail. Sua senha continua a mesma.',
         },
-        action: { href: confirmUrl('recovery'), label: 'Create new password / Criar nova senha' },
+        action: {
+          href: confirmUrl('recovery'),
+          label: 'Create new password / Criar nova senha',
+        },
       }),
     },
     // Accounts created without an e-mail have an empty {{ .Email }}; secure e-mail change sends this to both addresses.
     email_change: {
       kind: 'auth',
-      subject: 'Confirm your new CoopSeat e-mail / Confirme seu novo e-mail no CoopSeat',
+      subject:
+        'Confirm your new CoopSeat e-mail / Confirme seu novo e-mail no CoopSeat',
       html: renderEmail({
         siteUrl,
         preheader: 'Confirm the e-mail change · Confirme a troca de e-mail',
@@ -219,12 +243,16 @@ export function authEmails(appUrl) {
             '{{ else }}Confirme pelo botão acima <strong>{{ .NewEmail }}</strong> como e-mail da sua conta CoopSeat.{{ end }} O link vale por 1 hora.',
           note: `Se não foi você, altere sua senha agora e escreva para ${SUPPORT_EMAIL}.`,
         },
-        action: { href: confirmUrl('email_change'), label: 'Confirm change / Confirmar troca' },
+        action: {
+          href: confirmUrl('email_change'),
+          label: 'Confirm change / Confirmar troca',
+        },
       }),
     },
     reauthentication: {
       kind: 'auth',
-      subject: 'Your CoopSeat verification code / Seu código de verificação do CoopSeat',
+      subject:
+        'Your CoopSeat verification code / Seu código de verificação do CoopSeat',
       html: renderEmail({
         siteUrl,
         preheader: 'Your verification code · Seu código de verificação',
@@ -243,16 +271,26 @@ export function authEmails(appUrl) {
     },
     password_changed: {
       kind: 'notification',
-      subject: 'Your CoopSeat password was changed / A senha do seu CoopSeat foi alterada',
+      subject:
+        'Your CoopSeat password was changed / A senha do seu CoopSeat foi alterada',
       html: securityAlert({
         preheader: 'Security alert · Alerta de segurança',
-        en: { title: 'Your password was changed', body: 'The password of your CoopSeat account (<strong>{{ .Email }}</strong>) was just changed.', note: NOT_YOU_EN },
-        pt: { title: 'Sua senha foi alterada', body: 'A senha da sua conta CoopSeat (<strong>{{ .Email }}</strong>) acabou de ser alterada.', note: NOT_YOU_PT },
+        en: {
+          title: 'Your password was changed',
+          body: 'The password of your CoopSeat account (<strong>{{ .Email }}</strong>) was just changed.',
+          note: NOT_YOU_EN,
+        },
+        pt: {
+          title: 'Sua senha foi alterada',
+          body: 'A senha da sua conta CoopSeat (<strong>{{ .Email }}</strong>) acabou de ser alterada.',
+          note: NOT_YOU_PT,
+        },
       }),
     },
     email_changed: {
       kind: 'notification',
-      subject: 'Your CoopSeat e-mail was changed / O e-mail do seu CoopSeat foi alterado',
+      subject:
+        'Your CoopSeat e-mail was changed / O e-mail do seu CoopSeat foi alterado',
       html: securityAlert({
         preheader: 'Security alert · Alerta de segurança',
         en: {
@@ -269,38 +307,74 @@ export function authEmails(appUrl) {
     },
     mfa_factor_enrolled: {
       kind: 'notification',
-      subject: 'Two-step verification turned on / Verificação em duas etapas ativada',
+      subject:
+        'Two-step verification turned on / Verificação em duas etapas ativada',
       html: securityAlert({
         preheader: 'Security alert · Alerta de segurança',
-        en: { title: 'Two-step verification added', body: 'A verification method ({{ .FactorType }}) was added to your CoopSeat account (<strong>{{ .Email }}</strong>).', note: NOT_YOU_EN },
-        pt: { title: 'Verificação em duas etapas adicionada', body: 'Um método de verificação ({{ .FactorType }}) foi adicionado à sua conta CoopSeat (<strong>{{ .Email }}</strong>).', note: NOT_YOU_PT },
+        en: {
+          title: 'Two-step verification added',
+          body: 'A verification method ({{ .FactorType }}) was added to your CoopSeat account (<strong>{{ .Email }}</strong>).',
+          note: NOT_YOU_EN,
+        },
+        pt: {
+          title: 'Verificação em duas etapas adicionada',
+          body: 'Um método de verificação ({{ .FactorType }}) foi adicionado à sua conta CoopSeat (<strong>{{ .Email }}</strong>).',
+          note: NOT_YOU_PT,
+        },
       }),
     },
     mfa_factor_unenrolled: {
       kind: 'notification',
-      subject: 'Two-step verification removed / Verificação em duas etapas removida',
+      subject:
+        'Two-step verification removed / Verificação em duas etapas removida',
       html: securityAlert({
         preheader: 'Security alert · Alerta de segurança',
-        en: { title: 'Two-step verification removed', body: 'A verification method ({{ .FactorType }}) was removed from your CoopSeat account (<strong>{{ .Email }}</strong>).', note: NOT_YOU_EN },
-        pt: { title: 'Verificação em duas etapas removida', body: 'Um método de verificação ({{ .FactorType }}) foi removido da sua conta CoopSeat (<strong>{{ .Email }}</strong>).', note: NOT_YOU_PT },
+        en: {
+          title: 'Two-step verification removed',
+          body: 'A verification method ({{ .FactorType }}) was removed from your CoopSeat account (<strong>{{ .Email }}</strong>).',
+          note: NOT_YOU_EN,
+        },
+        pt: {
+          title: 'Verificação em duas etapas removida',
+          body: 'Um método de verificação ({{ .FactorType }}) foi removido da sua conta CoopSeat (<strong>{{ .Email }}</strong>).',
+          note: NOT_YOU_PT,
+        },
       }),
     },
     identity_linked: {
       kind: 'notification',
-      subject: 'New sign-in method on CoopSeat / Novo método de acesso no CoopSeat',
+      subject:
+        'New sign-in method on CoopSeat / Novo método de acesso no CoopSeat',
       html: securityAlert({
         preheader: 'Security alert · Alerta de segurança',
-        en: { title: 'Sign-in method linked', body: 'Your <strong>{{ .Provider }}</strong> account can now sign in to your CoopSeat account (<strong>{{ .Email }}</strong>).', note: NOT_YOU_EN },
-        pt: { title: 'Método de acesso vinculado', body: 'Sua conta <strong>{{ .Provider }}</strong> agora pode entrar na sua conta CoopSeat (<strong>{{ .Email }}</strong>).', note: NOT_YOU_PT },
+        en: {
+          title: 'Sign-in method linked',
+          body: 'Your <strong>{{ .Provider }}</strong> account can now sign in to your CoopSeat account (<strong>{{ .Email }}</strong>).',
+          note: NOT_YOU_EN,
+        },
+        pt: {
+          title: 'Método de acesso vinculado',
+          body: 'Sua conta <strong>{{ .Provider }}</strong> agora pode entrar na sua conta CoopSeat (<strong>{{ .Email }}</strong>).',
+          note: NOT_YOU_PT,
+        },
       }),
     },
     identity_unlinked: {
       kind: 'notification',
-      subject: 'Sign-in method removed from CoopSeat / Método de acesso removido do CoopSeat',
+      subject:
+        'Sign-in method removed from CoopSeat / Método de acesso removido do CoopSeat',
       html: securityAlert({
         preheader: 'Security alert · Alerta de segurança',
-        en: { title: 'Sign-in method removed', body: 'Your <strong>{{ .Provider }}</strong> account can no longer sign in to your CoopSeat account (<strong>{{ .Email }}</strong>).', note: NOT_YOU_EN },
-        pt: { title: 'Método de acesso removido', body: 'Sua conta <strong>{{ .Provider }}</strong> não pode mais entrar na sua conta CoopSeat (<strong>{{ .Email }}</strong>).', note: NOT_YOU_PT },
+        en: {
+          title: 'Sign-in method removed',
+          body: 'Your <strong>{{ .Provider }}</strong> account can no longer sign in to your CoopSeat account (<strong>{{ .Email }}</strong>).',
+          note: NOT_YOU_EN,
+        },
+        pt: {
+          title: 'Método de acesso removido',
+          body: 'Sua conta <strong>{{ .Provider }}</strong> não pode mais entrar na sua conta CoopSeat (<strong>{{ .Email }}</strong>).',
+          note: NOT_YOU_PT,
+        },
       }),
     },
   };

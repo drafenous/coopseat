@@ -3,9 +3,23 @@ on:
   push:
     branches: ['**']
     tags: ['desktop-v*']
-    paths: ['coopseat/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/desktop.yml']
+    paths:
+      [
+        'coopseat/**',
+        'packages/**',
+        'package.json',
+        'package-lock.json',
+        '.github/workflows/desktop.yml',
+      ]
   pull_request:
-    paths: ['coopseat/**', 'packages/**', 'package.json', 'package-lock.json', '.github/workflows/desktop.yml']
+    paths:
+      [
+        'coopseat/**',
+        'packages/**',
+        'package.json',
+        'package-lock.json',
+        '.github/workflows/desktop.yml',
+      ]
   workflow_dispatch:
 permissions:
   contents: read

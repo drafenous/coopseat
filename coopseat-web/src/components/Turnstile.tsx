@@ -15,13 +15,21 @@ declare global {
   }
 }
 
-const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+const SCRIPT_SRC =
+  'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
 function loadScript(): Promise<void> {
   if (window.turnstile) return Promise.resolve();
-  const existing = document.querySelector<HTMLScriptElement>(`script[src="${SCRIPT_SRC}"]`);
+  const existing = document.querySelector<HTMLScriptElement>(
+    `script[src="${SCRIPT_SRC}"]`,
+  );
   return new Promise((resolve, reject) => {
-    const script = existing ?? Object.assign(document.createElement('script'), { src: SCRIPT_SRC, async: true });
+    const script =
+      existing ??
+      Object.assign(document.createElement('script'), {
+        src: SCRIPT_SRC,
+        async: true,
+      });
     script.addEventListener('load', () => resolve());
     script.addEventListener('error', () => reject(new Error('turnstile')));
     if (!existing) document.head.appendChild(script);
@@ -29,7 +37,13 @@ function loadScript(): Promise<void> {
 }
 
 /** Renders nothing when NEXT_PUBLIC_TURNSTILE_SITE_KEY is not configured (local dev). */
-export function Turnstile({ onToken, resetKey }: { onToken: (token: string | undefined) => void; resetKey?: number }) {
+export function Turnstile({
+  onToken,
+  resetKey,
+}: {
+  onToken: (token: string | undefined) => void;
+  resetKey?: number;
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const siteKey = process.env['NEXT_PUBLIC_TURNSTILE_SITE_KEY'];
   const language = useLocale() === 'pt-BR' ? 'pt-br' : 'en';

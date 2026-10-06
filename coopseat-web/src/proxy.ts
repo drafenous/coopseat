@@ -1,19 +1,32 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { LOCALE_COOKIE, LOCALE_COOKIE_MAX_AGE, LOCALE_HEADER, splitLocalePath } from '@/i18n/config';
+import {
+  LOCALE_COOKIE,
+  LOCALE_COOKIE_MAX_AGE,
+  LOCALE_HEADER,
+  splitLocalePath,
+} from '@/i18n/config';
 import { gotrue } from '@/server/gotrue';
-import { ACCESS_COOKIE, REFRESH_COOKIE, clearSessionCookies, setSessionCookies } from '@/server/session';
+import {
+  ACCESS_COOKIE,
+  REFRESH_COOKIE,
+  clearSessionCookies,
+  setSessionCookies,
+} from '@/server/session';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-CoopSeat-Client, X-CoopSeat-Version',
+  'Access-Control-Allow-Headers':
+    'Authorization, Content-Type, X-CoopSeat-Client, X-CoopSeat-Version',
   'Access-Control-Max-Age': '600',
 };
 
 function expiresSoon(token: string | undefined): boolean {
   if (!token) return true;
   try {
-    const payload = JSON.parse(Buffer.from(token.split('.')[1] ?? '', 'base64url').toString()) as { exp?: number };
+    const payload = JSON.parse(
+      Buffer.from(token.split('.')[1] ?? '', 'base64url').toString(),
+    ) as { exp?: number };
     return !payload.exp || payload.exp * 1000 - Date.now() < 60_000;
   } catch {
     return true;
@@ -33,7 +46,11 @@ function forward(req: NextRequest): NextResponse {
   url.pathname = localized.path;
   const res = NextResponse.rewrite(url, { request: { headers } });
   if (req.cookies.get(LOCALE_COOKIE)?.value !== localized.locale) {
-    res.cookies.set(LOCALE_COOKIE, localized.locale, { path: '/', maxAge: LOCALE_COOKIE_MAX_AGE, sameSite: 'lax' });
+    res.cookies.set(LOCALE_COOKIE, localized.locale, {
+      path: '/',
+      maxAge: LOCALE_COOKIE_MAX_AGE,
+      sameSite: 'lax',
+    });
   }
   return res;
 }
@@ -46,16 +63,21 @@ function forward(req: NextRequest): NextResponse {
  */
 export async function proxy(req: NextRequest) {
   if (req.nextUrl.pathname.startsWith('/api/')) {
-    if (req.method === 'OPTIONS') return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+    if (req.method === 'OPTIONS')
+      return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
     const res = NextResponse.next();
-    if (req.headers.get('x-coopseat-client') === 'desktop' || req.headers.has('authorization')) {
+    if (
+      req.headers.get('x-coopseat-client') === 'desktop' ||
+      req.headers.has('authorization')
+    ) {
       for (const [k, v] of Object.entries(CORS_HEADERS)) res.headers.set(k, v);
     }
     return res;
   }
 
   const refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
-  if (!refreshToken || !expiresSoon(req.cookies.get(ACCESS_COOKIE)?.value)) return forward(req);
+  if (!refreshToken || !expiresSoon(req.cookies.get(ACCESS_COOKIE)?.value))
+    return forward(req);
 
   try {
     const tokens = await gotrue.refreshGrant(refreshToken);
@@ -74,5 +96,8 @@ export async function proxy(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/:path*', '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|svg|ico|webp)$).*)'],
+  matcher: [
+    '/api/:path*',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|svg|ico|webp)$).*)',
+  ],
 };

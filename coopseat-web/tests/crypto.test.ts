@@ -1,11 +1,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { decrypt, encrypt, pkceChallenge, safeEqual, seal, unseal } from '@/server/crypto';
+import {
+  decrypt,
+  encrypt,
+  pkceChallenge,
+  safeEqual,
+  seal,
+  unseal,
+} from '@/server/crypto';
 
 describe('crypto', () => {
   afterEach(() => vi.useRealTimers());
 
   it('computes the RFC 7636 S256 challenge', () => {
-    expect(pkceChallenge('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')).toBe('E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM');
+    expect(pkceChallenge('dBjftJeZ4CVP-mB92K27uhbUJU1p1r_wW1gFWFOEjXk')).toBe(
+      'E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM',
+    );
   });
 
   it('round-trips AES-GCM payloads with a fresh IV each time', () => {

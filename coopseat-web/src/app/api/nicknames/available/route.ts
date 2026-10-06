@@ -9,10 +9,18 @@ import { rateLimit } from '@/server/rate-limit';
 export const GET = route(async (req) => {
   await rateLimit('nickname', clientIp(req));
   const t = dictionaryFor(req);
-  const parsed = nicknameSchema.safeParse(req.nextUrl.searchParams.get('n') ?? '');
+  const parsed = nicknameSchema.safeParse(
+    req.nextUrl.searchParams.get('n') ?? '',
+  );
   if (!parsed.success) {
-    return NextResponse.json({ available: false, reason: errorMessage(t, parsed.error.issues[0]?.message, 'invalid_input') });
+    return NextResponse.json({
+      available: false,
+      reason: errorMessage(t, parsed.error.issues[0]?.message, 'invalid_input'),
+    });
   }
   const available = await isNicknameAvailable(parsed.data);
-  return NextResponse.json({ available, reason: available ? undefined : errorMessage(t, 'nickname_taken') });
+  return NextResponse.json({
+    available,
+    reason: available ? undefined : errorMessage(t, 'nickname_taken'),
+  });
 });

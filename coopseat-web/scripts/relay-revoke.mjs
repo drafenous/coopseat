@@ -11,7 +11,11 @@ const args = process.argv.slice(2);
 const userIndex = args.indexOf('--user');
 const profileId = userIndex >= 0 ? args[userIndex + 1] : null;
 const all = args.includes('--all');
-if ((!profileId && !all) || (profileId && all) || (profileId && !/^[0-9a-f-]{36}$/i.test(profileId))) {
+if (
+  (!profileId && !all) ||
+  (profileId && all) ||
+  (profileId && !/^[0-9a-f-]{36}$/i.test(profileId))
+) {
   console.error('Usage: npm run relay:revoke -- --user <uuid> | --all');
   process.exit(1);
 }
@@ -20,7 +24,9 @@ const url = process.env.DIRECT_URL ?? process.env.DATABASE_URL;
 const keyId = process.env.CLOUDFLARE_TURN_KEY_ID;
 const token = process.env.CLOUDFLARE_TURN_API_TOKEN;
 if (!url || !keyId || !token) {
-  console.error('Set DIRECT_URL, CLOUDFLARE_TURN_KEY_ID and CLOUDFLARE_TURN_API_TOKEN.');
+  console.error(
+    'Set DIRECT_URL, CLOUDFLARE_TURN_KEY_ID and CLOUDFLARE_TURN_API_TOKEN.',
+  );
   process.exit(1);
 }
 
@@ -40,10 +46,15 @@ try {
       { method: 'POST', headers: { Authorization: `Bearer ${token}` } },
     );
     if (!res.ok) {
-      console.error(`failed ${row.id} (user ${row.profileId}): HTTP ${res.status}`);
+      console.error(
+        `failed ${row.id} (user ${row.profileId}): HTTP ${res.status}`,
+      );
       continue;
     }
-    await client.query('update public.relay_credentials set "revokedAt" = now() where id = $1', [row.id]);
+    await client.query(
+      'update public.relay_credentials set "revokedAt" = now() where id = $1',
+      [row.id],
+    );
     revoked++;
   }
   console.log(`revoked ${revoked} of ${rows.length} active credential(s)`);

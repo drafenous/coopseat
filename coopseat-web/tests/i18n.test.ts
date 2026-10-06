@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { localePath, matchLocale, resolveLocale, splitLocalePath } from '@/i18n/config';
+import {
+  localePath,
+  matchLocale,
+  resolveLocale,
+  splitLocalePath,
+} from '@/i18n/config';
 import { en } from '@/i18n/dictionaries/en';
 import { ptBR } from '@/i18n/dictionaries/pt-BR';
 import { en as uiEn } from '../../packages/ui/src/i18n/en';
@@ -7,9 +12,15 @@ import { ptBR as uiPtBR } from '../../packages/ui/src/i18n/pt-BR';
 
 /** Flattens a dictionary into `path:kind` entries; arrays keep their length so sections stay aligned. */
 function shape(value: unknown, path = ''): string[] {
-  if (Array.isArray(value)) return [`${path}:array(${value.length})`, ...value.flatMap((v, i) => shape(v, `${path}[${i}]`))];
+  if (Array.isArray(value))
+    return [
+      `${path}:array(${value.length})`,
+      ...value.flatMap((v, i) => shape(v, `${path}[${i}]`)),
+    ];
   if (value && typeof value === 'object' && !('$$typeof' in value)) {
-    return Object.entries(value).flatMap(([key, v]) => shape(v, path ? `${path}.${key}` : key));
+    return Object.entries(value).flatMap(([key, v]) =>
+      shape(v, path ? `${path}.${key}` : key),
+    );
   }
   return [`${path}:${typeof value === 'function' ? 'function' : 'value'}`];
 }
@@ -50,7 +61,10 @@ describe('locale paths', () => {
   it('splits only an exact prefix segment', () => {
     expect(splitLocalePath('/pt-BR')).toEqual({ locale: 'pt-BR', path: '/' });
     expect(splitLocalePath('/pt-BR/')).toEqual({ locale: 'pt-BR', path: '/' });
-    expect(splitLocalePath('/pt-BR/download/installer')).toEqual({ locale: 'pt-BR', path: '/download/installer' });
+    expect(splitLocalePath('/pt-BR/download/installer')).toEqual({
+      locale: 'pt-BR',
+      path: '/download/installer',
+    });
     expect(splitLocalePath('/pt-BRX')).toBeNull();
     expect(splitLocalePath('/download')).toBeNull();
     expect(splitLocalePath('/')).toBeNull();

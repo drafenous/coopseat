@@ -33,7 +33,11 @@ export function startGoogleOAuth(flow: OAuthFlow): NextResponse {
   const verifier = randomToken(48);
   const state = randomToken(24);
   const nonce = randomToken(24);
-  const url = googleAuthorizeUrl({ state, nonceHash: sha256Hex(nonce), codeChallenge: pkceChallenge(verifier) });
+  const url = googleAuthorizeUrl({
+    state,
+    nonceHash: sha256Hex(nonce),
+    codeChallenge: pkceChallenge(verifier),
+  });
   const res = NextResponse.redirect(url, 303);
   setOAuthState(res, { ...flow, verifier, state, nonce });
   return res;
@@ -48,7 +52,11 @@ const cookieOptions = (maxAge: number) => ({
 });
 
 export function setOAuthState(res: NextResponse, state: OAuthState): void {
-  res.cookies.set(STATE_COOKIE, seal(state, STATE_TTL), cookieOptions(STATE_TTL));
+  res.cookies.set(
+    STATE_COOKIE,
+    seal(state, STATE_TTL),
+    cookieOptions(STATE_TTL),
+  );
 }
 
 export function readOAuthState(req: NextRequest): OAuthState | null {

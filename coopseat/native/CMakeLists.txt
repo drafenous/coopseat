@@ -10,7 +10,7 @@ FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download
 FetchContent_MakeAvailable(json)
 add_executable(InputCapture main.cpp)
 target_compile_definitions(InputCapture PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0A00)
-target_link_libraries(InputCapture PRIVATE nlohmann_json::nlohmann_json mfplat mfreadwrite mfuuid mf d3d11 dxgi d3dcompiler ole32 propsys uuid avrt)
+target_link_libraries(InputCapture PRIVATE nlohmann_json::nlohmann_json mfplat mfreadwrite mfuuid mf d3d11 dxgi d3dcompiler ole32 propsys uuid avrt mmdevapi)
 if(MSVC)
   target_compile_options(InputCapture PRIVATE /W4 /EHsc /utf-8)
   set_property(TARGET InputCapture PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")

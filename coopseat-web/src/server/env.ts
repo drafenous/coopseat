@@ -17,10 +17,16 @@ export const env = {
     return required('SUPABASE_SECRET_KEY');
   },
   get jwksUrl() {
-    return process.env['SUPABASE_JWKS_URL'] ?? `${this.supabaseUrl}/auth/v1/.well-known/jwks.json`;
+    return (
+      process.env['SUPABASE_JWKS_URL'] ??
+      `${this.supabaseUrl}/auth/v1/.well-known/jwks.json`
+    );
   },
   get appUrl() {
-    return (process.env['APP_URL'] ?? 'http://localhost:3000').replace(/\/$/, '');
+    return (process.env['APP_URL'] ?? 'http://localhost:3000').replace(
+      /\/$/,
+      '',
+    );
   },
   get googleClientId() {
     return required('GOOGLE_CLIENT_ID');

@@ -71,7 +71,10 @@ export const loginSchema = z.object({
   captchaToken: captchaSchema,
 });
 
-export const forgotSchema = z.object({ email: emailSchema, captchaToken: captchaSchema });
+export const forgotSchema = z.object({
+  email: emailSchema,
+  captchaToken: captchaSchema,
+});
 
 export const resetSchema = z.object({ password: passwordSchema });
 
@@ -85,17 +88,28 @@ export const updateMeSchema = z
   })
   .refine((v) => Object.keys(v).length > 0, 'nothing_to_update');
 
-export const deleteMeSchema = z.object({ confirm: z.string().min(1, 'confirm_required') });
+export const deleteMeSchema = z.object({
+  confirm: z.string().min(1, 'confirm_required'),
+});
 
 export const OAUTH_PROVIDERS = ['google'] as const;
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
-export const oauthProviderSchema = z.enum(OAUTH_PROVIDERS, { error: 'provider_unsupported' });
+export const oauthProviderSchema = z.enum(OAUTH_PROVIDERS, {
+  error: 'provider_unsupported',
+});
 
 export const PROVIDER_LABELS: Record<OAuthProvider, string> = {
   google: 'Google',
 };
 
-export const pkceChallengeSchema = z.string().regex(/^[A-Za-z0-9_-]{43}$/, 'pkce_challenge_invalid');
-export const pkceVerifierSchema = z.string().regex(/^[A-Za-z0-9._~-]{43,128}$/, 'pkce_verifier_invalid');
+export const pkceChallengeSchema = z
+  .string()
+  .regex(/^[A-Za-z0-9_-]{43}$/, 'pkce_challenge_invalid');
+export const pkceVerifierSchema = z
+  .string()
+  .regex(/^[A-Za-z0-9._~-]{43,128}$/, 'pkce_verifier_invalid');
 
-export const totpCodeSchema = z.string().trim().regex(/^\d{6}$/, 'totp_format');
+export const totpCodeSchema = z
+  .string()
+  .trim()
+  .regex(/^\d{6}$/, 'totp_format');

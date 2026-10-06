@@ -17,7 +17,13 @@ const QUERY = `query TurnEgress($accountTag: string!, $from: Date!, $to: Date!) 
 }`;
 
 type GraphQlResponse = {
-  data?: { viewer?: { accounts?: { callsTurnUsageAdaptiveGroups?: { sum?: { egressBytes?: number } }[] }[] } };
+  data?: {
+    viewer?: {
+      accounts?: {
+        callsTurnUsageAdaptiveGroups?: { sum?: { egressBytes?: number } }[];
+      }[];
+    };
+  };
   errors?: { message: string }[] | null;
 };
 
@@ -26,18 +32,28 @@ async function fetchMonthToDateEgress(now: Date): Promise<number> {
   const to = now.toISOString().slice(0, 10);
   const res = await fetch('https://api.cloudflare.com/client/v4/graphql', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${env.cloudflareAnalyticsToken}`, 'Content-Type': 'application/json' },
+    headers: {
+      Authorization: `Bearer ${env.cloudflareAnalyticsToken}`,
+      'Content-Type': 'application/json',
+    },
     body: JSON.stringify({
       query: QUERY,
-      variables: { accountTag: env.cloudflareAccountId, from: `${to.slice(0, 7)}-01`, to },
+      variables: {
+        accountTag: env.cloudflareAccountId,
+        from: `${to.slice(0, 7)}-01`,
+        to,
+      },
     }),
     cache: 'no-store',
   });
   const body = (await res.json().catch(() => ({}))) as GraphQlResponse;
   if (!res.ok || body.errors?.length || !body.data?.viewer?.accounts) {
-    throw new Error(`Cloudflare analytics ${res.status}: ${body.errors?.[0]?.message ?? 'no data'}`);
+    throw new Error(
+      `Cloudflare analytics ${res.status}: ${body.errors?.[0]?.message ?? 'no data'}`,
+    );
   }
-  const groups = body.data.viewer.accounts[0]?.callsTurnUsageAdaptiveGroups ?? [];
+  const groups =
+    body.data.viewer.accounts[0]?.callsTurnUsageAdaptiveGroups ?? [];
   return groups.reduce((total, g) => total + (g.sum?.egressBytes ?? 0), 0);
 }
 
@@ -46,7 +62,9 @@ async function fetchMonthToDateEgress(now: Date): Promise<number> {
  * instances share one reading. Null when usage can't be verified: analytics not configured,
  * or Cloudflare unreachable with no reading newer than USAGE_MAX_STALE_MS.
  */
-export async function monthToDateEgressBytes(now = new Date()): Promise<number | null> {
+export async function monthToDateEgressBytes(
+  now = new Date(),
+): Promise<number | null> {
   if (!env.cloudflareAccountId || !env.cloudflareAnalyticsToken) return null;
   const month = now.toISOString().slice(0, 7);
   const db = await adminDb();

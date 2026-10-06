@@ -8,7 +8,13 @@ import {
   type InternalCommand,
   type RoomTokenClaims,
 } from '@coopseat/ui/party-protocol';
-import { CLOSE, initialState, RoomEngine, type Effect, type State } from './engine';
+import {
+  CLOSE,
+  initialState,
+  RoomEngine,
+  type Effect,
+  type State,
+} from './engine';
 import type { Env } from './env';
 
 type Attachment = { sub: string | null; at: number; replaced?: boolean };
@@ -16,16 +22,24 @@ type Attachment = { sub: string | null; at: number; replaced?: boolean };
 const AUTH_TIMEOUT_MS = 10_000;
 let publicKey: Promise<CryptoKey> | undefined;
 
-async function verifyToken(env: Env, token: unknown): Promise<RoomTokenClaims | null> {
+async function verifyToken(
+  env: Env,
+  token: unknown,
+): Promise<RoomTokenClaims | null> {
   if (typeof token !== 'string' || token.length > 4096) return null;
-  publicKey ??= importSPKI(toPem(env.PARTY_TOKEN_PUBLIC_KEY, 'PUBLIC KEY'), 'EdDSA');
+  publicKey ??= importSPKI(
+    toPem(env.PARTY_TOKEN_PUBLIC_KEY, 'PUBLIC KEY'),
+    'EdDSA',
+  );
   try {
     const { payload } = await jwtVerify(token, await publicKey, {
       issuer: ROOM_TOKEN_ISSUER,
       audience: ROOM_TOKEN_AUDIENCE,
       algorithms: ['EdDSA'],
     });
-    return typeof payload.sub === 'string' ? (payload as unknown as RoomTokenClaims) : null;
+    return typeof payload.sub === 'string'
+      ? (payload as unknown as RoomTokenClaims)
+      : null;
   } catch {
     return null;
   }
@@ -68,7 +82,10 @@ export class PartySession extends DurableObject<Env> {
         }
       } else if (e.k === 'close') {
         for (const ws of this.sockets(e.to)) {
-          ws.serializeAttachment({ ...(ws.deserializeAttachment() as Attachment), replaced: true });
+          ws.serializeAttachment({
+            ...(ws.deserializeAttachment() as Attachment),
+            replaced: true,
+          });
           try {
             ws.close(e.code, e.reason);
           } catch {
@@ -76,10 +93,19 @@ export class PartySession extends DurableObject<Env> {
           }
         }
       } else if (e.k === 'event') {
-        await this.report(e.event);
+        // The BFF write can take seconds. Waiting here stalls the single-threaded room,
+        // including the approve that just let someone in.
+        this.ctx.waitUntil(this.report(e.event));
       } else if (e.k === 'alarm') {
-        const pendingAuth = this.ctx.getWebSockets().some((ws) => !(ws.deserializeAttachment() as Attachment | null)?.sub);
-        const at = [e.at, pendingAuth ? Date.now() + AUTH_TIMEOUT_MS : null].filter((t): t is number => t !== null);
+        const pendingAuth = this.ctx
+          .getWebSockets()
+          .some(
+            (ws) => !(ws.deserializeAttachment() as Attachment | null)?.sub,
+          );
+        const at = [
+          e.at,
+          pendingAuth ? Date.now() + AUTH_TIMEOUT_MS : null,
+        ].filter((t): t is number => t !== null);
         if (at.length) await this.ctx.storage.setAlarm(Math.min(...at));
         else await this.ctx.storage.deleteAlarm();
       }
@@ -95,11 +121,14 @@ export class PartySession extends DurableObject<Env> {
   private async report(event: unknown): Promise<void> {
     const body = JSON.stringify(event);
     try {
-      const res = await fetch(`${this.env.APP_URL.replace(/\/$/, '')}/api/party/internal/events`, {
-        method: 'POST',
-        headers: await internalHeaders(this.env.PARTY_SIGNAL_SECRET, body),
-        body,
-      });
+      const res = await fetch(
+        `${this.env.APP_URL.replace(/\/$/, '')}/api/party/internal/events`,
+        {
+          method: 'POST',
+          headers: await internalHeaders(this.env.PARTY_SIGNAL_SECRET, body),
+          body,
+        },
+      );
       if (!res.ok) console.warn('event rejected', res.status, body);
     } catch (err) {
       console.warn('event failed', String(err));
@@ -115,7 +144,10 @@ export class PartySession extends DurableObject<Env> {
       const pair = new WebSocketPair();
       const [client, server] = [pair[0], pair[1]];
       this.ctx.acceptWebSocket(server);
-      server.serializeAttachment({ sub: null, at: Date.now() } satisfies Attachment);
+      server.serializeAttachment({
+        sub: null,
+        at: Date.now(),
+      } satisfies Attachment);
       await this.ctx.storage.setAlarm(Date.now() + AUTH_TIMEOUT_MS);
       return new Response(null, { status: 101, webSocket: client });
     }
@@ -128,7 +160,10 @@ export class PartySession extends DurableObject<Env> {
     return new Response('not found', { status: 404 });
   }
 
-  async webSocketMessage(ws: WebSocket, message: string | ArrayBuffer): Promise<void> {
+  async webSocketMessage(
+    ws: WebSocket,
+    message: string | ArrayBuffer,
+  ): Promise<void> {
     const engine = await this.load();
     const att = ws.deserializeAttachment() as Attachment;
     if (att.replaced) return;
@@ -145,10 +180,14 @@ export class PartySession extends DurableObject<Env> {
 
     if (auth?.t === 'auth') {
       const claims = await verifyToken(this.env, auth.token);
-      if (!claims || (att.sub && claims.sub !== att.sub)) return ws.close(CLOSE.invalid, 'invalid');
+      if (!claims || (att.sub && claims.sub !== att.sub))
+        return ws.close(CLOSE.invalid, 'invalid');
       if (!att.sub) {
         for (const other of this.sockets(claims.sub)) {
-          other.serializeAttachment({ ...(other.deserializeAttachment() as Attachment), replaced: true });
+          other.serializeAttachment({
+            ...(other.deserializeAttachment() as Attachment),
+            replaced: true,
+          });
           try {
             other.send(JSON.stringify({ t: 'removed', reason: 'replaced' }));
             other.close(CLOSE.removed, 'replaced');
@@ -156,7 +195,10 @@ export class PartySession extends DurableObject<Env> {
             /* already closed */
           }
         }
-        ws.serializeAttachment({ ...att, sub: claims.sub } satisfies Attachment);
+        ws.serializeAttachment({
+          ...att,
+          sub: claims.sub,
+        } satisfies Attachment);
       }
       await this.apply(engine.join(claims, Date.now()));
       return;

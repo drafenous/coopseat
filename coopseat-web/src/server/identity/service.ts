@@ -51,19 +51,26 @@ export async function startVerification(profileId: string, returnUrl: string) {
     provider: provider.id,
     providerSessionId: session.sessionId,
   });
-  await db.orm.public.Profile.where({ id: profileId }).updateAll({ ageStatus: 'PENDING' });
+  await db.orm.public.Profile.where({ id: profileId }).updateAll({
+    ageStatus: 'PENDING',
+  });
   return session;
 }
 
 /** Applies a provider result. Idempotent: completed verifications are not touched again. */
-export async function applyVerificationResult(providerId: string, result: VerificationResult) {
+export async function applyVerificationResult(
+  providerId: string,
+  result: VerificationResult,
+) {
   const db = await adminDb();
   const verifications = db.orm.public.IdentityVerification;
   const row = await verifications
     .where({ providerSessionId: result.sessionId })
     .first();
-  if (!row || row.provider !== providerId) return { applied: false, reason: 'unknown_session' as const };
-  if (row.completedAt) return { applied: false, reason: 'already_completed' as const };
+  if (!row || row.provider !== providerId)
+    return { applied: false, reason: 'unknown_session' as const };
+  if (row.completedAt)
+    return { applied: false, reason: 'already_completed' as const };
 
   const now = new Date().toISOString();
   const profiles = db.orm.public.Profile.where({ id: row.profileId });
@@ -73,10 +80,15 @@ export async function applyVerificationResult(providerId: string, result: Verifi
     return { applied: true, status: 'review' as const };
   }
 
-  const approvedAdult = result.status === 'approved' && result.isAdult === true && result.document !== null;
+  const approvedAdult =
+    result.status === 'approved' &&
+    result.isAdult === true &&
+    result.document !== null;
   if (!approvedAdult) {
     const reason =
-      result.status === 'approved' && result.isAdult === false ? 'underage' : (result.failureReason ?? 'rejected');
+      result.status === 'approved' && result.isAdult === false
+        ? 'underage'
+        : (result.failureReason ?? 'rejected');
     await verifications.where({ id: row.id }).updateAll({
       status: 'rejected',
       isAdult: result.isAdult,
@@ -91,7 +103,10 @@ export async function applyVerificationResult(providerId: string, result: Verifi
     await verifications.where({ id: row.id }).updateAll({
       status: 'approved',
       isAdult: true,
-      documentFingerprint: documentFingerprint(result.document!.country, result.document!.number),
+      documentFingerprint: documentFingerprint(
+        result.document!.country,
+        result.document!.number,
+      ),
       completedAt: now,
     });
   } catch (err) {

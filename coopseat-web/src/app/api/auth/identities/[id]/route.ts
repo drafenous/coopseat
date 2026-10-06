@@ -20,6 +20,8 @@ export const DELETE = route<Ctx>(async (req, ctx) => {
     throw new ApiError(400, 'single_identity_not_deletable');
   }
 
-  await auth(gotrue.unlinkIdentity(session.token, identity.identity_id ?? identity.id));
+  await auth(
+    gotrue.unlinkIdentity(session.token, identity.identity_id ?? identity.id),
+  );
   return NextResponse.json({ ok: true });
 });

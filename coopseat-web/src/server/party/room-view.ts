@@ -14,7 +14,10 @@ export async function roomView(ownerId: string, ownerNickname: string | null) {
     db.orm.public.PartyRoomModerator.where({ roomId: ownerId }).all(),
     getActiveSession(ownerId, policy),
   ]);
-  const names = await nicknames([...whitelist.map((w) => w.profileId), ...moderators.map((m) => m.profileId)]);
+  const names = await nicknames([
+    ...whitelist.map((w) => w.profileId),
+    ...moderators.map((m) => m.profileId),
+  ]);
   return {
     shareUrl: ownerNickname ? `${env.appUrl}/party/${ownerNickname}` : null,
     hasPassword: room.passwordHash !== null,
@@ -24,8 +27,18 @@ export async function roomView(ownerId: string, ownerNickname: string | null) {
     maxParticipants: roomCapacity(policy, room),
     maxStreamers: policy.maxStreamers,
     enabled: policy.enabled,
-    whitelist: whitelist.map((w) => ({ profileId: w.profileId, nickname: names.get(w.profileId) ?? '', canStream: w.canStream })),
-    moderators: moderators.map((m) => ({ profileId: m.profileId, nickname: names.get(m.profileId) ?? '', ...modPerms(m) })),
-    activeSession: session ? { id: session.id, startedAt: session.startedAt } : null,
+    whitelist: whitelist.map((w) => ({
+      profileId: w.profileId,
+      nickname: names.get(w.profileId) ?? '',
+      canStream: w.canStream,
+    })),
+    moderators: moderators.map((m) => ({
+      profileId: m.profileId,
+      nickname: names.get(m.profileId) ?? '',
+      ...modPerms(m),
+    })),
+    activeSession: session
+      ? { id: session.id, startedAt: session.startedAt }
+      : null,
   };
 }

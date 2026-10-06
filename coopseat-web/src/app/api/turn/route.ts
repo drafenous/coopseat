@@ -1,5 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { dictionaries, errorMessage, type ErrorCode } from '@/i18n/dictionaries';
+import {
+  dictionaries,
+  errorMessage,
+  type ErrorCode,
+} from '@/i18n/dictionaries';
 import { localeFromRequest } from '@/i18n/server';
 import { adminDb } from '@/prisma/db';
 import { turnSchema } from '@/lib/validation/party';
@@ -26,19 +30,30 @@ const DENY_MESSAGE: Record<RelayDenyReason, ErrorCode> = {
 /** Only the desktop app sends this header; browsers are never subject to version rules. */
 function appVersion(req: NextRequest): string | null {
   const value = req.headers.get('x-coopseat-version')?.trim();
-  return value && /^v?\d+(\.\d+){0,2}([-+][\w.-]+)?$/.test(value) && value.length <= 32 ? value : null;
+  return value &&
+    /^v?\d+(\.\d+){0,2}([-+][\w.-]+)?$/.test(value) &&
+    value.length <= 32
+    ? value
+    : null;
 }
 
 /**
  * A room token is issued only after the watch gate (verified 18+) and admission to a live session,
  * so it stands in for both checks; the session must still be live.
  */
-async function assertAdmitted(roomToken: string, profileId: string): Promise<void> {
+async function assertAdmitted(
+  roomToken: string,
+  profileId: string,
+): Promise<void> {
   const claims = await verifyRoomToken(roomToken);
-  if (!claims || claims.sub !== profileId || claims.status !== 'admitted') throw new ApiError(403, 'party_token_invalid');
+  if (!claims || claims.sub !== profileId || claims.status !== 'admitted')
+    throw new ApiError(403, 'party_token_invalid');
   const db = await adminDb();
-  const session = await db.orm.public.PartySession.where({ id: claims.sid }).first();
-  if (!session || session.endedAt !== null) throw new ApiError(403, 'party_token_invalid');
+  const session = await db.orm.public.PartySession.where({
+    id: claims.sid,
+  }).first();
+  if (!session || session.endedAt !== null)
+    throw new ApiError(403, 'party_token_invalid');
 }
 
 /**
@@ -54,12 +69,19 @@ export const POST = route(async (req) => {
   await assertAdmitted(roomToken, profileId);
 
   const version = appVersion(req);
-  const decision = await evaluateRelay({ audience: 'member', profileId, appVersion: version });
+  const decision = await evaluateRelay({
+    audience: 'member',
+    profileId,
+    appVersion: version,
+  });
   if (!decision.allowed) {
     console.warn('TURN relay denied', { profileId, reason: decision.reason });
     const code = DENY_MESSAGE[decision.reason];
     const message = errorMessage(dictionaries[localeFromRequest(req)], code);
-    return NextResponse.json({ iceServers: STUN_ONLY, relay: false, reason: code, message }, { headers: NO_STORE });
+    return NextResponse.json(
+      { iceServers: STUN_ONLY, relay: false, reason: code, message },
+      { headers: NO_STORE },
+    );
   }
 
   const ttl = decision.policy.credentialTtlSeconds;

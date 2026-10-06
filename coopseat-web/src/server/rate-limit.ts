@@ -22,7 +22,10 @@ export const LIMITS = {
 } satisfies Record<string, Limit>;
 
 /** Sliding-window limiter backed by Postgres, so it holds across serverless instances. */
-export async function rateLimit(bucket: keyof typeof LIMITS, subject: string): Promise<void> {
+export async function rateLimit(
+  bucket: keyof typeof LIMITS,
+  subject: string,
+): Promise<void> {
   const { max, windowSeconds } = LIMITS[bucket];
   const key = `${bucket}:${subject}`;
   const since = new Date(Date.now() - windowSeconds * 1000).toISOString();

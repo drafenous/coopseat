@@ -8,7 +8,9 @@ import pg from 'pg';
 // transaction that is always rolled back, so no test data is left behind.
 const url = process.env.SQL_ADMIN_URL;
 if (!url) {
-  console.error('Set SQL_ADMIN_URL (postgres role of a NON-production project).');
+  console.error(
+    'Set SQL_ADMIN_URL (postgres role of a NON-production project).',
+  );
   process.exit(1);
 }
 

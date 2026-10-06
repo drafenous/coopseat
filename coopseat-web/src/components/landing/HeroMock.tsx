@@ -36,7 +36,10 @@ function GameScene() {
         <p>00:42.17</p>
       </div>
       <p className="absolute bottom-3 left-3 font-mono text-lg font-bold text-white/90 italic sm:text-xl">
-        187<span className="ml-1 text-[10px] font-semibold text-white/60 not-italic">KM/H</span>
+        187
+        <span className="ml-1 text-[10px] font-semibold text-white/60 not-italic">
+          KM/H
+        </span>
       </p>
 
       <div className="pointer-events-none absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent_0,transparent_2px,#0000002e_3px)]" />
@@ -86,7 +89,9 @@ export function HeroMock({ t }: { t: Dictionary['home']['mock'] }) {
           </div>
           <div>
             <p className="text-xs font-semibold text-strong">{t.watching(3)}</p>
-            <p className="text-[10px] font-semibold tracking-wider text-accent uppercase">{t.soon}</p>
+            <p className="text-[10px] font-semibold tracking-wider text-accent uppercase">
+              {t.soon}
+            </p>
           </div>
         </div>
       </div>

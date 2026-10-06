@@ -22,7 +22,9 @@ export function ResetForm() {
     setPending(true);
     setError(undefined);
     try {
-      await api('/api/auth/password/reset', { body: { password: form.get('password') } });
+      await api('/api/auth/password/reset', {
+        body: { password: form.get('password') },
+      });
       setDone(true);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : t.reset.failed);
@@ -34,7 +36,11 @@ export function ResetForm() {
   if (done) {
     return (
       <Alert tone="success">
-        {t.reset.done((label) => <Link href="/account" className="underline">{label}</Link>)}
+        {t.reset.done((label) => (
+          <Link href="/account" className="underline">
+            {label}
+          </Link>
+        ))}
       </Alert>
     );
   }
@@ -42,9 +48,25 @@ export function ResetForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {error ? <Alert>{error}</Alert> : null}
-      <Field label={t.common.newPassword} name="password" type="password" autoComplete="new-password" minLength={8} required hint={t.common.passwordHint} />
-      <Field label={t.common.confirmPassword} name="confirm" type="password" autoComplete="new-password" required />
-      <Button type="submit" disabled={pending}>{pending ? t.reset.pending : t.reset.submit}</Button>
+      <Field
+        label={t.common.newPassword}
+        name="password"
+        type="password"
+        autoComplete="new-password"
+        minLength={8}
+        required
+        hint={t.common.passwordHint}
+      />
+      <Field
+        label={t.common.confirmPassword}
+        name="confirm"
+        type="password"
+        autoComplete="new-password"
+        required
+      />
+      <Button type="submit" disabled={pending}>
+        {pending ? t.reset.pending : t.reset.submit}
+      </Button>
     </form>
   );
 }

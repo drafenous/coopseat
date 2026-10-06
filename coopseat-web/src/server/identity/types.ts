@@ -5,12 +5,17 @@
  */
 export interface IdentityProvider {
   readonly id: string;
-  createSession(input: CreateSessionInput): Promise<{ sessionId: string; url: string }>;
+  createSession(
+    input: CreateSessionInput,
+  ): Promise<{ sessionId: string; url: string }>;
   /**
    * Must authenticate the request (signature/HMAC) and throw when it is not genuine. Returns null for
    * genuine events that carry no final outcome (progress updates), which are acknowledged and ignored.
    */
-  parseWebhook(rawBody: string, headers: Headers): Promise<VerificationResult | null>;
+  parseWebhook(
+    rawBody: string,
+    headers: Headers,
+  ): Promise<VerificationResult | null>;
 }
 
 export type CreateSessionInput = {

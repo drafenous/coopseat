@@ -19,15 +19,32 @@ export async function api<T = Record<string, unknown>>(
 ): Promise<T> {
   const res = await fetch(path, {
     method: init.method ?? (init.body === undefined ? 'GET' : 'POST'),
-    headers: init.body === undefined ? undefined : { 'Content-Type': 'application/json' },
+    headers:
+      init.body === undefined
+        ? undefined
+        : { 'Content-Type': 'application/json' },
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
     credentials: 'same-origin',
   });
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
-    const err = (data['error'] ?? {}) as { message?: string; code?: string; fields?: Record<string, string[]> };
-    const fallback = dictionaries[isLocale(document.documentElement.lang) ? document.documentElement.lang : DEFAULT_LOCALE].common.genericError;
-    throw new ApiClientError(err.message ?? fallback, res.status, err.code ?? 'error', err.fields);
+    const err = (data['error'] ?? {}) as {
+      message?: string;
+      code?: string;
+      fields?: Record<string, string[]>;
+    };
+    const fallback =
+      dictionaries[
+        isLocale(document.documentElement.lang)
+          ? document.documentElement.lang
+          : DEFAULT_LOCALE
+      ].common.genericError;
+    throw new ApiClientError(
+      err.message ?? fallback,
+      res.status,
+      err.code ?? 'error',
+      err.fields,
+    );
   }
   return data as T;
 }

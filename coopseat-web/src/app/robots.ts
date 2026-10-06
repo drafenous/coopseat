@@ -10,7 +10,12 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: '*',
       allow: '/',
-      disallow: ['/api/', ...LOCALES.flatMap((locale) => PRIVATE_PATHS.map((path) => localePath(locale, path)))],
+      disallow: [
+        '/api/',
+        ...LOCALES.flatMap((locale) =>
+          PRIVATE_PATHS.map((path) => localePath(locale, path)),
+        ),
+      ],
     },
     sitemap: absoluteUrl('/sitemap.xml'),
   };

@@ -20,7 +20,9 @@ export function ForgotForm() {
     setPending(true);
     setError(undefined);
     try {
-      const res = await api<{ message: string }>('/api/auth/password/forgot', { body: { email, captchaToken: captcha } });
+      const res = await api<{ message: string }>('/api/auth/password/forgot', {
+        body: { email, captchaToken: captcha },
+      });
       setMessage(res.message);
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : t.forgot.failed);
@@ -35,9 +37,17 @@ export function ForgotForm() {
   return (
     <form onSubmit={onSubmit} className="space-y-4" noValidate>
       {error ? <Alert>{error}</Alert> : null}
-      <Field label={t.forgot.accountEmail} name="email" type="email" autoComplete="email" required />
+      <Field
+        label={t.forgot.accountEmail}
+        name="email"
+        type="email"
+        autoComplete="email"
+        required
+      />
       <Turnstile onToken={setCaptcha} resetKey={captchaReset} />
-      <Button type="submit" disabled={pending}>{pending ? t.forgot.pending : t.forgot.submit}</Button>
+      <Button type="submit" disabled={pending}>
+        {pending ? t.forgot.pending : t.forgot.submit}
+      </Button>
     </form>
   );
 }

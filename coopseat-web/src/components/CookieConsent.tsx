@@ -28,8 +28,16 @@ function translation(t: Dictionary): CC.Translation {
       closeIconLabel: c.close,
       sections: [
         { description: c.intro },
-        { title: c.necessary.title, description: c.necessary.description, linkedCategory: 'necessary' },
-        { title: c.analytics.title, description: c.analytics.description, linkedCategory: 'analytics' },
+        {
+          title: c.necessary.title,
+          description: c.necessary.description,
+          linkedCategory: 'necessary',
+        },
+        {
+          title: c.analytics.title,
+          description: c.analytics.description,
+          linkedCategory: 'analytics',
+        },
         { title: c.more.title, description: c.more.description(privacyLink) },
       ],
     },
@@ -38,7 +46,9 @@ function translation(t: Dictionary): CC.Translation {
 
 function syncAnalytics() {
   const granted = CC.acceptedCategory('analytics');
-  window.gtag?.('consent', 'update', { analytics_storage: granted ? 'granted' : 'denied' });
+  window.gtag?.('consent', 'update', {
+    analytics_storage: granted ? 'granted' : 'denied',
+  });
   if (granted) void CC.loadScript(GTAG_SRC, { async: '' });
 }
 
@@ -47,7 +57,11 @@ export function CookieConsent({ locale }: { locale: Locale }) {
     if (!GA_ID) return;
     void CC.run({
       guiOptions: {
-        consentModal: { layout: 'box inline', position: 'bottom right', equalWeightButtons: true },
+        consentModal: {
+          layout: 'box inline',
+          position: 'bottom right',
+          equalWeightButtons: true,
+        },
         preferencesModal: { layout: 'box', equalWeightButtons: true },
       },
       categories: {
@@ -58,7 +72,9 @@ export function CookieConsent({ locale }: { locale: Locale }) {
       onChange: syncAnalytics,
       language: {
         default: locale,
-        translations: Object.fromEntries(LOCALES.map((l) => [l, translation(dictionaries[l])])),
+        translations: Object.fromEntries(
+          LOCALES.map((l) => [l, translation(dictionaries[l])]),
+        ),
       },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps -- run() is one-shot per page load; locale changes go through setLanguage below.
@@ -71,10 +87,20 @@ export function CookieConsent({ locale }: { locale: Locale }) {
   return null;
 }
 
-export function CookiePreferencesButton({ className, children }: { className?: string; children: React.ReactNode }) {
+export function CookiePreferencesButton({
+  className,
+  children,
+}: {
+  className?: string;
+  children: React.ReactNode;
+}) {
   if (!GA_ID) return null;
   return (
-    <button type="button" className={className} onClick={() => CC.showPreferences()}>
+    <button
+      type="button"
+      className={className}
+      onClick={() => CC.showPreferences()}
+    >
       {children}
     </button>
   );

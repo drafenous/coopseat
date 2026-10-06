@@ -58,12 +58,12 @@ Cheap checks run before the budget, which may call Cloudflare.
 
 Tables (Prisma contract `coopseat-web/src/prisma/contract.prisma`, all `@@rls` without policies, so backend-only):
 
-| Table | Purpose |
-|---|---|
-| `relay_policy` | Singleton row `id = 'global'`; missing row = `DEFAULT_RELAY_POLICY`. `updatedAt` has no DB default: raw SQL inserts must set it |
-| `relay_user_overrides` | Per-user block / quota, PK `profileId` |
-| `relay_credentials` | Every issued credential (username, audience, appVersion, expiresAt, revokedAt): quota, audit, revocation |
-| `relay_usage` | Month-to-date TURN egress cache (`month` = `YYYY-MM` UTC) |
+| Table                  | Purpose                                                                                                                         |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `relay_policy`         | Singleton row `id = 'global'`; missing row = `DEFAULT_RELAY_POLICY`. `updatedAt` has no DB default: raw SQL inserts must set it |
+| `relay_user_overrides` | Per-user block / quota, PK `profileId`                                                                                          |
+| `relay_credentials`    | Every issued credential (username, audience, appVersion, expiresAt, revokedAt): quota, audit, revocation                        |
+| `relay_usage`          | Month-to-date TURN egress cache (`month` = `YYYY-MM` UTC)                                                                       |
 
 Operators edit these with SQL in Supabase; ready-made statements are in `coopseat-web/README.md`, section "Controle do relay". There are no admin routes by design.
 

@@ -8,23 +8,45 @@ type Row = Record<string, unknown>;
 type Predicate = (row: Row) => boolean;
 
 const field = (name: string) => ({
-  eq: (v: unknown): Predicate => (r) => r[name] === v,
-  neq: (v: unknown): Predicate => (r) => r[name] !== v,
-  gte: (v: string): Predicate => (r) => String(r[name]) >= v,
-  in: (vs: unknown[]): Predicate => (r) => vs.includes(r[name]),
+  eq:
+    (v: unknown): Predicate =>
+    (r) =>
+      r[name] === v,
+  neq:
+    (v: unknown): Predicate =>
+    (r) =>
+      r[name] !== v,
+  gte:
+    (v: string): Predicate =>
+    (r) =>
+      String(r[name]) >= v,
+  in:
+    (vs: unknown[]): Predicate =>
+    (r) =>
+      vs.includes(r[name]),
   isNull: (): Predicate => (r) => r[name] === null || r[name] === undefined,
 });
-const fields = new Proxy({}, { get: (_t, name: string) => field(name) }) as Record<string, ReturnType<typeof field>>;
+const fields = new Proxy(
+  {},
+  { get: (_t, name: string) => field(name) },
+) as Record<string, ReturnType<typeof field>>;
 
-const uniqueViolation = () => Object.assign(new Error('duplicate key'), { code: '23505' });
+const uniqueViolation = () =>
+  Object.assign(new Error('duplicate key'), { code: '23505' });
 
-function table(rows: Row[], defaults: () => Row, validate: (rows: Row[]) => boolean = () => true) {
+function table(
+  rows: Row[],
+  defaults: () => Row,
+  validate: (rows: Row[]) => boolean = () => true,
+) {
   const query = (preds: Predicate[]) => {
     const match = () => rows.filter((r) => preds.every((p) => p(r)));
     return {
       where(cond: Row | ((h: typeof fields) => Predicate)) {
         const pred: Predicate =
-          typeof cond === 'function' ? cond(fields) : (r) => Object.entries(cond).every(([k, v]) => r[k] === v);
+          typeof cond === 'function'
+            ? cond(fields)
+            : (r) => Object.entries(cond).every(([k, v]) => r[k] === v);
         return query([...preds, pred]);
       },
       select() {
@@ -53,7 +75,9 @@ function table(rows: Row[], defaults: () => Row, validate: (rows: Row[]) => bool
       },
       async aggregate(fn: (a: { count(): string }) => Record<string, string>) {
         const shape = fn({ count: () => 'count' });
-        return Object.fromEntries(Object.keys(shape).map((k) => [k, match().length]));
+        return Object.fromEntries(
+          Object.keys(shape).map((k) => [k, match().length]),
+        );
       },
       async create(data: Row) {
         const row = { ...defaults(), ...data };
@@ -71,7 +95,9 @@ function table(rows: Row[], defaults: () => Row, validate: (rows: Row[]) => bool
 
 /** Mirrors the partial unique index identity_verifications_fingerprint_approved. */
 function approvedFingerprintsUnique(rows: Row[]): boolean {
-  const seen = rows.filter((r) => r.status === 'approved' && r.documentFingerprint).map((r) => r.documentFingerprint);
+  const seen = rows
+    .filter((r) => r.status === 'approved' && r.documentFingerprint)
+    .map((r) => r.documentFingerprint);
   return new Set(seen).size === seen.length;
 }
 
@@ -114,7 +140,10 @@ export function createFakeDb() {
         return table(data.AuthTicket, () => ({ createdAt: now() }));
       },
       get RateLimitHit() {
-        return table(data.RateLimitHit, () => ({ id: randomUUID(), createdAt: now() }));
+        return table(data.RateLimitHit, () => ({
+          id: randomUUID(),
+          createdAt: now(),
+        }));
       },
       get Profile() {
         return table(data.Profile, () => ({
@@ -131,15 +160,19 @@ export function createFakeDb() {
         }));
       },
       get IdentityVerification() {
-        return table(data.IdentityVerification, () => ({
-          id: randomUUID(),
-          status: 'created',
-          isAdult: null,
-          documentFingerprint: null,
-          failureReason: null,
-          createdAt: now(),
-          completedAt: null,
-        }), approvedFingerprintsUnique);
+        return table(
+          data.IdentityVerification,
+          () => ({
+            id: randomUUID(),
+            status: 'created',
+            isAdult: null,
+            documentFingerprint: null,
+            failureReason: null,
+            createdAt: now(),
+            completedAt: null,
+          }),
+          approvedFingerprintsUnique,
+        );
       },
       get RelayPolicy() {
         return table(data.RelayPolicy, () => ({
@@ -202,25 +235,51 @@ export function createFakeDb() {
         }));
       },
       get PartyRoomWhitelist() {
-        return table(data.PartyRoomWhitelist, () => ({ id: randomUUID(), canStream: false, createdAt: now() }), roomProfileUnique);
+        return table(
+          data.PartyRoomWhitelist,
+          () => ({ id: randomUUID(), canStream: false, createdAt: now() }),
+          roomProfileUnique,
+        );
       },
       get PartyRoomModerator() {
-        return table(data.PartyRoomModerator, () => ({
-          id: randomUUID(),
-          canKick: true,
-          canBan: false,
-          canStopStreams: true,
-          canApprove: true,
-          canGrantStream: false,
-          canDeleteMessages: true,
-          createdAt: now(),
-        }), roomProfileUnique);
+        return table(
+          data.PartyRoomModerator,
+          () => ({
+            id: randomUUID(),
+            canKick: true,
+            canBan: false,
+            canStopStreams: true,
+            canApprove: true,
+            canGrantStream: false,
+            canDeleteMessages: true,
+            createdAt: now(),
+          }),
+          roomProfileUnique,
+        );
       },
       get PartyRoomBan() {
-        return table(data.PartyRoomBan, () => ({ id: randomUUID(), reason: null, expiresAt: null, createdAt: now() }), roomProfileUnique);
+        return table(
+          data.PartyRoomBan,
+          () => ({
+            id: randomUUID(),
+            reason: null,
+            expiresAt: null,
+            createdAt: now(),
+          }),
+          roomProfileUnique,
+        );
       },
       get PartySession() {
-        return table(data.PartySession, () => ({ id: randomUUID(), startedAt: now(), endedAt: null, endReason: null }), oneActiveSession);
+        return table(
+          data.PartySession,
+          () => ({
+            id: randomUUID(),
+            startedAt: now(),
+            endedAt: null,
+            endReason: null,
+          }),
+          oneActiveSession,
+        );
       },
       get PartySessionParticipant() {
         return table(data.PartySessionParticipant, () => ({

@@ -11,7 +11,9 @@ import { NO_STORE, partyCaller, requireVerified } from '@/server/party/routes';
 export const GET = route(async (req) => {
   const { viewer } = await partyCaller(req);
   requireVerified(viewer);
-  return NextResponse.json(await roomView(viewer.profileId, viewer.nickname), { headers: NO_STORE });
+  return NextResponse.json(await roomView(viewer.profileId, viewer.nickname), {
+    headers: NO_STORE,
+  });
 });
 
 export const PATCH = route(async (req) => {
@@ -21,7 +23,11 @@ export const PATCH = route(async (req) => {
   const room = await ensureRoom(viewer.profileId);
 
   const passwordHash =
-    input.password === undefined ? room.passwordHash : input.password === null ? null : await hashRoomPassword(input.password);
+    input.password === undefined
+      ? room.passwordHash
+      : input.password === null
+        ? null
+        : await hashRoomPassword(input.password);
   const next = {
     passwordHash,
     requireApproval: input.requireApproval ?? room.requireApproval,
@@ -33,6 +39,10 @@ export const PATCH = route(async (req) => {
   }
 
   const db = await adminDb();
-  await db.orm.public.PartyRoom.where({ ownerId: viewer.profileId }).updateAll(next);
-  return NextResponse.json(await roomView(viewer.profileId, viewer.nickname), { headers: NO_STORE });
+  await db.orm.public.PartyRoom.where({ ownerId: viewer.profileId }).updateAll(
+    next,
+  );
+  return NextResponse.json(await roomView(viewer.profileId, viewer.nickname), {
+    headers: NO_STORE,
+  });
 });

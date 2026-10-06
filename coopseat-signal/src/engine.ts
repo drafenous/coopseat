@@ -76,10 +76,23 @@ const MSG_WINDOW_MS = 10_000;
 const MSG_MAX_PER_WINDOW = 300;
 
 export function initialState(sid: string): State {
-  return { sid, ownerId: null, cfg: null, members: {}, chat: [], requests: {}, subs: {}, ended: null };
+  return {
+    sid,
+    ownerId: null,
+    cfg: null,
+    members: {},
+    chat: [],
+    requests: {},
+    subs: {},
+    ended: null,
+  };
 }
 
-const pendingUser = (m: Member): PendingUser => ({ id: m.id, nick: m.nick, at: m.joinedAt });
+const pendingUser = (m: Member): PendingUser => ({
+  id: m.id,
+  nick: m.nick,
+  at: m.joinedAt,
+});
 
 export class RoomEngine {
   private fx: Effect[] = [];
@@ -92,7 +105,9 @@ export class RoomEngine {
   // ---------- queries ----------
 
   private admitted(): Member[] {
-    return Object.values(this.state.members).filter((m) => m.status === 'admitted');
+    return Object.values(this.state.members).filter(
+      (m) => m.status === 'admitted',
+    );
   }
 
   private streamAllowed(m: Member): boolean {
@@ -115,7 +130,9 @@ export class RoomEngine {
   }
 
   private ownerLive(): boolean {
-    const owner = this.state.ownerId ? this.state.members[this.state.ownerId] : undefined;
+    const owner = this.state.ownerId
+      ? this.state.members[this.state.ownerId]
+      : undefined;
     return Boolean(owner?.streaming);
   }
 
@@ -131,7 +148,8 @@ export class RoomEngine {
   }
 
   private toPerm(perm: keyof ModPerms, msg: ServerMessage) {
-    for (const m of this.admitted()) if (this.perms(m)?.[perm]) this.send(m.id, msg);
+    for (const m of this.admitted())
+      if (this.perms(m)?.[perm]) this.send(m.id, msg);
   }
 
   private error(to: string, code: string) {
@@ -151,8 +169,17 @@ export class RoomEngine {
   join(claims: RoomTokenClaims, now: number): Effect[] {
     const s = this.state;
     if (s.ended) {
-      this.fx.push({ k: 'send', to: claims.sub, msg: { t: 'session_end', reason: s.ended } });
-      this.fx.push({ k: 'close', to: claims.sub, code: CLOSE.ended, reason: s.ended });
+      this.fx.push({
+        k: 'send',
+        to: claims.sub,
+        msg: { t: 'session_end', reason: s.ended },
+      });
+      this.fx.push({
+        k: 'close',
+        to: claims.sub,
+        code: CLOSE.ended,
+        reason: s.ended,
+      });
       return this.flush();
     }
     if (claims.sid !== s.sid) return this.reject(claims.sub, 'invalid');
@@ -164,9 +191,15 @@ export class RoomEngine {
 
     const existing = s.members[claims.sub];
     if (!existing) {
-      const active = Object.values(s.members).filter((m) => m.connected || m.goneAt !== null);
-      if (claims.role !== 'owner' && active.length >= s.cfg.cap) return this.reject(claims.sub, 'full');
-      if (claims.status === 'pending' && active.filter((m) => m.status === 'pending').length >= MAX_PENDING) {
+      const active = Object.values(s.members).filter(
+        (m) => m.connected || m.goneAt !== null,
+      );
+      if (claims.role !== 'owner' && active.length >= s.cfg.cap)
+        return this.reject(claims.sub, 'full');
+      if (
+        claims.status === 'pending' &&
+        active.filter((m) => m.status === 'pending').length >= MAX_PENDING
+      ) {
         return this.reject(claims.sub, 'full');
       }
     }
@@ -209,7 +242,8 @@ export class RoomEngine {
     if (m.streaming && !this.streamAllowed(m)) this.stopStream(m);
 
     if (m.status === 'pending') {
-      if (!existing) this.toPerm('approve', { t: 'pending', user: pendingUser(m) });
+      if (!existing)
+        this.toPerm('approve', { t: 'pending', user: pendingUser(m) });
       this.send(m.id, this.welcome(m));
       return this.flush();
     }
@@ -219,7 +253,11 @@ export class RoomEngine {
     this.broadcast({ t: 'presence', peer: this.participant(m) }, m.id);
     if (!m.announced) {
       m.announced = true;
-      if (m.role !== 'owner') this.fx.push({ k: 'event', event: { type: 'joined', sessionId: s.sid, profileId: m.id } });
+      if (m.role !== 'owner')
+        this.fx.push({
+          k: 'event',
+          event: { type: 'joined', sessionId: s.sid, profileId: m.id },
+        });
     }
     return this.flush();
   }
@@ -245,7 +283,9 @@ export class RoomEngine {
       chat: admitted ? s.chat : [],
       pending:
         admitted && perms?.approve
-          ? Object.values(s.members).filter((p) => p.status === 'pending').map(pendingUser)
+          ? Object.values(s.members)
+              .filter((p) => p.status === 'pending')
+              .map(pendingUser)
           : [],
       requests: admitted && perms?.grantStream ? Object.values(s.requests) : [],
       chatEnabled: Boolean(s.cfg?.chat),
@@ -261,7 +301,8 @@ export class RoomEngine {
   /** Removes a member for good (kick, ban, sanction, denial). */
   private remove(m: Member, reason: RemovalReason) {
     this.send(m.id, { t: 'removed', reason });
-    if (m.connected) this.fx.push({ k: 'close', to: m.id, code: CLOSE.removed, reason });
+    if (m.connected)
+      this.fx.push({ k: 'close', to: m.id, code: CLOSE.removed, reason });
     this.forget(m);
   }
 
@@ -274,7 +315,8 @@ export class RoomEngine {
       delete s.requests[m.id];
       this.toPerm('grantStream', { t: 'stream_request_removed', id: m.id });
     }
-    if (m.status === 'pending') this.toPerm('approve', { t: 'pending_removed', id: m.id });
+    if (m.status === 'pending')
+      this.toPerm('approve', { t: 'pending_removed', id: m.id });
     else this.broadcast({ t: 'left', id: m.id });
   }
 
@@ -306,7 +348,11 @@ export class RoomEngine {
       this.fx.push({ k: 'send', to: m.id, msg: { t: 'session_end', reason } });
       this.fx.push({ k: 'close', to: m.id, code: CLOSE.ended, reason });
     }
-    if (notify) this.fx.push({ k: 'event', event: { type: 'ended', sessionId: s.sid, reason } });
+    if (notify)
+      this.fx.push({
+        k: 'event',
+        event: { type: 'ended', sessionId: s.sid, reason },
+      });
     this.state = { ...initialState(s.sid), ended: reason };
     return this.flush();
   }
@@ -314,11 +360,17 @@ export class RoomEngine {
   alarm(now: number): Effect[] {
     const s = this.state;
     if (s.ended) return this.flush();
-    if (s.cfg && s.cfg.endsAt * 1000 <= now) return this.end('max_duration', true);
+    if (s.cfg && s.cfg.endsAt * 1000 <= now)
+      return this.end('max_duration', true);
 
     for (const m of Object.values(s.members)) {
       if (m.connected && now - m.lastSeen >= SOCKET_DEAD_MS) {
-        this.fx.push({ k: 'close', to: m.id, code: CLOSE.invalid, reason: 'invalid' });
+        this.fx.push({
+          k: 'close',
+          to: m.id,
+          code: CLOSE.invalid,
+          reason: 'invalid',
+        });
         m.connected = false;
         m.goneAt = now;
         if (m.status === 'pending') {
@@ -333,10 +385,14 @@ export class RoomEngine {
       }
       if (m.goneAt === null) continue;
       if (m.id === s.ownerId) {
-        if (now - m.goneAt >= (s.cfg?.ownerGraceSeconds ?? 60) * 1000) return this.end('owner_timeout', true);
+        if (now - m.goneAt >= (s.cfg?.ownerGraceSeconds ?? 60) * 1000)
+          return this.end('owner_timeout', true);
       } else if (now - m.goneAt >= RECONNECT_GRACE_MS) {
         this.forget(m);
-        this.fx.push({ k: 'event', event: { type: 'left', sessionId: s.sid, profileId: m.id } });
+        this.fx.push({
+          k: 'event',
+          event: { type: 'left', sessionId: s.sid, profileId: m.id },
+        });
       }
     }
     return this.flush();
@@ -351,7 +407,10 @@ export class RoomEngine {
       if (m.connected) times.push(m.lastSeen + SOCKET_DEAD_MS);
       if (m.status === 'pending') times.push(m.joinedAt + PENDING_TTL_MS);
       if (m.goneAt !== null) {
-        const grace = m.id === s.ownerId ? (s.cfg?.ownerGraceSeconds ?? 60) * 1000 : RECONNECT_GRACE_MS;
+        const grace =
+          m.id === s.ownerId
+            ? (s.cfg?.ownerGraceSeconds ?? 60) * 1000
+            : RECONNECT_GRACE_MS;
         times.push(m.goneAt + grace);
       }
     }
@@ -370,7 +429,12 @@ export class RoomEngine {
         if (m.status === 'pending') this.remove(m, 'denied');
         break;
       case 'approve':
-        if (m.status === 'pending') this.send(m.id, { t: 'approved' });
+        if (m.status === 'pending') {
+          // Drop them from the lobby queue now. They stay pending until the refreshed token
+          // rejoins, which is what actually exposes peers, chat and ICE.
+          this.toPerm('approve', { t: 'pending_removed', id: m.id });
+          this.send(m.id, { t: 'approved' });
+        }
         break;
       case 'refresh':
         this.send(m.id, { t: 'refresh_token' });
@@ -420,7 +484,8 @@ export class RoomEngine {
       this.error(sub, 'pending');
       return this.flush();
     }
-    const target = typeof msg.to === 'string' ? this.state.members[msg.to] : undefined;
+    const target =
+      typeof msg.to === 'string' ? this.state.members[msg.to] : undefined;
 
     switch (msg.t) {
       case 'chat':
@@ -449,7 +514,11 @@ export class RoomEngine {
         this.streamKill(m, target);
         break;
       case 'subscribe':
-        this.subscribe(m, target, QUALITIES.find((q) => q === msg.quality) ?? 'low');
+        this.subscribe(
+          m,
+          target,
+          QUALITIES.find((q) => q === msg.quality) ?? 'low',
+        );
         break;
       case 'unsubscribe':
         if (target && this.state.subs[target.id]?.[m.id]) {
@@ -474,15 +543,24 @@ export class RoomEngine {
   }
 
   private chat(m: Member, text: unknown, now: number) {
-    if (!this.state.cfg?.chat || !m.chat) return this.error(m.id, 'chat_forbidden');
+    if (!this.state.cfg?.chat || !m.chat)
+      return this.error(m.id, 'chat_forbidden');
     m.chatHits = m.chatHits.filter((t) => now - t < CHAT_WINDOW_MS);
-    if (m.chatHits.length >= CHAT_MAX_PER_WINDOW) return this.error(m.id, 'chat_rate_limited');
+    if (m.chatHits.length >= CHAT_MAX_PER_WINDOW)
+      return this.error(m.id, 'chat_rate_limited');
     const clean = sanitizeChat(text);
     if (!clean) return this.error(m.id, 'chat_invalid');
     m.chatHits.push(now);
-    const msg: ChatMessage = { id: this.newId(), from: m.id, nick: m.nick, text: clean, at: now };
+    const msg: ChatMessage = {
+      id: this.newId(),
+      from: m.id,
+      nick: m.nick,
+      text: clean,
+      at: now,
+    };
     this.state.chat.push(msg);
-    if (this.state.chat.length > CHAT_HISTORY) this.state.chat.splice(0, this.state.chat.length - CHAT_HISTORY);
+    if (this.state.chat.length > CHAT_HISTORY)
+      this.state.chat.splice(0, this.state.chat.length - CHAT_HISTORY);
     this.broadcast({ t: 'chat', msg });
   }
 
@@ -490,7 +568,8 @@ export class RoomEngine {
     const index = this.state.chat.findIndex((c) => c.id === id);
     if (index < 0) return;
     const msg = this.state.chat[index]!;
-    if (msg.from !== m.id && !this.perms(m)?.deleteMessages) return this.error(m.id, 'forbidden');
+    if (msg.from !== m.id && !this.perms(m)?.deleteMessages)
+      return this.error(m.id, 'forbidden');
     this.state.chat.splice(index, 1);
     this.broadcast({ t: 'chat_deleted', id: msg.id });
   }
@@ -503,9 +582,11 @@ export class RoomEngine {
       return;
     }
     if (!this.streamAllowed(m)) return this.error(m.id, 'stream_forbidden');
-    if (m.role !== 'owner' && !this.ownerLive()) return this.error(m.id, 'owner_not_live');
+    if (m.role !== 'owner' && !this.ownerLive())
+      return this.error(m.id, 'owner_not_live');
     const live = this.admitted().filter((p) => p.streaming).length;
-    if (live >= (this.state.cfg?.maxStreamers ?? 10)) return this.error(m.id, 'stream_full');
+    if (live >= (this.state.cfg?.maxStreamers ?? 10))
+      return this.error(m.id, 'stream_full');
     m.streaming = true;
     if (this.state.requests[m.id]) {
       delete this.state.requests[m.id];
@@ -522,45 +603,79 @@ export class RoomEngine {
     this.toPerm('grantStream', { t: 'stream_request', user });
   }
 
-  private canTarget(actor: Member, target: Member | undefined): target is Member {
-    if (!target || target.id === actor.id || target.role === 'owner') return false;
+  private canTarget(
+    actor: Member,
+    target: Member | undefined,
+  ): target is Member {
+    if (!target || target.id === actor.id || target.role === 'owner')
+      return false;
     return !(actor.role === 'moderator' && target.role === 'moderator');
   }
 
-  private streamGrant(actor: Member, target: Member | undefined, grant: boolean) {
-    if (!this.perms(actor)?.grantStream) return this.error(actor.id, 'forbidden');
-    if (!this.canTarget(actor, target) || target.status !== 'admitted') return this.error(actor.id, 'invalid_target');
-    if (grant && target.streamBlocked) return this.error(actor.id, 'stream_forbidden');
+  private streamGrant(
+    actor: Member,
+    target: Member | undefined,
+    grant: boolean,
+  ) {
+    if (!this.perms(actor)?.grantStream)
+      return this.error(actor.id, 'forbidden');
+    if (!this.canTarget(actor, target) || target.status !== 'admitted')
+      return this.error(actor.id, 'invalid_target');
+    if (grant && target.streamBlocked)
+      return this.error(actor.id, 'stream_forbidden');
     target.granted = grant;
     if (this.state.requests[target.id]) {
       delete this.state.requests[target.id];
-      this.toPerm('grantStream', { t: 'stream_request_removed', id: target.id });
+      this.toPerm('grantStream', {
+        t: 'stream_request_removed',
+        id: target.id,
+      });
     }
     this.send(target.id, { t: grant ? 'stream_granted' : 'stream_revoked' });
-    if (!grant && target.streaming && !this.streamAllowed(target)) this.stopStream(target);
+    if (!grant && target.streaming && !this.streamAllowed(target))
+      this.stopStream(target);
     else this.broadcast({ t: 'presence', peer: this.participant(target) });
   }
 
   private streamKill(actor: Member, target: Member | undefined) {
-    if (!this.perms(actor)?.stopStreams) return this.error(actor.id, 'forbidden');
-    if (!this.canTarget(actor, target) || !target.streaming) return this.error(actor.id, 'invalid_target');
+    if (!this.perms(actor)?.stopStreams)
+      return this.error(actor.id, 'forbidden');
+    if (!this.canTarget(actor, target) || !target.streaming)
+      return this.error(actor.id, 'invalid_target');
     target.granted = false;
     this.stopStream(target);
     this.send(target.id, { t: 'stream_revoked' });
-    this.fx.push({ k: 'event', event: { type: 'stream_killed', sessionId: this.state.sid, profileId: target.id, by: actor.id } });
+    this.fx.push({
+      k: 'event',
+      event: {
+        type: 'stream_killed',
+        sessionId: this.state.sid,
+        profileId: target.id,
+        by: actor.id,
+      },
+    });
   }
 
   private subscribe(m: Member, target: Member | undefined, quality: Quality) {
-    if (!target || target.id === m.id || !target.streaming) return this.error(m.id, 'invalid_target');
+    if (!target || target.id === m.id || !target.streaming)
+      return this.error(m.id, 'invalid_target');
     const viewers = (this.state.subs[target.id] ??= {});
     viewers[m.id] = quality;
     this.send(target.id, { t: 'subscribe', from: m.id, quality });
   }
 
   /** SDP/ICE only flows between a streamer and one of its subscribers, never to pending users. */
-  private relaySignal(m: Member, target: Member | undefined, data: unknown, size: number) {
-    if (!target || target.status !== 'admitted' || size > MAX_SIGNAL_BYTES) return this.error(m.id, 'invalid_target');
-    const linked = Boolean(this.state.subs[target.id]?.[m.id] || this.state.subs[m.id]?.[target.id]);
+  private relaySignal(
+    m: Member,
+    target: Member | undefined,
+    data: unknown,
+    size: number,
+  ) {
+    if (!target || target.status !== 'admitted' || size > MAX_SIGNAL_BYTES)
+      return this.error(m.id, 'invalid_target');
+    const linked = Boolean(
+      this.state.subs[target.id]?.[m.id] || this.state.subs[m.id]?.[target.id],
+    );
     if (!linked) return this.error(m.id, 'not_subscribed');
     if (!isSignalData(data)) return this.error(m.id, 'invalid');
     this.send(target.id, { t: 'signal', from: m.id, data });
@@ -568,9 +683,18 @@ export class RoomEngine {
 
   private kick(actor: Member, target: Member | undefined) {
     if (!this.perms(actor)?.kick) return this.error(actor.id, 'forbidden');
-    if (!this.canTarget(actor, target)) return this.error(actor.id, 'invalid_target');
+    if (!this.canTarget(actor, target))
+      return this.error(actor.id, 'invalid_target');
     this.remove(target, 'kick');
-    this.fx.push({ k: 'event', event: { type: 'kicked', sessionId: this.state.sid, profileId: target.id, by: actor.id } });
+    this.fx.push({
+      k: 'event',
+      event: {
+        type: 'kicked',
+        sessionId: this.state.sid,
+        profileId: target.id,
+        by: actor.id,
+      },
+    });
   }
 }
 
@@ -580,12 +704,17 @@ function isSignalData(v: unknown): v is SignalData {
   if (typeof d.pc !== 'string' || d.pc.length > 100) return false;
   if (d.description !== undefined) {
     const desc = d.description as Record<string, unknown> | null;
-    if (!desc || !['offer', 'answer', 'pranswer', 'rollback'].includes(String(desc.type))) return false;
+    if (
+      !desc ||
+      !['offer', 'answer', 'pranswer', 'rollback'].includes(String(desc.type))
+    )
+      return false;
     if (desc.sdp !== undefined && typeof desc.sdp !== 'string') return false;
   }
   if (d.candidate !== undefined && d.candidate !== null) {
     const c = d.candidate as Record<string, unknown>;
-    if (typeof c.candidate !== 'string' || c.candidate.length > 1024) return false;
+    if (typeof c.candidate !== 'string' || c.candidate.length > 1024)
+      return false;
   }
   return d.description !== undefined || d.candidate !== undefined;
 }

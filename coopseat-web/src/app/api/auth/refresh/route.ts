@@ -3,7 +3,13 @@ import { localeFromRequest } from '@/i18n/server';
 import { auth } from '@/server/auth-errors';
 import { gotrue } from '@/server/gotrue';
 import { ApiError, errorResponse, route } from '@/server/http';
-import { REFRESH_COOKIE, assertSameOrigin, clearSessionCookies, isDesktop, sessionResponse } from '@/server/session';
+import {
+  REFRESH_COOKIE,
+  assertSameOrigin,
+  clearSessionCookies,
+  isDesktop,
+  sessionResponse,
+} from '@/server/session';
 
 const bodySchema = z.object({ refreshToken: z.string().min(1).max(512) });
 
@@ -11,7 +17,9 @@ export const POST = route(async (req) => {
   assertSameOrigin(req);
   let refreshToken: string | undefined;
   if (isDesktop(req)) {
-    refreshToken = bodySchema.parse(await req.json().catch(() => ({}))).refreshToken;
+    refreshToken = bodySchema.parse(
+      await req.json().catch(() => ({})),
+    ).refreshToken;
   } else {
     refreshToken = req.cookies.get(REFRESH_COOKIE)?.value;
   }

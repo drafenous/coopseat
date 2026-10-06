@@ -8,7 +8,11 @@ const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 export const googleRedirectUri = () => `${env.appUrl}/api/auth/callback`;
 
 /** `nonceHash` is sha256(nonce) in hex: GoTrue hashes the raw nonce and compares it with the id_token claim. */
-export function googleAuthorizeUrl(opts: { state: string; nonceHash: string; codeChallenge: string }) {
+export function googleAuthorizeUrl(opts: {
+  state: string;
+  nonceHash: string;
+  codeChallenge: string;
+}) {
   const url = new URL(AUTHORIZE_URL);
   url.search = new URLSearchParams({
     client_id: env.googleClientId,
@@ -38,7 +42,14 @@ export async function googleExchangeCode(code: string, codeVerifier: string) {
     }),
     cache: 'no-store',
   });
-  const data = (await res.json().catch(() => ({}))) as { id_token?: string; access_token?: string; error?: string };
-  if (!res.ok || !data.id_token) throw new Error(`Google token exchange failed: ${data.error ?? res.status}`);
+  const data = (await res.json().catch(() => ({}))) as {
+    id_token?: string;
+    access_token?: string;
+    error?: string;
+  };
+  if (!res.ok || !data.id_token)
+    throw new Error(
+      `Google token exchange failed: ${data.error ?? res.status}`,
+    );
   return { idToken: data.id_token, accessToken: data.access_token };
 }

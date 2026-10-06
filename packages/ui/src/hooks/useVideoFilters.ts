@@ -1,19 +1,28 @@
-import {useEffect,useState,type RefObject} from 'react';
-import type {EffectIndex,SmoothingLevel} from '../types';
+import { useEffect, useState, type RefObject } from 'react';
+import type { EffectIndex, SmoothingLevel } from '../types';
 
-type Options={videoRef:RefObject<HTMLVideoElement|null>;canvasRef:RefObject<HTMLCanvasElement|null>;smoothing:SmoothingLevel;effect:EffectIndex;enabled:boolean};
-type FrameVideo=HTMLVideoElement&{requestVideoFrameCallback?(cb:()=>void):number;cancelVideoFrameCallback?(id:number):void};
+type Options = {
+  videoRef: RefObject<HTMLVideoElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  smoothing: SmoothingLevel;
+  effect: EffectIndex;
+  enabled: boolean;
+};
+type FrameVideo = HTMLVideoElement & {
+  requestVideoFrameCallback?(cb: () => void): number;
+  cancelVideoFrameCallback?(id: number): void;
+};
 
-const vertex=`#version 300 es
+const vertex = `#version 300 es
 out vec2 uv;
 void main(){uv=vec2((gl_VertexID<<1)&2,gl_VertexID&2);gl_Position=vec4(uv*vec2(2,-2)+vec2(-1,1),0,1);}`;
-const header=`#version 300 es
+const header = `#version 300 es
 precision highp float;
 in vec2 uv;out vec4 color;uniform sampler2D src;uniform vec2 texel;uniform vec2 outSize;uniform float sharpness;uniform float sharpen;uniform float colorMode;uniform float curve;
 vec3 at(vec2 p){return texture(src,p).rgb;}
 float luma(vec3 c){return dot(c,vec3(.299,.587,.114));}
 `;
-const fxaa=`${header}void main(){
+const fxaa = `${header}void main(){
  vec3 nw=at(uv-texel),ne=at(uv+vec2(texel.x,-texel.y)),sw=at(uv+vec2(-texel.x,texel.y)),se=at(uv+texel),m=at(uv);
  float lNW=luma(nw),lNE=luma(ne),lSW=luma(sw),lSE=luma(se),lM=luma(m);
  float lMin=min(lM,min(min(lNW,lNE),min(lSW,lSE))),lMax=max(lM,max(max(lNW,lNE),max(lSW,lSE)));
@@ -26,7 +35,7 @@ const fxaa=`${header}void main(){
  float lB=luma(b);
  color=vec4(lB<lMin||lB>lMax?a:b,1);
 }`;
-const finish=`${header}
+const finish = `${header}
 vec3 cas(vec2 p){
  vec3 n=at(p-vec2(0,texel.y)),w=at(p-vec2(texel.x,0)),c=at(p),e=at(p+vec2(texel.x,0)),s=at(p+vec2(0,texel.y));
  vec3 mn=min(c,min(min(n,s),min(w,e))),mx=max(c,max(max(n,s),max(w,e)));
@@ -47,7 +56,7 @@ void main(){
  else if(colorMode>.5){c=clamp(mix(vec3(luma(c)),c,1.35),0.,1.);c=clamp((c-.5)*1.08+.5,0.,1.);}
  color=vec4(c,1);
 }`;
-const crt=`${header}void main(){
+const crt = `${header}void main(){
  vec2 p=uv*2.-1.;p*=1.+vec2(p.y*p.y*.04,p.x*p.x*.05)*curve;vec2 q=p*.5+.5;
  if(any(lessThan(q,vec2(0)))||any(greaterThan(q,vec2(1)))){color=vec4(0,0,0,1);return;}
  vec3 c=at(q);float l=luma(c);
@@ -57,7 +66,7 @@ const crt=`${header}void main(){
  float vignette=pow(clamp(16.*q.x*q.y*(1.-q.x)*(1.-q.y),0.,1.),.12);
  color=vec4(clamp(c*scan*mask*vignette*1.2,0.,1.),1);
 }`;
-const lcd=`${header}void main(){
+const lcd = `${header}void main(){
  float cell=max(3.,floor(outSize.y/240.));vec2 px=uv*outSize/cell;vec2 f=fract(px);
  vec3 c=at((floor(px)+.5)*cell/outSize);
  c=mix(vec3(luma(c)),c,.85)*.9+.05;
@@ -65,19 +74,55 @@ const lcd=`${header}void main(){
  color=vec4(clamp(c*grid,0.,1.),1);
 }`;
 
-type Program={p:WebGLProgram;u:Record<'texel'|'outSize'|'sharpness'|'sharpen'|'colorMode'|'curve',WebGLUniformLocation|null>};
-function program(gl:WebGL2RenderingContext,fragment:string):Program{
- const p=gl.createProgram()!;
- for(const [type,source] of [[gl.VERTEX_SHADER,vertex],[gl.FRAGMENT_SHADER,fragment]] as const){const s=gl.createShader(type)!;gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s)||'shader');gl.attachShader(p,s);gl.deleteShader(s);}
- gl.linkProgram(p);if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(p)||'program');
- const u=(name:string)=>gl.getUniformLocation(p,name);
- return {p,u:{texel:u('texel'),outSize:u('outSize'),sharpness:u('sharpness'),sharpen:u('sharpen'),colorMode:u('colorMode'),curve:u('curve')}};
+type Program = {
+  p: WebGLProgram;
+  u: Record<
+    'texel' | 'outSize' | 'sharpness' | 'sharpen' | 'colorMode' | 'curve',
+    WebGLUniformLocation | null
+  >;
+};
+function program(gl: WebGL2RenderingContext, fragment: string): Program {
+  const p = gl.createProgram()!;
+  for (const [type, source] of [
+    [gl.VERTEX_SHADER, vertex],
+    [gl.FRAGMENT_SHADER, fragment],
+  ] as const) {
+    const s = gl.createShader(type)!;
+    gl.shaderSource(s, source);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS))
+      throw Error(gl.getShaderInfoLog(s) || 'shader');
+    gl.attachShader(p, s);
+    gl.deleteShader(s);
+  }
+  gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS))
+    throw Error(gl.getProgramInfoLog(p) || 'program');
+  const u = (name: string) => gl.getUniformLocation(p, name);
+  return {
+    p,
+    u: {
+      texel: u('texel'),
+      outSize: u('outSize'),
+      sharpness: u('sharpness'),
+      sharpen: u('sharpen'),
+      colorMode: u('colorMode'),
+      curve: u('curve'),
+    },
+  };
 }
 
-function texture(gl:WebGL2RenderingContext){
- const t=gl.createTexture()!;gl.bindTexture(gl.TEXTURE_2D,t);
- for(const [k,v] of [[gl.TEXTURE_MIN_FILTER,gl.LINEAR],[gl.TEXTURE_MAG_FILTER,gl.LINEAR],[gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE],[gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE]])gl.texParameteri(gl.TEXTURE_2D,k,v);
- return t;
+function texture(gl: WebGL2RenderingContext) {
+  const t = gl.createTexture()!;
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  for (const [k, v] of [
+    [gl.TEXTURE_MIN_FILTER, gl.LINEAR],
+    [gl.TEXTURE_MAG_FILTER, gl.LINEAR],
+    [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE],
+    [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE],
+  ])
+    gl.texParameteri(gl.TEXTURE_2D, k, v);
+  return t;
 }
 
 /**
@@ -86,52 +131,149 @@ function texture(gl:WebGL2RenderingContext){
  * The `<video>` keeps playing underneath so Picture in Picture and frame callbacks still work.
  * Returns whether the canvas is showing the filtered picture; on any GPU failure it stays hidden.
  */
-export function useVideoFilters({videoRef,canvasRef,smoothing,effect,enabled}:Options){
- const [active,setActive]=useState(false);
- useEffect(()=>{
-  const video=videoRef.current as FrameVideo|null,canvas=canvasRef.current;
-  if(!enabled||(!smoothing&&!effect)||!video||!canvas)return;
-  const gl=canvas.getContext('webgl2',{alpha:false,antialias:false,depth:false,desynchronized:true,powerPreference:'high-performance'});
-  if(!gl)return;
-  const crtEffect=effect===1||effect===2,grid=crtEffect||effect===3,antiAlias=smoothing>0&&!grid;
-  let stopped=false,shown=false,frame=0,width=0,height=0;
-  let programs:{fxaa:Program;final:Program};
-  try{programs={fxaa:program(gl,fxaa),final:program(gl,crtEffect?crt:effect===3?lcd:finish)};}catch{return;}
-  const source=texture(gl),smoothed=texture(gl),fbo=gl.createFramebuffer();
-  // Each pass flips rows (uv.y=0 is the top of the viewport, but the bottom of a framebuffer texture), so the upload flips
-  // once more when there are two passes and not at all when the final pass reads the video directly.
-  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,antiAlias);
-
-  const draw=()=>{
-   if(stopped)return;
-   const vw=video.videoWidth,vh=video.videoHeight;
-   if(vw&&vh&&video.readyState>=2){
-    const scale=Math.min(video.clientWidth/vw,video.clientHeight/vh)*devicePixelRatio;
-    const cw=Math.max(1,Math.round(vw*scale)),ch=Math.max(1,Math.round(vh*scale));
-    if(canvas.width!==cw||canvas.height!==ch){canvas.width=cw;canvas.height=ch;}
-    gl.activeTexture(gl.TEXTURE0);gl.bindTexture(gl.TEXTURE_2D,source);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,video);
-    if(antiAlias){
-     if(vw!==width||vh!==height){width=vw;height=vh;gl.bindTexture(gl.TEXTURE_2D,smoothed);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA8,vw,vh,0,gl.RGBA,gl.UNSIGNED_BYTE,null);gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,smoothed,0);gl.bindTexture(gl.TEXTURE_2D,source);}
-     gl.bindFramebuffer(gl.FRAMEBUFFER,fbo);gl.viewport(0,0,vw,vh);gl.useProgram(programs.fxaa.p);gl.uniform2f(programs.fxaa.u.texel,1/vw,1/vh);gl.drawArrays(gl.TRIANGLES,0,3);
-     gl.bindTexture(gl.TEXTURE_2D,smoothed);
+export function useVideoFilters({
+  videoRef,
+  canvasRef,
+  smoothing,
+  effect,
+  enabled,
+}: Options) {
+  const [active, setActive] = useState(false);
+  useEffect(() => {
+    const video = videoRef.current as FrameVideo | null,
+      canvas = canvasRef.current;
+    if (!enabled || (!smoothing && !effect) || !video || !canvas) return;
+    const gl = canvas.getContext('webgl2', {
+      alpha: false,
+      antialias: false,
+      depth: false,
+      desynchronized: true,
+      powerPreference: 'high-performance',
+    });
+    if (!gl) return;
+    const crtEffect = effect === 1 || effect === 2,
+      grid = crtEffect || effect === 3,
+      antiAlias = smoothing > 0 && !grid;
+    let stopped = false,
+      shown = false,
+      frame = 0,
+      width = 0,
+      height = 0;
+    let programs: { fxaa: Program; final: Program };
+    try {
+      programs = {
+        fxaa: program(gl, fxaa),
+        final: program(gl, crtEffect ? crt : effect === 3 ? lcd : finish),
+      };
+    } catch {
+      return;
     }
-    const f=programs.final;
-    gl.bindFramebuffer(gl.FRAMEBUFFER,null);gl.viewport(0,0,cw,ch);gl.useProgram(f.p);
-    gl.uniform2f(f.u.texel,1/vw,1/vh);gl.uniform2f(f.u.outSize,cw,ch);gl.uniform1f(f.u.sharpness,.6);gl.uniform1f(f.u.sharpen,smoothing>1&&!grid?1:0);gl.uniform1f(f.u.colorMode,effect>3?effect-3:0);gl.uniform1f(f.u.curve,effect===1?1:0);
-    gl.drawArrays(gl.TRIANGLES,0,3);
-    if(!shown){shown=true;setActive(true);}
-   }
-   schedule();
-  };
-  const schedule=()=>{frame=video.requestVideoFrameCallback?video.requestVideoFrameCallback(draw):requestAnimationFrame(draw);};
-  const lost=(e:Event)=>{e.preventDefault();stopped=true;setActive(false);};
-  canvas.addEventListener('webglcontextlost',lost);
-  schedule();
-  return()=>{
-   stopped=true;setActive(false);canvas.removeEventListener('webglcontextlost',lost);
-   if(video.cancelVideoFrameCallback)video.cancelVideoFrameCallback(frame);else cancelAnimationFrame(frame);
-   gl.deleteTexture(source);gl.deleteTexture(smoothed);gl.deleteFramebuffer(fbo);gl.deleteProgram(programs.fxaa.p);gl.deleteProgram(programs.final.p);
-  };
- },[videoRef,canvasRef,smoothing,effect,enabled]);
- return active;
+    const source = texture(gl),
+      smoothed = texture(gl),
+      fbo = gl.createFramebuffer();
+    // Each pass flips rows (uv.y=0 is the top of the viewport, but the bottom of a framebuffer texture), so the upload flips
+    // once more when there are two passes and not at all when the final pass reads the video directly.
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, antiAlias);
+
+    const draw = () => {
+      if (stopped) return;
+      const vw = video.videoWidth,
+        vh = video.videoHeight;
+      if (vw && vh && video.readyState >= 2) {
+        const scale =
+          Math.min(video.clientWidth / vw, video.clientHeight / vh) *
+          devicePixelRatio;
+        const cw = Math.max(1, Math.round(vw * scale)),
+          ch = Math.max(1, Math.round(vh * scale));
+        if (canvas.width !== cw || canvas.height !== ch) {
+          canvas.width = cw;
+          canvas.height = ch;
+        }
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, source);
+        gl.texImage2D(
+          gl.TEXTURE_2D,
+          0,
+          gl.RGBA,
+          gl.RGBA,
+          gl.UNSIGNED_BYTE,
+          video,
+        );
+        if (antiAlias) {
+          if (vw !== width || vh !== height) {
+            width = vw;
+            height = vh;
+            gl.bindTexture(gl.TEXTURE_2D, smoothed);
+            gl.texImage2D(
+              gl.TEXTURE_2D,
+              0,
+              gl.RGBA8,
+              vw,
+              vh,
+              0,
+              gl.RGBA,
+              gl.UNSIGNED_BYTE,
+              null,
+            );
+            gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+            gl.framebufferTexture2D(
+              gl.FRAMEBUFFER,
+              gl.COLOR_ATTACHMENT0,
+              gl.TEXTURE_2D,
+              smoothed,
+              0,
+            );
+            gl.bindTexture(gl.TEXTURE_2D, source);
+          }
+          gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+          gl.viewport(0, 0, vw, vh);
+          gl.useProgram(programs.fxaa.p);
+          gl.uniform2f(programs.fxaa.u.texel, 1 / vw, 1 / vh);
+          gl.drawArrays(gl.TRIANGLES, 0, 3);
+          gl.bindTexture(gl.TEXTURE_2D, smoothed);
+        }
+        const f = programs.final;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.viewport(0, 0, cw, ch);
+        gl.useProgram(f.p);
+        gl.uniform2f(f.u.texel, 1 / vw, 1 / vh);
+        gl.uniform2f(f.u.outSize, cw, ch);
+        gl.uniform1f(f.u.sharpness, 0.6);
+        gl.uniform1f(f.u.sharpen, smoothing > 1 && !grid ? 1 : 0);
+        gl.uniform1f(f.u.colorMode, effect > 3 ? effect - 3 : 0);
+        gl.uniform1f(f.u.curve, effect === 1 ? 1 : 0);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        if (!shown) {
+          shown = true;
+          setActive(true);
+        }
+      }
+      schedule();
+    };
+    const schedule = () => {
+      frame = video.requestVideoFrameCallback
+        ? video.requestVideoFrameCallback(draw)
+        : requestAnimationFrame(draw);
+    };
+    const lost = (e: Event) => {
+      e.preventDefault();
+      stopped = true;
+      setActive(false);
+    };
+    canvas.addEventListener('webglcontextlost', lost);
+    schedule();
+    return () => {
+      stopped = true;
+      setActive(false);
+      canvas.removeEventListener('webglcontextlost', lost);
+      if (video.cancelVideoFrameCallback) video.cancelVideoFrameCallback(frame);
+      else cancelAnimationFrame(frame);
+      gl.deleteTexture(source);
+      gl.deleteTexture(smoothed);
+      gl.deleteFramebuffer(fbo);
+      gl.deleteProgram(programs.fxaa.p);
+      gl.deleteProgram(programs.final.p);
+    };
+  }, [videoRef, canvasRef, smoothing, effect, enabled]);
+  return active;
 }

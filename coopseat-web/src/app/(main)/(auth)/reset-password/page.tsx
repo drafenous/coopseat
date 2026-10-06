@@ -6,7 +6,10 @@ import { getPageSession } from '@/server/page-session';
 import { ResetForm } from './ResetForm';
 
 export async function generateMetadata(): Promise<Metadata> {
-  return { title: (await getDictionary()).meta.resetPassword, robots: { index: false } };
+  return {
+    title: (await getDictionary()).meta.resetPassword,
+    robots: { index: false },
+  };
 }
 
 export default async function ResetPage() {
@@ -17,7 +20,11 @@ export default async function ResetPage() {
         <ResetForm />
       ) : (
         <Alert>
-          {t.reset.expired((label) => <Link href="/forgot-password" className="underline">{label}</Link>)}
+          {t.reset.expired((label) => (
+            <Link href="/forgot-password" className="underline">
+              {label}
+            </Link>
+          ))}
         </Alert>
       )}
     </Card>

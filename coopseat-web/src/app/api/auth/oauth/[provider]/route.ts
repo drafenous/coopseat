@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { oauthProviderSchema, pkceChallengeSchema } from '@/lib/validation/account';
+import {
+  oauthProviderSchema,
+  pkceChallengeSchema,
+} from '@/lib/validation/account';
 import { env } from '@/server/env';
 import { clientIp, errorResponse, safeNextPath } from '@/server/http';
 import { startGoogleOAuth } from '@/server/oauth-state';
@@ -18,7 +21,9 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 
     const params = req.nextUrl.searchParams;
     const desktop = params.get('client') === 'desktop';
-    const desktopChallenge = desktop ? pkceChallengeSchema.parse(params.get('challenge')) : undefined;
+    const desktopChallenge = desktop
+      ? pkceChallengeSchema.parse(params.get('challenge'))
+      : undefined;
 
     return startGoogleOAuth({
       mode: desktop ? 'desktop' : 'web',
@@ -27,6 +32,12 @@ export async function GET(req: NextRequest, ctx: Ctx) {
     });
   } catch (err) {
     const res = errorResponse(err);
-    return NextResponse.redirect(new URL(`/auth/error?status=${res.status}&code=oauth_start_failed`, env.appUrl), 303);
+    return NextResponse.redirect(
+      new URL(
+        `/auth/error?status=${res.status}&code=oauth_start_failed`,
+        env.appUrl,
+      ),
+      303,
+    );
   }
 }

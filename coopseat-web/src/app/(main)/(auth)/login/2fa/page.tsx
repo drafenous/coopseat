@@ -8,9 +8,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getDictionary()).meta.mfa, robots: { index: false } };
 }
 
-export default async function MfaPage({ searchParams }: PageProps<'/login/2fa'>) {
+export default async function MfaPage({
+  searchParams,
+}: PageProps<'/login/2fa'>) {
   const [params, t] = await Promise.all([searchParams, getDictionary()]);
-  const next = safeNextPath(typeof params['next'] === 'string' ? params['next'] : null);
+  const next = safeNextPath(
+    typeof params['next'] === 'string' ? params['next'] : null,
+  );
   return (
     <Card title={t.mfa.title} subtitle={t.mfa.subtitle}>
       <MfaForm next={next} />

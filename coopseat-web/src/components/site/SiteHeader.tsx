@@ -6,7 +6,10 @@ import { DOWNLOAD_URL } from '@/lib/links';
 import { getPageSession } from '@/server/page-session';
 
 export async function SiteHeader() {
-  const [{ home: h }, session] = await Promise.all([getDictionary(), getPageSession()]);
+  const [{ home: h }, session] = await Promise.all([
+    getDictionary(),
+    getPageSession(),
+  ]);
   const nav = [
     { href: '/#features', label: h.nav.features },
     { href: '/#how', label: h.nav.how },
@@ -20,7 +23,11 @@ export async function SiteHeader() {
         <Brand href="/" version={null} />
         <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
           {nav.map((item) => (
-            <a key={item.href} href={item.href} className="transition hover:text-strong">
+            <a
+              key={item.href}
+              href={item.href}
+              className="transition hover:text-strong"
+            >
               {item.label}
             </a>
           ))}

@@ -6,14 +6,21 @@ import { signRoomToken, type RoomTokenInput } from '@/server/party/tokens';
 import { createFakeDb, type FakeDb } from './fake-db';
 
 const fake = vi.hoisted(() => ({ current: null as unknown as FakeDb }));
-vi.mock('@/prisma/db', () => ({ adminDb: async () => fake.current.db, getDb: async () => fake.current.db }));
+vi.mock('@/prisma/db', () => ({
+  adminDb: async () => fake.current.db,
+  getDb: async () => fake.current.db,
+}));
 vi.mock('@/server/jwt', () => ({
-  verifyAccessToken: async (token: string) => (token === 'valid' ? { sub: 'user-1', aal: 'aal1' } : null),
+  verifyAccessToken: async (token: string) =>
+    token === 'valid' ? { sub: 'user-1', aal: 'aal1' } : null,
 }));
 
 const ctx = undefined as never;
 const room = { token: '' };
-const roomClaims = (sid: string, overrides: Partial<RoomTokenInput> = {}): RoomTokenInput => ({
+const roomClaims = (
+  sid: string,
+  overrides: Partial<RoomTokenInput> = {},
+): RoomTokenInput => ({
   sid,
   rid: 'owner-1',
   sub: 'user-1',
@@ -24,24 +31,46 @@ const roomClaims = (sid: string, overrides: Partial<RoomTokenInput> = {}): RoomT
   streamBlocked: false,
   chat: true,
   mod: OWNER_PERMS,
-  cfg: { cap: 10, maxStreamers: 10, ownerGraceSeconds: 120, endsAt: 0, chat: true },
+  cfg: {
+    cap: 10,
+    maxStreamers: 10,
+    ownerGraceSeconds: 120,
+    endsAt: 0,
+    chat: true,
+  },
   ...overrides,
 });
-const request = (token?: string, headers: Record<string, string> = {}, body: unknown = { roomToken: room.token }) =>
+const request = (
+  token?: string,
+  headers: Record<string, string> = {},
+  body: unknown = { roomToken: room.token },
+) =>
   new NextRequest('https://coopseat.com/api/turn', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}), ...headers },
+    headers: {
+      'content-type': 'application/json',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
     body: JSON.stringify(body),
   });
 const iceServers = [
   { urls: ['stun:stun.cloudflare.com:3478'] },
-  { urls: ['turn:turn.cloudflare.com:3478?transport=udp'], username: 'u', credential: 'c' },
+  {
+    urls: ['turn:turn.cloudflare.com:3478?transport=udp'],
+    username: 'u',
+    credential: 'c',
+  },
 ];
 const STUN_ONLY = [{ urls: ['stun:stun.cloudflare.com:3478'] }];
 
-const policy = (values: Record<string, unknown>) => fake.current.db.orm.public.RelayPolicy.create({ id: 'global', ...values });
+const policy = (values: Record<string, unknown>) =>
+  fake.current.db.orm.public.RelayPolicy.create({ id: 'global', ...values });
 const override = (values: Record<string, unknown>) =>
-  fake.current.db.orm.public.RelayUserOverride.create({ profileId: 'user-1', ...values });
+  fake.current.db.orm.public.RelayUserOverride.create({
+    profileId: 'user-1',
+    ...values,
+  });
 const issued = (count: number, issuedAt = new Date().toISOString()) =>
   Promise.all(
     Array.from({ length: count }, () =>
@@ -60,12 +89,16 @@ describe('POST /api/turn', () => {
 
   beforeEach(async () => {
     fake.current = createFakeDb();
-    const session = await fake.current.db.orm.public.PartySession.create({ roomId: 'owner-1' });
+    const session = await fake.current.db.orm.public.PartySession.create({
+      roomId: 'owner-1',
+    });
     room.token = (await signRoomToken(roomClaims(session.id as string))).token;
     vi.stubEnv('CLOUDFLARE_TURN_KEY_ID', 'key-id');
     vi.stubEnv('CLOUDFLARE_TURN_API_TOKEN', 'api-token');
     vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    fetchSpy = vi.fn(async () => Response.json({ iceServers }, { status: 201 }));
+    fetchSpy = vi.fn(async () =>
+      Response.json({ iceServers }, { status: 201 }),
+    );
     vi.stubGlobal('fetch', fetchSpy);
   });
   afterEach(() => {
@@ -81,7 +114,9 @@ describe('POST /api/turn', () => {
     expect(body).toMatchObject({ relay: false, reason, iceServers: STUN_ONLY });
     expect(body.message).toEqual(expect.any(String));
     expect(fetchSpy).not.toHaveBeenCalled();
-    expect(fake.current.data.RelayCredential.filter((c) => c.username === 'u')).toHaveLength(0);
+    expect(
+      fake.current.data.RelayCredential.filter((c) => c.username === 'u'),
+    ).toHaveLength(0);
   };
 
   it('requires a session', async () => {
@@ -91,13 +126,25 @@ describe('POST /api/turn', () => {
   });
 
   it('requires a room token for a live session where the caller is admitted', async () => {
-    const status = async (body: unknown) => (await turn(request('valid', {}, body), ctx)).status;
+    const status = async (body: unknown) =>
+      (await turn(request('valid', {}, body), ctx)).status;
     expect(await status({})).toBe(400);
     expect(await status({ roomToken: 'x'.repeat(40) })).toBe(403);
 
     const sid = fake.current.data.PartySession[0]!.id as string;
-    expect(await status({ roomToken: (await signRoomToken(roomClaims(sid, { sub: 'someone-else' }))).token })).toBe(403);
-    expect(await status({ roomToken: (await signRoomToken(roomClaims(sid, { status: 'pending' }))).token })).toBe(403);
+    expect(
+      await status({
+        roomToken: (
+          await signRoomToken(roomClaims(sid, { sub: 'someone-else' }))
+        ).token,
+      }),
+    ).toBe(403);
+    expect(
+      await status({
+        roomToken: (await signRoomToken(roomClaims(sid, { status: 'pending' })))
+          .token,
+      }),
+    ).toBe(403);
 
     fake.current.data.PartySession[0]!.endedAt = new Date().toISOString();
     expect(await status({ roomToken: room.token })).toBe(403);
@@ -105,17 +152,34 @@ describe('POST /api/turn', () => {
   });
 
   it('returns Cloudflare ICE servers without caching and records the credential', async () => {
-    const res = await turn(request('valid', { 'x-coopseat-version': '0.2.0' }), ctx);
+    const res = await turn(
+      request('valid', { 'x-coopseat-version': '0.2.0' }),
+      ctx,
+    );
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe('no-store');
     const body = await res.json();
-    expect(body).toMatchObject({ iceServers, relay: true, maxRelayBitrateKbps: 4000 });
-    const [url, init] = fetchSpy.mock.calls[0] as unknown as [string, RequestInit];
+    expect(body).toMatchObject({
+      iceServers,
+      relay: true,
+      maxRelayBitrateKbps: 4000,
+    });
+    const [url, init] = fetchSpy.mock.calls[0] as unknown as [
+      string,
+      RequestInit,
+    ];
     expect(url).toContain('/turn/keys/key-id/credentials/generate-ice-servers');
-    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer api-token');
+    expect((init.headers as Record<string, string>).Authorization).toBe(
+      'Bearer api-token',
+    );
     expect(JSON.parse(init.body as string)).toEqual({ ttl: 14400 });
     expect(fake.current.data.RelayCredential).toEqual([
-      expect.objectContaining({ profileId: 'user-1', username: 'u', audience: 'member', appVersion: '0.2.0' }),
+      expect.objectContaining({
+        profileId: 'user-1',
+        username: 'u',
+        audience: 'member',
+        appVersion: '0.2.0',
+      }),
     ]);
   });
 
@@ -141,10 +205,25 @@ describe('POST /api/turn', () => {
   });
 
   it('blocks app versions below the minimum or on the block list', async () => {
-    await policy({ minAppVersion: '0.2.0', blockedAppVersions: '0.3.1, 0.4.0' });
-    await expectDenied(request('valid', { 'x-coopseat-version': '0.1.9' }), 'relay_app_outdated');
-    await expectDenied(request('valid', { 'x-coopseat-version': '0.3.1' }), 'relay_app_outdated');
-    expect((await (await turn(request('valid', { 'x-coopseat-version': '0.3.0' }), ctx)).json()).relay).toBe(true);
+    await policy({
+      minAppVersion: '0.2.0',
+      blockedAppVersions: '0.3.1, 0.4.0',
+    });
+    await expectDenied(
+      request('valid', { 'x-coopseat-version': '0.1.9' }),
+      'relay_app_outdated',
+    );
+    await expectDenied(
+      request('valid', { 'x-coopseat-version': '0.3.1' }),
+      'relay_app_outdated',
+    );
+    expect(
+      (
+        await (
+          await turn(request('valid', { 'x-coopseat-version': '0.3.0' }), ctx)
+        ).json()
+      ).relay,
+    ).toBe(true);
   });
 
   it('does not apply version rules to browsers', async () => {
@@ -153,10 +232,16 @@ describe('POST /api/turn', () => {
   });
 
   it('blocks a user until the block expires', async () => {
-    await override({ blocked: true, reason: 'abuse', expiresAt: new Date(Date.now() + 60_000).toISOString() });
+    await override({
+      blocked: true,
+      reason: 'abuse',
+      expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    });
     await expectDenied(request('valid'), 'relay_unavailable');
 
-    fake.current.data.RelayUserOverride[0]!.expiresAt = new Date(Date.now() - 1000).toISOString();
+    fake.current.data.RelayUserOverride[0]!.expiresAt = new Date(
+      Date.now() - 1000,
+    ).toISOString();
     expect((await (await turn(request('valid'), ctx)).json()).relay).toBe(true);
   });
 
@@ -176,7 +261,9 @@ describe('POST /api/turn', () => {
 
   it('hides upstream failures', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    fetchSpy.mockImplementation(async () => new Response('boom', { status: 500 }));
+    fetchSpy.mockImplementation(
+      async () => new Response('boom', { status: 500 }),
+    );
     const res = await turn(request('valid'), ctx);
     expect(res.status).toBe(502);
     expect((await res.json()).error.code).toBe('turn_unavailable');

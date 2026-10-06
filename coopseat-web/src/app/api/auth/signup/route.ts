@@ -6,13 +6,20 @@ import { verifyCaptcha } from '@/server/captcha';
 import { env } from '@/server/env';
 import { gotrue, type AuthTokens, type AuthUser } from '@/server/gotrue';
 import { ApiError, clientIp, readJson, route } from '@/server/http';
-import { acceptTerms, isNicknameAvailable, setNickname } from '@/server/profiles';
+import {
+  acceptTerms,
+  isNicknameAvailable,
+  setNickname,
+} from '@/server/profiles';
 import { rateLimit } from '@/server/rate-limit';
 import { assertSameOrigin } from '@/server/session';
 
 export const POST = route(async (req) => {
   assertSameOrigin(req);
-  const SENT = { status: 'confirmation_sent', message: dictionaryFor(req).messages.confirmationSent };
+  const SENT = {
+    status: 'confirmation_sent',
+    message: dictionaryFor(req).messages.confirmationSent,
+  };
   const ip = clientIp(req);
   await rateLimit('signup', ip);
   const input = await readJson(req, signupSchema);
@@ -23,12 +30,20 @@ export const POST = route(async (req) => {
   }
 
   const result = await auth(
-    gotrue.signUp(input.email, input.password, `${env.appUrl}/api/auth/confirm?flow=signup`, {
-      nickname: input.nickname,
-      terms_version: TERMS_VERSION,
-    }),
+    gotrue.signUp(
+      input.email,
+      input.password,
+      `${env.appUrl}/api/auth/confirm?flow=signup`,
+      {
+        nickname: input.nickname,
+        terms_version: TERMS_VERSION,
+      },
+    ),
   );
-  const user: AuthUser = 'access_token' in result ? (result as AuthTokens).user : (result as AuthUser);
+  const user: AuthUser =
+    'access_token' in result
+      ? (result as AuthTokens).user
+      : (result as AuthUser);
 
   // With email confirmation on, an existing email yields an obfuscated user without
   // identities. Answer the same way so the endpoint does not reveal registered emails.
@@ -40,7 +55,9 @@ export const POST = route(async (req) => {
     await setNickname(user.id, input.nickname, { enforceCooldown: false });
     await acceptTerms(user.id, TERMS_VERSION);
   } catch (err) {
-    await gotrue.admin.deleteUser(user.id).catch((e) => console.error('rollback signup failed', e));
+    await gotrue.admin
+      .deleteUser(user.id)
+      .catch((e) => console.error('rollback signup failed', e));
     throw err;
   }
 

@@ -26,26 +26,46 @@ export function PartyMock({ t }: { t: Dictionary['home']['party'] }) {
             <span className="grid size-9 place-items-center rounded-full bg-accent text-accent-ink">
               <Armchair size={18} />
             </span>
-            <span className="text-[10px] leading-tight font-semibold text-accent">{t.host}</span>
+            <span className="text-[10px] leading-tight font-semibold text-accent">
+              {t.host}
+            </span>
           </div>
           {GUESTS.map((g) => (
-            <div key={g.initials} className="flex flex-col items-center gap-1.5 rounded-xl border border-line-soft bg-surface p-2.5 text-center">
-              <span className={`grid size-9 place-items-center rounded-full text-xs font-bold ${g.className}`}>{g.initials}</span>
-              <span className="text-[10px] leading-tight text-muted">{t.guest}</span>
+            <div
+              key={g.initials}
+              className="flex flex-col items-center gap-1.5 rounded-xl border border-line-soft bg-surface p-2.5 text-center"
+            >
+              <span
+                className={`grid size-9 place-items-center rounded-full text-xs font-bold ${g.className}`}
+              >
+                {g.initials}
+              </span>
+              <span className="text-[10px] leading-tight text-muted">
+                {t.guest}
+              </span>
             </div>
           ))}
           <div className="flex flex-col items-center gap-1.5 rounded-xl border border-dashed border-line p-2.5 text-center">
             <span className="grid size-9 place-items-center rounded-full border border-dashed border-line-strong text-subtle">
               <Plus size={16} />
             </span>
-            <span className="text-[10px] leading-tight text-subtle">{t.invite}</span>
+            <span className="text-[10px] leading-tight text-subtle">
+              {t.invite}
+            </span>
           </div>
         </div>
 
         <div className="space-y-2">
           {t.chat.map((m, i) => (
-            <p key={m.name} className="w-fit max-w-[90%] rounded-xl rounded-tl-sm bg-surface px-3 py-2 text-xs text-foreground">
-              <span className={`mr-1.5 font-semibold ${CHAT_COLORS[i] ?? 'text-accent'}`}>{m.name}</span>
+            <p
+              key={m.name}
+              className="w-fit max-w-[90%] rounded-xl rounded-tl-sm bg-surface px-3 py-2 text-xs text-foreground"
+            >
+              <span
+                className={`mr-1.5 font-semibold ${CHAT_COLORS[i] ?? 'text-accent'}`}
+              >
+                {m.name}
+              </span>
               {m.text}
             </p>
           ))}

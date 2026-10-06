@@ -35,8 +35,19 @@ export function MfaForm({ next }: { next: string }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {error ? <Alert>{error}</Alert> : null}
-      <Field label={t.common.code} name="code" inputMode="numeric" autoComplete="one-time-code" pattern="\d{6}" maxLength={6} required autoFocus />
-      <Button type="submit" disabled={pending}>{pending ? t.mfa.pending : t.mfa.submit}</Button>
+      <Field
+        label={t.common.code}
+        name="code"
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        pattern="\d{6}"
+        maxLength={6}
+        required
+        autoFocus
+      />
+      <Button type="submit" disabled={pending}>
+        {pending ? t.mfa.pending : t.mfa.submit}
+      </Button>
     </form>
   );
 }

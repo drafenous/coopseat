@@ -19,7 +19,8 @@ export function getProvider(id: string): IdentityProvider | null {
 
 export function activeProvider(): IdentityProvider {
   const provider = getProvider(env.kycProvider);
-  if (!provider) throw new Error(`Provedor de KYC indisponível: ${env.kycProvider}`);
+  if (!provider)
+    throw new Error(`Provedor de KYC indisponível: ${env.kycProvider}`);
   return provider;
 }
 

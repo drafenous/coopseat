@@ -1,20 +1,31 @@
 import { env } from './env';
 import { ApiError } from './http';
 
-export type IceServer = { urls: string[]; username?: string; credential?: string };
+export type IceServer = {
+  urls: string[];
+  username?: string;
+  credential?: string;
+};
 
 export const TURN_TTL_SECONDS = 4 * 60 * 60;
 
 /** Free Cloudflare STUN, handed out when the relay is denied so direct (P2P) connections still work. */
-export const STUN_ONLY: IceServer[] = [{ urls: ['stun:stun.cloudflare.com:3478'] }];
+export const STUN_ONLY: IceServer[] = [
+  { urls: ['stun:stun.cloudflare.com:3478'] },
+];
 
 /** Short-lived Cloudflare Realtime TURN credentials, ready for `new RTCPeerConnection({ iceServers })`. */
-export async function createIceServers(ttl = TURN_TTL_SECONDS): Promise<IceServer[]> {
+export async function createIceServers(
+  ttl = TURN_TTL_SECONDS,
+): Promise<IceServer[]> {
   const res = await fetch(
     `https://rtc.live.cloudflare.com/v1/turn/keys/${env.turnKeyId}/credentials/generate-ice-servers`,
     {
       method: 'POST',
-      headers: { Authorization: `Bearer ${env.turnApiToken}`, 'Content-Type': 'application/json' },
+      headers: {
+        Authorization: `Bearer ${env.turnApiToken}`,
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({ ttl }),
       cache: 'no-store',
     },

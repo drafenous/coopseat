@@ -1,17 +1,21 @@
-import { OWNER_PERMS, type EndReason, type ModPerms } from '@coopseat/ui/party-protocol';
+import {
+  OWNER_PERMS,
+  type EndReason,
+  type ModPerms,
+} from '@coopseat/ui/party-protocol';
 import { permissionsFor } from '@/lib/gates';
 import { NICKNAME_PATTERN } from '@/lib/validation/account';
 import { adminDb } from '@/prisma/db';
-import { accountSummary } from '../account';
+import { accountPermissions } from '../account';
 import { auth as authErrors } from '../auth-errors';
 import { gotrue } from '../gotrue';
 import { ApiError } from '../http';
-import { isUniqueViolation } from '../profiles';
+import { ensureProfile, isUniqueViolation } from '../profiles';
 import { rateLimit } from '../rate-limit';
 import type { AuthContext } from '../session';
 import { verifyRoomPassword } from './password';
 import { getPartyPolicy, roomCapacity, type PartyPolicy } from './policy';
-import { activeSanctions, isBlocked } from './sanctions';
+import { activeSanctions, isBlocked, type SanctionScope } from './sanctions';
 import { signalCommand } from './signal';
 import type { RoomTokenInput } from './tokens';
 
@@ -19,12 +23,24 @@ export type Viewer = {
   profileId: string;
   nickname: string | null;
   permissions: ReturnType<typeof permissionsFor>;
+  /** Loaded with the viewer so admission does not read sanctions a second time. */
+  sanctions?: Set<SanctionScope>;
 };
 
+/** Auth user, profile and sanctions in one round, then the watch gate. Throws if the account is suspended. */
 export async function loadViewer(session: AuthContext): Promise<Viewer> {
-  const user = await authErrors(gotrue.getUser(session.token));
-  const account = await accountSummary(user, session.claims);
-  return { profileId: account.id, nickname: account.nickname, permissions: account.permissions };
+  const [user, profile, sanctions] = await Promise.all([
+    authErrors(gotrue.getUser(session.token)),
+    ensureProfile(session.claims.sub),
+    activeSanctions(session.claims.sub),
+  ]);
+  if (sanctions.has('platform')) throw new ApiError(403, 'account_suspended');
+  return {
+    profileId: session.claims.sub,
+    nickname: profile.nickname,
+    sanctions,
+    permissions: accountPermissions(user, session.claims, profile),
+  };
 }
 
 export type RoomOwner = { id: string; nickname: string };
@@ -33,8 +49,12 @@ export type RoomOwner = { id: string; nickname: string };
 export async function findOwner(nickname: string): Promise<RoomOwner | null> {
   if (!NICKNAME_PATTERN.test(nickname)) return null;
   const db = await adminDb();
-  const profile = await db.orm.public.Profile.where({ nicknameKey: nickname.toLowerCase() }).first();
-  return profile?.nickname ? { id: profile.id, nickname: profile.nickname } : null;
+  const profile = await db.orm.public.Profile.where({
+    nicknameKey: nickname.toLowerCase(),
+  }).first();
+  return profile?.nickname
+    ? { id: profile.id, nickname: profile.nickname }
+    : null;
 }
 
 export async function getRoom(ownerId: string) {
@@ -48,7 +68,10 @@ export async function ensureRoom(ownerId: string) {
   if (existing) return existing;
   const db = await adminDb();
   try {
-    return await db.orm.public.PartyRoom.create({ ownerId, requireApproval: true });
+    return await db.orm.public.PartyRoom.create({
+      ownerId,
+      requireApproval: true,
+    });
   } catch (err) {
     if (isUniqueViolation(err)) return (await getRoom(ownerId))!;
     throw err;
@@ -56,11 +79,17 @@ export async function ensureRoom(ownerId: string) {
 }
 
 export function sessionEndsAt(startedAt: string, policy: PartyPolicy): number {
-  return Math.floor(Date.parse(startedAt) / 1000) + policy.sessionMaxHours * 3600;
+  return (
+    Math.floor(Date.parse(startedAt) / 1000) + policy.sessionMaxHours * 3600
+  );
 }
 
 /** Ends the session row and tells the signal server. Returns false if it had already ended. */
-export async function endSession(sessionId: string, reason: EndReason, notifySignal = true): Promise<boolean> {
+export async function endSession(
+  sessionId: string,
+  reason: EndReason,
+  notifySignal = true,
+): Promise<boolean> {
   const db = await adminDb();
   const now = new Date().toISOString();
   const updated = await db.orm.public.PartySession.where({ id: sessionId })
@@ -74,14 +103,23 @@ export async function endSession(sessionId: string, reason: EndReason, notifySig
   return true;
 }
 
-/** The live session of a room, closing it first if it outlived `sessionMaxHours`. */
-export async function getActiveSession(roomId: string, policy: PartyPolicy) {
+/**
+ * The live session of a room, closing it first if it outlived `sessionMaxHours`.
+ * The policy read overlaps the session read when the caller has not loaded it yet.
+ */
+export async function getActiveSession(
+  roomId: string,
+  policy?: PartyPolicy | Promise<PartyPolicy>,
+) {
   const db = await adminDb();
-  const session = await db.orm.public.PartySession.where({ roomId })
-    .where((s) => s.endedAt.isNull())
-    .first();
+  const [session, resolved] = await Promise.all([
+    db.orm.public.PartySession.where({ roomId })
+      .where((s) => s.endedAt.isNull())
+      .first(),
+    policy ?? getPartyPolicy(),
+  ]);
   if (!session) return null;
-  if (sessionEndsAt(session.startedAt, policy) * 1000 <= Date.now()) {
+  if (sessionEndsAt(session.startedAt, resolved) * 1000 <= Date.now()) {
     await endSession(session.id, 'max_duration');
     return null;
   }
@@ -113,33 +151,54 @@ export function modPerms(row: {
 
 export async function getActiveBan(roomId: string, profileId: string) {
   const db = await adminDb();
-  const ban = await db.orm.public.PartyRoomBan.where({ roomId, profileId }).first();
-  return ban && (!ban.expiresAt || Date.parse(ban.expiresAt) > Date.now()) ? ban : null;
+  const ban = await db.orm.public.PartyRoomBan.where({
+    roomId,
+    profileId,
+  }).first();
+  return ban && (!ban.expiresAt || Date.parse(ban.expiresAt) > Date.now())
+    ? ban
+    : null;
 }
 
 async function admittedParticipant(sessionId: string, profileId: string) {
   const db = await adminDb();
-  const row = await db.orm.public.PartySessionParticipant.where({ sessionId, profileId }).first();
+  const row = await db.orm.public.PartySessionParticipant.where({
+    sessionId,
+    profileId,
+  }).first();
   return row && row.removal === null ? row : null;
 }
 
 /** One row per (session, profile); re-admission after a kick clears the removal. */
-export async function admitParticipant(sessionId: string, profileId: string): Promise<void> {
+export async function admitParticipant(
+  sessionId: string,
+  profileId: string,
+): Promise<void> {
   const db = await adminDb();
   const rows = db.orm.public.PartySessionParticipant;
   const existing = await rows.where({ sessionId, profileId }).first();
   if (existing) {
     if (existing.removal !== null || existing.leftAt !== null) {
-      await rows.where({ id: existing.id }).updateAll({ removal: null, removedBy: null, leftAt: null });
+      await rows
+        .where({ id: existing.id })
+        .updateAll({ removal: null, removedBy: null, leftAt: null });
     }
     return;
   }
   await rows.create({ sessionId, profileId });
 }
 
-export async function markRemoved(sessionId: string, profileId: string, removal: 'kick' | 'ban', by: string) {
+export async function markRemoved(
+  sessionId: string,
+  profileId: string,
+  removal: 'kick' | 'ban',
+  by: string,
+) {
   const db = await adminDb();
-  await db.orm.public.PartySessionParticipant.where({ sessionId, profileId }).updateAll({
+  await db.orm.public.PartySessionParticipant.where({
+    sessionId,
+    profileId,
+  }).updateAll({
     removal,
     removedBy: by,
     leftAt: new Date().toISOString(),
@@ -171,21 +230,34 @@ export async function decideAccess(input: {
   owner: RoomOwner;
   password?: string;
   expectedSessionId?: string;
+  /** Already loaded by the caller; read here otherwise. */
+  policy?: PartyPolicy;
+  sanctions?: Set<SanctionScope>;
+  room?: ReturnType<typeof getRoom>;
 }): Promise<AccessResult> {
   const { viewer, owner } = input;
-  const policy = await getPartyPolicy();
-  if (!policy.enabled) return { state: 'disabled' };
-
-  const sanctions = await activeSanctions(viewer.profileId);
-  if (isBlocked(sanctions, 'party_join')) return { state: 'unavailable' };
-  if (!viewer.permissions.watch.allowed) return { state: 'requirements', missing: viewer.permissions.watch.missing };
-
   const isOwner = viewer.profileId === owner.id;
-  if (!isOwner && (await getActiveBan(owner.id, viewer.profileId))) return { state: 'banned' };
-
-  const room = await getRoom(owner.id);
-  const session = room ? await getActiveSession(room.ownerId, policy) : null;
-  if (!room || !session || (input.expectedSessionId && input.expectedSessionId !== session.id)) {
+  // Independent reads go out together, including the live session; the checks below keep their order.
+  const policyPromise = input.policy ?? getPartyPolicy();
+  const [policy, sanctions, ban, room, session] = await Promise.all([
+    policyPromise,
+    input.sanctions ??
+      viewer.sanctions ??
+      activeSanctions(viewer.profileId),
+    isOwner ? null : getActiveBan(owner.id, viewer.profileId),
+    input.room ?? getRoom(owner.id),
+    getActiveSession(owner.id, policyPromise),
+  ]);
+  if (!policy.enabled) return { state: 'disabled' };
+  if (isBlocked(sanctions, 'party_join')) return { state: 'unavailable' };
+  if (!viewer.permissions.watch.allowed)
+    return { state: 'requirements', missing: viewer.permissions.watch.missing };
+  if (ban) return { state: 'banned' };
+  if (
+    !room ||
+    !session ||
+    (input.expectedSessionId && input.expectedSessionId !== session.id)
+  ) {
     return { state: 'offline', isOwner };
   }
 
@@ -195,8 +267,12 @@ export async function decideAccess(input: {
     rid: room.ownerId,
     sub: viewer.profileId,
     nick: viewer.nickname ?? '',
-    streamBlocked: !viewer.permissions.host.allowed || isBlocked(sanctions, 'party_stream'),
-    chat: policy.chatEnabled && viewer.permissions.chat.allowed && !isBlocked(sanctions, 'party_chat'),
+    streamBlocked:
+      !viewer.permissions.host.allowed || isBlocked(sanctions, 'party_stream'),
+    chat:
+      policy.chatEnabled &&
+      viewer.permissions.chat.allowed &&
+      !isBlocked(sanctions, 'party_chat'),
     cfg: {
       cap: roomCapacity(policy, room),
       maxStreamers: policy.maxStreamers,
@@ -207,8 +283,14 @@ export async function decideAccess(input: {
   };
   const result = (
     state: 'admitted' | 'pending',
-    claims: Pick<RoomTokenInput, 'role' | 'canStream' | 'mod'> & Partial<Pick<RoomTokenInput, 'streamBlocked'>>,
-  ): AccessResult => ({ state, sessionId: session.id, endsAt, claims: { ...base, ...claims, status: state } });
+    claims: Pick<RoomTokenInput, 'role' | 'canStream' | 'mod'> &
+      Partial<Pick<RoomTokenInput, 'streamBlocked'>>,
+  ): AccessResult => ({
+    state,
+    sessionId: session.id,
+    endsAt,
+    claims: { ...base, ...claims, status: state },
+  });
 
   if (isOwner) {
     return result('admitted', {
@@ -220,24 +302,38 @@ export async function decideAccess(input: {
   }
 
   const db = await adminDb();
-  const moderator = await getModerator(room.ownerId, viewer.profileId);
-  const listed = room.whitelistEnabled
-    ? await db.orm.public.PartyRoomWhitelist.where({ roomId: room.ownerId, profileId: viewer.profileId }).first()
-    : null;
+  const [moderator, listed, returning] = await Promise.all([
+    getModerator(room.ownerId, viewer.profileId),
+    room.whitelistEnabled
+      ? db.orm.public.PartyRoomWhitelist.where({
+          roomId: room.ownerId,
+          profileId: viewer.profileId,
+        }).first()
+      : null,
+    admittedParticipant(session.id, viewer.profileId),
+  ]);
   const role = moderator ? ('moderator' as const) : ('member' as const);
-  const claims = { role, canStream: listed?.canStream ?? false, mod: moderator ? modPerms(moderator) : null };
+  const claims = {
+    role,
+    canStream: listed?.canStream ?? false,
+    mod: moderator ? modPerms(moderator) : null,
+  };
 
-  if (moderator || listed || (await admittedParticipant(session.id, viewer.profileId))) {
-    await admitParticipant(session.id, viewer.profileId);
+  if (moderator || listed || returning) {
+    // A row already open for this session does not need another read/write on every token refresh.
+    if (!returning || returning.leftAt !== null)
+      await admitParticipant(session.id, viewer.profileId);
     return result('admitted', claims);
   }
 
-  if (!room.passwordHash && !room.requireApproval) return { state: 'not_invited' };
+  if (!room.passwordHash && !room.requireApproval)
+    return { state: 'not_invited' };
 
   if (room.passwordHash) {
     if (!input.password) return { state: 'password_required' };
     await rateLimit('party_password', `${viewer.profileId}:${room.ownerId}`);
-    if (!(await verifyRoomPassword(input.password, room.passwordHash))) throw new ApiError(403, 'party_password_invalid');
+    if (!(await verifyRoomPassword(input.password, room.passwordHash)))
+      throw new ApiError(403, 'party_password_invalid');
   }
 
   if (room.requireApproval) return result('pending', claims);
@@ -248,14 +344,21 @@ export async function decideAccess(input: {
 
 export type Actor = { role: 'owner' | 'moderator'; perms: ModPerms };
 
-export async function actorFor(roomId: string, profileId: string): Promise<Actor | null> {
+export async function actorFor(
+  roomId: string,
+  profileId: string,
+): Promise<Actor | null> {
   if (roomId === profileId) return { role: 'owner', perms: OWNER_PERMS };
   const moderator = await getModerator(roomId, profileId);
   return moderator ? { role: 'moderator', perms: modPerms(moderator) } : null;
 }
 
 /** Nobody acts on the owner; moderators can't act on other moderators. */
-export async function assertCanTarget(roomId: string, actor: Actor, targetId: string): Promise<void> {
+export async function assertCanTarget(
+  roomId: string,
+  actor: Actor,
+  targetId: string,
+): Promise<void> {
   if (targetId === roomId) throw new ApiError(403, 'party_target_invalid');
   if (actor.role === 'moderator' && (await getModerator(roomId, targetId))) {
     throw new ApiError(403, 'party_target_invalid');

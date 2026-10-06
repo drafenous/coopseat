@@ -1,7 +1,13 @@
 import { ProviderButton } from '@coopseat/ui/design';
 import { OAUTH_PROVIDERS } from '@/lib/validation/account';
 
-export function ProviderButtons({ next = '/account', action }: { next?: string; action: string }) {
+export function ProviderButtons({
+  next = '/account',
+  action,
+}: {
+  next?: string;
+  action: string;
+}) {
   return (
     <div className="grid gap-2">
       {OAUTH_PROVIDERS.map((provider) => (

@@ -30,22 +30,26 @@ O botão **Entrar** no cabeçalho conecta o app à conta CoopSeat. Toda a comuni
 
 O endereço fica em `electron/environments.json`, um por ambiente. `npm run dev` usa `development` (`http://localhost:3000`). O instalador usa `production` (`https://coopseat.com`) e ignora variáveis da máquina. Para testar outro ambiente: `COOPSEAT_ENV=production npm run dev`. Para um endereço avulso, como um preview: `COOPSEAT_BFF_URL=https://seu-preview.exemplo npm run dev`. Esse endereço precisa ser o mesmo `APP_URL` do site naquele ambiente.
 
+O servidor de sinalização da Gaming-Party (`coopseat-signal`) segue as mesmas regras, em `electron/signals.json` (`development`: `http://localhost:8787`, `production`: `https://sinal.coopseat.com`), e o endereço avulso vem de `COOPSEAT_SIGNAL_URL`. Ele precisa ser o mesmo `PARTY_SIGNAL_URL` do site, senão o CSP do app bloqueia o WebSocket e a sala fica em "Conectando…".
+
+Na Gaming-Party, o áudio de **Captura de Janela** é só o do programa daquela janela (e dos processos filhos dele). Na **Captura de Tela**, o áudio é o do PC inteiro, menos o do próprio CoopSeat. O núcleo nativo faz isso com o loopback por processo do Windows (`native/loopback.hpp`, Windows 10 2004+) e manda PCM 48 kHz estéreo pelo stdout. O renderer transforma esse PCM numa trilha com `MediaStreamTrackGenerator`. Se o loopback por processo não estiver disponível, o app usa o áudio do sistema inteiro. O processo de áudio é parado com o comando `stop` e só é encerrado à força depois de 3 s, porque matá-lo no meio da captura trava o serviço de áudio do Windows.
+
 ## O que está implementado
 
-| Área | Implementação |
-|---|---|
-| UI | Electron, React, TypeScript e Vite; interface em português |
-| Captura nativa | Media Foundation Source Reader assíncrono, `MF_LOW_LATENCY`, modos reais do driver |
-| Vídeo | NV12, YUY2, RGB32/ARGB32; MJPEG quando o decoder do Windows consegue entregar um desses formatos |
-| Render | Direct3D 11, conversão YUV em shader, letterbox, GPU scaling, swap chain flip-discard |
-| Fila | Um sample pendente; frames antigos substituídos pelo mais recente |
-| Áudio | WASAPI compartilhado, eventos, captura e reprodução em thread separada; mínimo período de captura quando IAudioClient3 aceita |
-| Buffer de áudio | Fila limitada a dois buffers de saída ou 20 ms, o maior; excesso descartado |
-| Controles | Dispositivo, modo, entrada/saída de áudio, volume, VSync, tela cheia, modo cinema automático, sempre no topo |
-| Persistência | Preferências locais por versão de schema; opção de conexão automática |
-| Compatibilidade | `getUserMedia`, `<video>`, entrada de áudio explícita, `setSinkId` para saída |
-| Diagnóstico | Resolução/formato, FPS renderizados no nativo, FPS negociados no Chromium, frames descartados na fila nativa |
-| Empacotamento | NSIS x64, build local PowerShell/CMake e workflow GitHub Actions |
+| Área            | Implementação                                                                                                                 |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| UI              | Electron, React, TypeScript e Vite; interface em português                                                                    |
+| Captura nativa  | Media Foundation Source Reader assíncrono, `MF_LOW_LATENCY`, modos reais do driver                                            |
+| Vídeo           | NV12, YUY2, RGB32/ARGB32; MJPEG quando o decoder do Windows consegue entregar um desses formatos                              |
+| Render          | Direct3D 11, conversão YUV em shader, letterbox, GPU scaling, swap chain flip-discard                                         |
+| Fila            | Um sample pendente; frames antigos substituídos pelo mais recente                                                             |
+| Áudio           | WASAPI compartilhado, eventos, captura e reprodução em thread separada; mínimo período de captura quando IAudioClient3 aceita |
+| Buffer de áudio | Fila limitada a dois buffers de saída ou 20 ms, o maior; excesso descartado                                                   |
+| Controles       | Dispositivo, modo, entrada/saída de áudio, volume, VSync, tela cheia, modo cinema automático, sempre no topo                  |
+| Persistência    | Preferências locais por versão de schema; opção de conexão automática                                                         |
+| Compatibilidade | `getUserMedia`, `<video>`, entrada de áudio explícita, `setSinkId` para saída                                                 |
+| Diagnóstico     | Resolução/formato, FPS renderizados no nativo, FPS negociados no Chromium, frames descartados na fila nativa                  |
+| Empacotamento   | NSIS x64, build local PowerShell/CMake e workflow GitHub Actions                                                              |
 
 ## Limites técnicos importantes
 

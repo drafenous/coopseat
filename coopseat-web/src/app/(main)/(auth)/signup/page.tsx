@@ -8,7 +8,13 @@ import { SignupForm } from './SignupForm';
 
 export async function generateMetadata(): Promise<Metadata> {
   const [{ meta }, locale] = await Promise.all([getDictionary(), getLocale()]);
-  return pageMetadata({ locale, path: '/signup', title: meta.signup, description: meta.signupDescription, imageAlt: meta.title });
+  return pageMetadata({
+    locale,
+    path: '/signup',
+    title: meta.signup,
+    description: meta.signupDescription,
+    imageAlt: meta.title,
+  });
 }
 
 export default async function SignupPage() {
@@ -16,9 +22,19 @@ export default async function SignupPage() {
   return (
     <Card
       title={t.signup.title}
-      subtitle={<>{t.signup.haveAccount} <Link href="/login" className="text-accent">{t.signup.signIn}</Link></>}
+      subtitle={
+        <>
+          {t.signup.haveAccount}{' '}
+          <Link href="/login" className="text-accent">
+            {t.signup.signIn}
+          </Link>
+        </>
+      }
     >
-      <ProviderButtons action={t.providers.continueWith} next="/account?welcome=1" />
+      <ProviderButtons
+        action={t.providers.continueWith}
+        next="/account?welcome=1"
+      />
       <Divider label={t.common.orWithEmail} />
       <SignupForm />
     </Card>

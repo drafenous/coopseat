@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { dictionaryFor } from '@/i18n/server';
-import { deleteMeSchema, TERMS_VERSION, updateMeSchema } from '@/lib/validation/account';
+import {
+  deleteMeSchema,
+  TERMS_VERSION,
+  updateMeSchema,
+} from '@/lib/validation/account';
 import { accountSummary } from '@/server/account';
 import { auth } from '@/server/auth-errors';
 import { env } from '@/server/env';
@@ -18,25 +22,41 @@ export const GET = route(async (req) => {
 
 export const PATCH = route(async (req) => {
   const input = await readJson(req, updateMeSchema);
-  const session = await requireAuth(req, { aal2IfEnrolled: input.email !== undefined });
+  const session = await requireAuth(req, {
+    aal2IfEnrolled: input.email !== undefined,
+  });
   await rateLimit('account', session.claims.sub);
 
   let message: string | undefined;
   if (input.nickname !== undefined) {
-    await setNickname(session.claims.sub, input.nickname, { enforceCooldown: true });
+    await setNickname(session.claims.sub, input.nickname, {
+      enforceCooldown: true,
+    });
   }
   if (input.acceptTerms) await acceptTerms(session.claims.sub, TERMS_VERSION);
   if (input.email !== undefined) {
-    await auth(gotrue.updateUser(session.token, { email: input.email }, `${env.appUrl}/api/auth/confirm`));
+    await auth(
+      gotrue.updateUser(
+        session.token,
+        { email: input.email },
+        `${env.appUrl}/api/auth/confirm`,
+      ),
+    );
     message = dictionaryFor(req).messages.emailChangeSent;
   }
 
   const user = await auth(gotrue.getUser(session.token));
-  return NextResponse.json({ ...(await accountSummary(user, session.claims)), message });
+  return NextResponse.json({
+    ...(await accountSummary(user, session.claims)),
+    message,
+  });
 });
 
 export const DELETE = route(async (req) => {
-  const session = await requireAuth(req, { aal2IfEnrolled: true, allowSuspended: true });
+  const session = await requireAuth(req, {
+    aal2IfEnrolled: true,
+    allowSuspended: true,
+  });
   await rateLimit('account', session.claims.sub);
   const { confirm } = await readJson(req, deleteMeSchema);
 

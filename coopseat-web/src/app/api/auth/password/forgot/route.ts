@@ -15,8 +15,12 @@ export const POST = route(async (req) => {
   const input = await readJson(req, forgotSchema);
   await rateLimit('forgot', input.email);
   await verifyCaptcha(input.captchaToken, ip);
-  await gotrue.recover(input.email, `${env.appUrl}/api/auth/confirm`).catch((err) => {
-    console.warn('recover failed', err instanceof Error ? err.message : err);
+  await gotrue
+    .recover(input.email, `${env.appUrl}/api/auth/confirm`)
+    .catch((err) => {
+      console.warn('recover failed', err instanceof Error ? err.message : err);
+    });
+  return NextResponse.json({
+    message: dictionaryFor(req).messages.resetLinkSent,
   });
-  return NextResponse.json({ message: dictionaryFor(req).messages.resetLinkSent });
 });

@@ -25,7 +25,9 @@ export type RelayPolicy = {
   monthlyBudgetGb: number | null;
 };
 
-export type RelayDecision = { allowed: true; policy: RelayPolicy } | { allowed: false; reason: RelayDenyReason; policy: RelayPolicy };
+export type RelayDecision =
+  | { allowed: true; policy: RelayPolicy }
+  | { allowed: false; reason: RelayDenyReason; policy: RelayPolicy };
 
 /** Used when the `relay_policy` row does not exist; mirrors the column defaults. */
 export const DEFAULT_RELAY_POLICY: RelayPolicy = {
@@ -47,16 +49,25 @@ const BYTES_PER_GB = 1e9;
  * Whether this month's TURN egress is still under budget. Unverifiable usage fails closed, except
  * outside production when analytics is simply not configured.
  */
-async function checkBudget(policy: RelayPolicy): Promise<RelayDenyReason | null> {
+async function checkBudget(
+  policy: RelayPolicy,
+): Promise<RelayDenyReason | null> {
   if (policy.monthlyBudgetGb === null) return null;
   const bytes = await monthToDateEgressBytes();
   if (bytes === null) {
-    const configured = Boolean(env.cloudflareAccountId && env.cloudflareAnalyticsToken);
+    const configured = Boolean(
+      env.cloudflareAccountId && env.cloudflareAnalyticsToken,
+    );
     if (!configured && !env.isProduction) return null;
-    if (!configured) console.error('Relay budget set but CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_ANALYTICS_API_TOKEN missing');
+    if (!configured)
+      console.error(
+        'Relay budget set but CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_ANALYTICS_API_TOKEN missing',
+      );
     return 'budget_unverified';
   }
-  return bytes >= policy.monthlyBudgetGb * BYTES_PER_GB ? 'budget_exceeded' : null;
+  return bytes >= policy.monthlyBudgetGb * BYTES_PER_GB
+    ? 'budget_exceeded'
+    : null;
 }
 
 /** Compares `major.minor.patch` (pre-release and build suffixes ignored). Returns <0, 0 or >0. */
@@ -76,9 +87,16 @@ export function compareSemver(a: string, b: string): number {
   return 0;
 }
 
-export function isAppVersionBlocked(policy: RelayPolicy, appVersion: string | null): boolean {
+export function isAppVersionBlocked(
+  policy: RelayPolicy,
+  appVersion: string | null,
+): boolean {
   if (!appVersion) return false;
-  if (policy.minAppVersion && compareSemver(appVersion, policy.minAppVersion) < 0) return true;
+  if (
+    policy.minAppVersion &&
+    compareSemver(appVersion, policy.minAppVersion) < 0
+  )
+    return true;
   const blocked = (policy.blockedAppVersions ?? '')
     .split(',')
     .map((v) => v.trim())
@@ -110,19 +128,37 @@ export async function evaluateRelay(input: {
         monthlyBudgetGb: row.monthlyBudgetGb,
       }
     : DEFAULT_RELAY_POLICY;
-  const deny = (reason: RelayDenyReason): RelayDecision => ({ allowed: false, reason, policy });
+  const deny = (reason: RelayDenyReason): RelayDecision => ({
+    allowed: false,
+    reason,
+    policy,
+  });
 
   if (!policy.enabled) return deny('disabled');
-  if (!(input.audience === 'member' ? policy.membersEnabled : policy.guestsEnabled)) return deny('audience_disabled');
-  if (isAppVersionBlocked(policy, input.appVersion)) return deny('app_version_blocked');
+  if (
+    !(input.audience === 'member'
+      ? policy.membersEnabled
+      : policy.guestsEnabled)
+  )
+    return deny('audience_disabled');
+  if (isAppVersionBlocked(policy, input.appVersion))
+    return deny('app_version_blocked');
 
-  const override = await db.orm.public.RelayUserOverride.where({ profileId: input.profileId }).first();
-  const overrideActive = override && (!override.expiresAt || Date.parse(override.expiresAt) > Date.now());
+  const override = await db.orm.public.RelayUserOverride.where({
+    profileId: input.profileId,
+  }).first();
+  const overrideActive =
+    override &&
+    (!override.expiresAt || Date.parse(override.expiresAt) > Date.now());
   if (overrideActive && override.blocked) return deny('user_blocked');
 
-  const quota = (overrideActive ? override.dailyQuota : null) ?? policy.dailyCredentialQuota;
+  const quota =
+    (overrideActive ? override.dailyQuota : null) ??
+    policy.dailyCredentialQuota;
   const since = new Date(Date.now() - QUOTA_WINDOW_MS).toISOString();
-  const { total } = await db.orm.public.RelayCredential.where((c) => c.profileId.eq(input.profileId))
+  const { total } = await db.orm.public.RelayCredential.where((c) =>
+    c.profileId.eq(input.profileId),
+  )
     .where((c) => c.issuedAt.gte(since))
     .aggregate((a) => ({ total: a.count() }));
   if (total >= quota) return deny('quota_exceeded');

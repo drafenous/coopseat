@@ -2,7 +2,7 @@
 
 One-time steps for a new Supabase project. Everything after step 2 is scripted.
 
-1. **Create the project** (region `sa-east-1`). In *Database > Extensions* enable `pg_cron`.
+1. **Create the project** (region `sa-east-1`). In _Database > Extensions_ enable `pg_cron`.
 2. **Database roles.** In the SQL editor run `supabase/sql/000_prisma_role.sql` after replacing
    `CHANGE_ME` with a strong password. Use the **session pooler** (port 5432) URLs in `.env.local`:
    `DATABASE_URL` with user `prisma.<ref>` (BFF runtime), `DIRECT_URL` and `SQL_ADMIN_URL` with user
@@ -16,9 +16,11 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    ```
    Later contract changes: `npx prisma migration plan --from <last-hash> --name <slug>`, review, then `db migrate`.
 4. **Auth settings.** Create a personal access token (Account > Access tokens) and run
+
    ```bash
    SUPABASE_ACCESS_TOKEN=... SUPABASE_PROJECT_REF=... npm run supabase:configure
    ```
+
    It sets: email confirmation on, secure email change, manual identity linking, password policy
    (8+ chars, letters and digits, leaked-password check), TOTP MFA, the Custom Access Token Hook
    (`public.custom_access_token_hook`), redirect allow list (`https://coopseat.com/**`),
@@ -30,17 +32,17 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    into `.email-preview/` and open `index.html` in a browser; `tests/email-templates.test.ts` checks that each
    template only uses the variables GoTrue gives it and that every link is accepted by `/api/auth/confirm`.
 
-   | Service | Env vars | Notes |
-   | --- | --- | --- |
-   | Google | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | see **Google OAuth client** below |
-   | E-mail (Resend) | `RESEND_API_KEY` | sender `no-reply@coopseat.com` via `smtp.resend.com:465` |
-   | Other SMTP (overrides Resend) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | same sender |
+   | Service                       | Env vars                                           | Notes                                                    |
+   | ----------------------------- | -------------------------------------------------- | -------------------------------------------------------- |
+   | Google                        | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`         | see **Google OAuth client** below                        |
+   | E-mail (Resend)               | `RESEND_API_KEY`                                   | sender `no-reply@coopseat.com` via `smtp.resend.com:465` |
+   | Other SMTP (overrides Resend) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | same sender                                              |
 
    **Google OAuth client.** In Google Cloud Console (APIs & Services):
-   1. *OAuth consent screen*: user type *External*, app name `CoopSeat`, support e-mail, authorized domain
+   1. _OAuth consent screen_: user type _External_, app name `CoopSeat`, support e-mail, authorized domain
       `coopseat.com`, scopes `openid`, `.../auth/userinfo.email`, `.../auth/userinfo.profile`. Publish the app
-      (while in *Testing* only the listed test users can sign in).
-   2. *Credentials > Create credentials > OAuth client ID*, type *Web application*:
+      (while in _Testing_ only the listed test users can sign in).
+   2. _Credentials > Create credentials > OAuth client ID_, type _Web application_:
       - Authorized JavaScript origins: `https://coopseat.com`, `http://localhost:3000`
       - Authorized redirect URIs: `https://coopseat.com/api/auth/callback`, `http://localhost:3000/api/auth/callback`
    3. Put the client id and secret in `.env.local` and in Vercel as `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`,
@@ -53,8 +55,8 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    they are added to the list.
 
    **Resend domain.** In Resend > Domains add `coopseat.com`, create the SPF (`send` MX + TXT) and DKIM
-   (`resend._domainkey`) records it lists at the DNS provider, and wait for *Verified*. Add a DMARC record
-   (`_dmarc` TXT `v=DMARC1; p=none;`) if the domain has none. Then create an API key with *Sending access*
+   (`resend._domainkey`) records it lists at the DNS provider, and wait for _Verified_. Add a DMARC record
+   (`_dmarc` TXT `v=DMARC1; p=none;`) if the domain has none. Then create an API key with _Sending access_
    for that domain and set it as `RESEND_API_KEY` locally and in Vercel. The BFF uses the same key for its
    own e-mails (`sendEmail` in `src/server/email.ts`).
 
@@ -72,14 +74,14 @@ With `KYC_PROVIDER=mock` on a dev/preview deployment:
 
 1. `/signup` with email and password → confirmation email → link opens `/auth/confirmed`.
 2. `/login` → `/account` asks for a nickname if needed; a taken nickname (any casing) is refused.
-3. *Verify my age* → `/verification/mock` → choose **Approve (over 18)** → `/account` shows age verified and
+3. _Verify my age_ → `/verification/mock` → choose **Approve (over 18)** → `/account` shows age verified and
    chat and host unlocked. Repeat with a second account and the same document number: it must be rejected.
 4. Enable TOTP in `/account`, sign out, sign in again: the 2FA step must appear. A "two-step verification added"
    e-mail must arrive.
 5. Link and unlink Google in `/account`; unlinking the last login method must be refused. Each change sends a
    security e-mail.
-6. Desktop (`COOPSEAT_BFF_URL=<preview url> npm run dev` in `coopseat/`): *Continue with Google* opens the
-   browser and returns via `coopseat://auth/callback`; email login, 2FA and *My account* work in the app.
+6. Desktop (`COOPSEAT_BFF_URL=<preview url> npm run dev` in `coopseat/`): _Continue with Google_ opens the
+   browser and returns via `coopseat://auth/callback`; email login, 2FA and _My account_ work in the app.
 7. Switch the language (footer on the site, the language icon in the app header) and repeat a step: pages, API errors
    and the app follow the choice. The old Portuguese paths (`/entrar`, `/conta`, ...) redirect permanently.
 

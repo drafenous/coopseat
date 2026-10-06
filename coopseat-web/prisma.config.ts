@@ -10,6 +10,8 @@ export default definePrismaConfig({
     contract: './src/prisma/contract.prisma',
     extensions: [supabasePack],
     migrations: { dir: 'migrations' },
-    db: { connection: process.env['DIRECT_URL'] ?? process.env['DATABASE_URL']! },
+    db: {
+      connection: process.env['DIRECT_URL'] ?? process.env['DATABASE_URL']!,
+    },
   }),
 });

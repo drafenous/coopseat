@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/prisma/db';
 import { ApiError, route } from '@/server/http';
-import { decideAccess, endSession, ensureRoom, getActiveSession } from '@/server/party/access';
+import {
+  decideAccess,
+  endSession,
+  ensureRoom,
+  getActiveSession,
+} from '@/server/party/access';
 import { accessPayload } from '@/server/party/join';
 import { getPartyPolicy } from '@/server/party/policy';
 import { NO_STORE, partyCaller } from '@/server/party/routes';
@@ -14,18 +19,26 @@ import { isUniqueViolation } from '@/server/profiles';
  */
 export const POST = route(async (req) => {
   const { viewer } = await partyCaller(req, 'party_session');
-  const policy = await getPartyPolicy();
+  const [policy, sanctions] = await Promise.all([
+    getPartyPolicy(),
+    activeSanctions(viewer.profileId),
+  ]);
   if (!policy.enabled) throw new ApiError(503, 'party_disabled');
-  const sanctions = await activeSanctions(viewer.profileId);
-  if (isBlocked(sanctions, 'party_host') || isBlocked(sanctions, 'party_stream')) {
+  if (
+    isBlocked(sanctions, 'party_host') ||
+    isBlocked(sanctions, 'party_stream')
+  ) {
     throw new ApiError(403, 'party_unavailable');
   }
   if (!viewer.permissions.host.allowed) {
-    throw new ApiError(403, 'party_requirements', { missing: viewer.permissions.host.missing });
+    throw new ApiError(403, 'party_requirements', {
+      missing: viewer.permissions.host.missing,
+    });
   }
-  if (!viewer.nickname) throw new ApiError(403, 'party_requirements', { missing: ['nickname'] });
+  if (!viewer.nickname)
+    throw new ApiError(403, 'party_requirements', { missing: ['nickname'] });
 
-  await ensureRoom(viewer.profileId);
+  const room = await ensureRoom(viewer.profileId);
   if (!(await getActiveSession(viewer.profileId, policy))) {
     const db = await adminDb();
     try {
@@ -36,14 +49,25 @@ export const POST = route(async (req) => {
   }
 
   const owner = { id: viewer.profileId, nickname: viewer.nickname };
-  const result = await decideAccess({ viewer, owner });
-  return NextResponse.json(await accessPayload(result, owner), { headers: NO_STORE });
+  const result = await decideAccess({
+    viewer,
+    owner,
+    policy,
+    sanctions,
+    room: Promise.resolve(room),
+  });
+  return NextResponse.json(await accessPayload(result, owner, room), {
+    headers: NO_STORE,
+  });
 });
 
 /** Ends the owner's live session: every viewer is disconnected, other streams stop and chat is erased. */
 export const DELETE = route(async (req) => {
   const { viewer } = await partyCaller(req, 'party_session');
-  const session = await getActiveSession(viewer.profileId, await getPartyPolicy());
+  const session = await getActiveSession(
+    viewer.profileId,
+    await getPartyPolicy(),
+  );
   if (session) await endSession(session.id, 'owner_ended');
   return NextResponse.json({ ok: true }, { headers: NO_STORE });
 });

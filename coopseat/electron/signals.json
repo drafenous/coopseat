@@ -1,0 +1,4 @@
+{
+  "development": "http://localhost:8787",
+  "production": "https://coopseat-signal.rodrigo-roberto-almeida.workers.dev"
+}

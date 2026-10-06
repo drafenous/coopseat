@@ -5,7 +5,10 @@ const nickname = z.string().trim().regex(NICKNAME_PATTERN, 'nickname_format');
 const profileId = z.uuid('invalid_input');
 const perm = z.boolean().optional();
 
-export const roomPasswordSchema = z.string().min(4, 'party_password_format').max(64, 'party_password_format');
+export const roomPasswordSchema = z
+  .string()
+  .min(4, 'party_password_format')
+  .max(64, 'party_password_format');
 
 export const updateRoomSchema = z
   .object({
@@ -16,7 +19,9 @@ export const updateRoomSchema = z
   })
   .strict();
 
-export const whitelistEntrySchema = z.object({ nickname, canStream: z.boolean().default(false) }).strict();
+export const whitelistEntrySchema = z
+  .object({ nickname, canStream: z.boolean().default(false) })
+  .strict();
 
 export const profileRefSchema = z.object({ profileId }).strict();
 
@@ -36,11 +41,18 @@ export const banSchema = z
   .object({
     profileId,
     reason: z.string().trim().max(300).optional(),
-    hours: z.number().int().min(1).max(24 * 365).optional(),
+    hours: z
+      .number()
+      .int()
+      .min(1)
+      .max(24 * 365)
+      .optional(),
   })
   .strict();
 
-export const approvalSchema = z.object({ profileId, approve: z.boolean() }).strict();
+export const approvalSchema = z
+  .object({ profileId, approve: z.boolean() })
+  .strict();
 
 export const joinSchema = z
   .object({
@@ -49,4 +61,6 @@ export const joinSchema = z
   })
   .strict();
 
-export const turnSchema = z.object({ roomToken: z.string().min(20).max(4096) }).strict();
+export const turnSchema = z
+  .object({ roomToken: z.string().min(20).max(4096) })
+  .strict();

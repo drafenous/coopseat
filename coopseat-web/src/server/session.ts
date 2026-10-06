@@ -16,7 +16,10 @@ export type AuthContext = {
 
 /** Desktop requests carry a Bearer token (or this header) and never use cookies. */
 export function isDesktop(req: NextRequest): boolean {
-  return req.headers.get('x-coopseat-client') === 'desktop' || req.headers.get('authorization')?.startsWith('Bearer ') === true;
+  return (
+    req.headers.get('x-coopseat-client') === 'desktop' ||
+    req.headers.get('authorization')?.startsWith('Bearer ') === true
+  );
 }
 
 /** Cookie-authenticated mutations must come from our own origin (CSRF). */
@@ -89,12 +92,21 @@ export function clearSessionCookies(res: NextResponse): void {
 
 export function desktopSession(tokens: AuthTokens) {
   const t = withExpiry(tokens);
-  return { accessToken: t.access_token, refreshToken: t.refresh_token, expiresAt: t.expires_at };
+  return {
+    accessToken: t.access_token,
+    refreshToken: t.refresh_token,
+    expiresAt: t.expires_at,
+  };
 }
 
 /** Desktop gets the tokens in the body; the browser gets httpOnly cookies. */
-export function sessionResponse(req: NextRequest, tokens: AuthTokens, body: Record<string, unknown> = {}): NextResponse {
-  if (isDesktop(req)) return NextResponse.json({ ...body, session: desktopSession(tokens) });
+export function sessionResponse(
+  req: NextRequest,
+  tokens: AuthTokens,
+  body: Record<string, unknown> = {},
+): NextResponse {
+  if (isDesktop(req))
+    return NextResponse.json({ ...body, session: desktopSession(tokens) });
   const res = NextResponse.json(body);
   setSessionCookies(res, tokens);
   return res;

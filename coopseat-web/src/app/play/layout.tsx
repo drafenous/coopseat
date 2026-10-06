@@ -5,7 +5,10 @@ import { getDictionary, getLocale } from '@/i18n/server';
 import { SITE_NAME, SITE_URL, pageMetadata } from '@/lib/seo';
 import './play.css';
 
-export const viewport: Viewport = { themeColor: '#0b1016', colorScheme: 'dark' };
+export const viewport: Viewport = {
+  themeColor: '#0b1016',
+  colorScheme: 'dark',
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const [t, locale] = await Promise.all([getDictionary(), getLocale()]);
@@ -24,7 +27,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Separate root layout: the app's element defaults (base.css) must not leak into the site. */
-export default async function PlayLayout({ children }: { children: React.ReactNode }) {
+export default async function PlayLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const locale = await getLocale();
   return (
     <html lang={locale}>

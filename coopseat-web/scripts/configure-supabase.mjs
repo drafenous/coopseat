@@ -7,7 +7,10 @@ import { authEmailConfig } from '../supabase/templates/emails.mjs';
 
 const token = process.env.SUPABASE_ACCESS_TOKEN;
 const ref = process.env.SUPABASE_PROJECT_REF;
-const appUrl = (process.env.APP_URL ?? 'https://coopseat.com').replace(/\/$/, '');
+const appUrl = (process.env.APP_URL ?? 'https://coopseat.com').replace(
+  /\/$/,
+  '',
+);
 if (!token || !ref) {
   console.error('Set SUPABASE_ACCESS_TOKEN and SUPABASE_PROJECT_REF.');
   process.exit(1);
@@ -34,10 +37,20 @@ const smtpServer = process.env.SMTP_HOST
       smtp_pass: process.env.SMTP_PASS,
     }
   : resendKey
-    ? { smtp_host: 'smtp.resend.com', smtp_port: '465', smtp_user: 'resend', smtp_pass: resendKey }
+    ? {
+        smtp_host: 'smtp.resend.com',
+        smtp_port: '465',
+        smtp_user: 'resend',
+        smtp_pass: resendKey,
+      }
     : null;
 const smtp = smtpServer
-  ? { ...smtpServer, smtp_admin_email: 'no-reply@coopseat.com', smtp_sender_name: 'CoopSeat', rate_limit_email_sent: 100 }
+  ? {
+      ...smtpServer,
+      smtp_admin_email: 'no-reply@coopseat.com',
+      smtp_sender_name: 'CoopSeat',
+      rate_limit_email_sent: 100,
+    }
   : {};
 
 // The free plan rejects the leaked-password check and, without custom SMTP, custom templates.
@@ -47,14 +60,21 @@ const emailTemplates = customTemplates ? authEmailConfig(appUrl) : {};
 
 const config = {
   site_url: appUrl,
-  uri_allow_list: [...new Set([`${appUrl}/**`, 'https://coopseat.com/**', 'http://localhost:3000/**'])].join(','),
+  uri_allow_list: [
+    ...new Set([
+      `${appUrl}/**`,
+      'https://coopseat.com/**',
+      'http://localhost:3000/**',
+    ]),
+  ].join(','),
   disable_signup: false,
   mailer_autoconfirm: false,
   mailer_secure_email_change_enabled: true,
   mailer_otp_exp: 3600,
   security_manual_linking_enabled: true,
   password_min_length: 8,
-  password_required_characters: 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789',
+  password_required_characters:
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ:0123456789',
   password_hibp_enabled: pro,
   security_refresh_token_reuse_interval: 10,
   jwt_exp: 3600,
@@ -62,7 +82,8 @@ const config = {
   mfa_totp_verify_enabled: true,
   mfa_max_enrolled_factors: 3,
   hook_custom_access_token_enabled: true,
-  hook_custom_access_token_uri: 'pg-functions://postgres/public/custom_access_token_hook',
+  hook_custom_access_token_uri:
+    'pg-functions://postgres/public/custom_access_token_hook',
   // Captcha is verified by the BFF (Turnstile); GoTrue is only reachable through it.
   security_captcha_enabled: false,
   ...emailTemplates,
@@ -76,20 +97,31 @@ const config = {
   ...smtp,
 };
 
-const res = await fetch(`https://api.supabase.com/v1/projects/${ref}/config/auth`, {
-  method: 'PATCH',
-  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-  body: JSON.stringify(config),
-});
+const res = await fetch(
+  `https://api.supabase.com/v1/projects/${ref}/config/auth`,
+  {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(config),
+  },
+);
 if (!res.ok) {
   console.error(`Management API ${res.status}: ${await res.text()}`);
   process.exitCode = 1;
 } else {
   console.log('Supabase Auth configured.');
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    console.warn('Google sign-in left unchanged: set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable it.');
+    console.warn(
+      'Google sign-in left unchanged: set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable it.',
+    );
   }
-  if (!pro) console.warn('Free plan: leaked-password protection (HaveIBeenPwned) is off. Set SUPABASE_PLAN=pro after upgrading.');
+  if (!pro)
+    console.warn(
+      'Free plan: leaked-password protection (HaveIBeenPwned) is off. Set SUPABASE_PLAN=pro after upgrading.',
+    );
   if (!customTemplates) {
     console.warn(
       'Email templates and security notifications skipped: set RESEND_API_KEY (or SMTP_*) to use the bilingual templates. Until then Supabase sends its ' +

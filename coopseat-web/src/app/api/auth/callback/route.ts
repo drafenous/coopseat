@@ -29,7 +29,8 @@ function errorPage(code: ErrorCode) {
 
 function avatarOf(tokens: AuthTokens): string | null {
   for (const identity of tokens.user.identities ?? []) {
-    const url = identity.identity_data?.avatar_url ?? identity.identity_data?.picture;
+    const url =
+      identity.identity_data?.avatar_url ?? identity.identity_data?.picture;
     if (typeof url === 'string') return url;
   }
   return null;
@@ -40,7 +41,8 @@ export async function GET(req: NextRequest) {
   const state = readOAuthState(req);
   const finish = clearOAuthState;
 
-  if (!state || !safeEqual(params.get('state') ?? '', state.state)) return finish(errorPage('login_expired'));
+  if (!state || !safeEqual(params.get('state') ?? '', state.state))
+    return finish(errorPage('login_expired'));
 
   if (params.get('error')) return finish(errorPage('provider_refused'));
 
@@ -76,7 +78,11 @@ export async function GET(req: NextRequest) {
       const payload = hasVerifiedFactor(tokens)
         ? { mfaRequired: true, mfaToken: sealMfaToken(tokens) }
         : { tokens };
-      const ticket = await createTicket('desktop_login', payload, state.desktopChallenge);
+      const ticket = await createTicket(
+        'desktop_login',
+        payload,
+        state.desktopChallenge,
+      );
       return finish(openApp(`coopseat://auth/callback?ticket=${ticket}`));
     }
     case 'link-desktop': {
@@ -91,7 +97,9 @@ export async function GET(req: NextRequest) {
     }
     case 'web': {
       if (hasVerifiedFactor(tokens)) {
-        const res = redirect(`/login/2fa?next=${encodeURIComponent(state.next ?? '/account')}`);
+        const res = redirect(
+          `/login/2fa?next=${encodeURIComponent(state.next ?? '/account')}`,
+        );
         setMfaCookie(res, tokens);
         return finish(res);
       }

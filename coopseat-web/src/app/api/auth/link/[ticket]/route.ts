@@ -14,7 +14,10 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   if (!payload) return fail('link_expired');
 
   try {
-    return startGoogleOAuth({ mode: payload.mode, linkTo: payload.accessToken });
+    return startGoogleOAuth({
+      mode: payload.mode,
+      linkTo: payload.accessToken,
+    });
   } catch {
     return fail('link_failed');
   }

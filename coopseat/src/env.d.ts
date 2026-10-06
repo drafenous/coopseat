@@ -1,3 +1,7 @@
-import type {DesktopBridge} from '@coopseat/ui';
+import type { DesktopBridge } from '@coopseat/ui';
 
-declare global { interface Window { input?: DesktopBridge } }
+declare global {
+  interface Window {
+    input?: DesktopBridge;
+  }
+}

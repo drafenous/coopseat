@@ -19,7 +19,10 @@ const sample = {
 /** Covers the subset of Go templates the e-mails use: `{{ .Var }}` and `{{ if .Var }}…{{ else }}…{{ end }}`. */
 function fill(html, data) {
   return html
-    .replace(/\{\{ if \.(\w+) \}\}([\s\S]*?)(?:\{\{ else \}\}([\s\S]*?))?\{\{ end \}\}/g, (_, key, yes, no = '') => (data[key] ? yes : no))
+    .replace(
+      /\{\{ if \.(\w+) \}\}([\s\S]*?)(?:\{\{ else \}\}([\s\S]*?))?\{\{ end \}\}/g,
+      (_, key, yes, no = '') => (data[key] ? yes : no),
+    )
     .replace(/\{\{ \.(\w+) \}\}/g, (_, key) => {
       if (!(key in data)) throw new Error(`No sample value for {{ .${key} }}`);
       return data[key];
@@ -32,12 +35,23 @@ await mkdir(out, { recursive: true });
 
 const pages = [];
 for (const [name, email] of Object.entries(authEmails(appUrl))) {
-  const variants = name === 'email_change' ? [['', sample], ['-no-email', { ...sample, Email: '' }]] : [['', sample]];
+  const variants =
+    name === 'email_change'
+      ? [
+          ['', sample],
+          ['-no-email', { ...sample, Email: '' }],
+        ]
+      : [['', sample]];
   for (const [suffix, data] of variants) {
     const file = `${name}${suffix}.html`;
     await writeFile(join(out, file), fill(email.html, data));
-    pages.push(`<li><a href="${file}">${name}${suffix}</a> <small>(${email.kind})</small> ${fill(email.subject, data)}</li>`);
+    pages.push(
+      `<li><a href="${file}">${name}${suffix}</a> <small>(${email.kind})</small> ${fill(email.subject, data)}</li>`,
+    );
   }
 }
-await writeFile(join(out, 'index.html'), `<!doctype html><meta charset="utf-8"><title>CoopSeat e-mails</title><ul>${pages.join('')}</ul>`);
+await writeFile(
+  join(out, 'index.html'),
+  `<!doctype html><meta charset="utf-8"><title>CoopSeat e-mails</title><ul>${pages.join('')}</ul>`,
+);
 console.log(`Wrote ${pages.length} previews to ${join(out, 'index.html')}`);

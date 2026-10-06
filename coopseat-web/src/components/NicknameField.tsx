@@ -31,9 +31,19 @@ export function NicknameField({
     const controller = new AbortController();
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/nicknames/available?n=${encodeURIComponent(candidate)}`, { signal: controller.signal });
-        const data = (await res.json()) as { available?: boolean; reason?: string };
-        setRemote({ value: candidate, available: Boolean(data.available), reason: data.reason });
+        const res = await fetch(
+          `/api/nicknames/available?n=${encodeURIComponent(candidate)}`,
+          { signal: controller.signal },
+        );
+        const data = (await res.json()) as {
+          available?: boolean;
+          reason?: string;
+        };
+        setRemote({
+          value: candidate,
+          available: Boolean(data.available),
+          reason: data.reason,
+        });
       } catch {
         // Aborted or offline: keep the previous hint.
       }
@@ -48,7 +58,11 @@ export function NicknameField({
   let hint: React.ReactNode = t.nickname.hint;
   if (value && value !== current) {
     if (!parsed.success) {
-      formatError = errorMessage(t, parsed.error.issues[0]?.message, 'invalid_input');
+      formatError = errorMessage(
+        t,
+        parsed.error.issues[0]?.message,
+        'invalid_input',
+      );
     } else if (remote?.value !== candidate) {
       hint = t.nickname.checking;
     } else if (remote.available) {

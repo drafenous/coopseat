@@ -1,6 +1,10 @@
 import { hmacHex, randomToken, safeEqual } from '@/server/crypto';
 import { env } from '@/server/env';
-import { WebhookAuthError, type IdentityProvider, type VerificationResult } from '../types';
+import {
+  WebhookAuthError,
+  type IdentityProvider,
+  type VerificationResult,
+} from '../types';
 
 function secret(): string {
   return process.env['MOCK_KYC_SECRET'] ?? 'dev-mock-kyc-secret';
@@ -24,7 +28,8 @@ export const mockProvider: IdentityProvider = {
 
   async parseWebhook(rawBody, headers) {
     const signature = headers.get('x-mock-signature') ?? '';
-    if (!safeEqual(signature, signMockPayload(rawBody))) throw new WebhookAuthError('bad signature');
+    if (!safeEqual(signature, signMockPayload(rawBody)))
+      throw new WebhookAuthError('bad signature');
     return JSON.parse(rawBody) as VerificationResult;
   },
 };

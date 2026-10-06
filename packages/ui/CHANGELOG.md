@@ -7,33 +7,40 @@ All notable changes to `@coopseat/ui` are documented here. The format is based o
 ## [0.2.1] - 2026-10-03
 
 ### Added
+
 - `Platform` for the web accepts an optional `cookiePreferences()` that opens the host's cookie dialog from Preferences.
 - `DesktopBridge.bounds()` accepts optional `holes` and `dim`, so menus and dialogs show over the native video.
 - `CoopSeatPage` has Preferences, an opt-in anonymous telemetry prompt, a cinema mode menu and an account menu.
 
 ### Changed
+
 - Effects and filters moved to their own settings section, and automatic cinema mode waits 1 to 5 seconds or never.
 
 ### Removed
+
 - The in-app account window and the social sign-in buttons other than Google.
 
 ## [0.2.0] - 2026-10-03
 
 ### Added
+
 - Internationalization exports: `I18nProvider`, `useT`, `useLocale`, `getLocale`, `setLocale`, `isUiLocale` and `UI_LOCALES`, with English and Portuguese.
 - `theme.css` with the design tokens as Tailwind CSS v4 theme variables.
 - Screen effects, edge smoothing, Picture in Picture, troubleshooting guide and a movable, collapsible settings panel in `CoopSeatPage`.
 
 ### Changed
+
 - Components are styled with Tailwind CSS instead of per-component stylesheets. Apps must import `tailwindcss` and then `@coopseat/ui/theme.css`.
 - The account permissions list no longer shows voice.
 
 ### Removed
+
 - **Breaking:** `@coopseat/ui/tokens.css`. Use `@coopseat/ui/theme.css` instead.
 
 ## [0.1.0] - 2026-10-03
 
 ### Added
+
 - `CoopSeatPage`: the capture app interface shared by the desktop app and the website, with `configurePlatform` to plug in the desktop bridge or the browser.
 - Design system entry point (`@coopseat/ui/design`): `Button`, `TextButton`, `TextInput`, `Divider`, `FieldHint`, `Field`, `Alert`, `Brand`, `Card`, `ProviderButton` and `cx`.
 - Shared styles in `base.css` and design tokens in `tokens.css`.

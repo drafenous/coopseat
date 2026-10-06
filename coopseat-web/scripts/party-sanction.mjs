@@ -10,7 +10,13 @@ import pg from 'pg';
 // Without --hours the sanction is permanent. Applying one also cuts the user out of live sessions
 // (and ends the sessions they own for platform/party_host).
 
-const SCOPES = ['platform', 'party_host', 'party_stream', 'party_join', 'party_chat'];
+const SCOPES = [
+  'platform',
+  'party_host',
+  'party_stream',
+  'party_join',
+  'party_chat',
+];
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const args = process.argv.slice(2);
 const arg = (name) => {
@@ -18,7 +24,9 @@ const arg = (name) => {
   return i >= 0 ? args[i + 1] : undefined;
 };
 const usage = () => {
-  console.error('Usage: npm run party:sanction -- --user <uuid> --scope <scope> [--hours <n>] [--reason "<text>"] | --revoke <uuid>');
+  console.error(
+    'Usage: npm run party:sanction -- --user <uuid> --scope <scope> [--hours <n>] [--reason "<text>"] | --revoke <uuid>',
+  );
   process.exit(1);
 };
 
@@ -32,13 +40,17 @@ async function signal(sessionId, command) {
   const base = (process.env.PARTY_SIGNAL_URL ?? '').replace(/\/$/, '');
   const secret = process.env.PARTY_SIGNAL_SECRET;
   if (!base || !secret) {
-    console.warn('PARTY_SIGNAL_URL / PARTY_SIGNAL_SECRET not set: live sessions learn about it on the next token refresh (up to 10 min).');
+    console.warn(
+      'PARTY_SIGNAL_URL / PARTY_SIGNAL_SECRET not set: live sessions learn about it on the next token refresh (up to 10 min).',
+    );
     return;
   }
   const body = JSON.stringify(command);
   const ts = String(Date.now());
   const nonce = randomUUID();
-  const signature = createHmac('sha256', secret).update(`${ts}.${nonce}.${body}`).digest('hex');
+  const signature = createHmac('sha256', secret)
+    .update(`${ts}.${nonce}.${body}`)
+    .digest('hex');
   const res = await fetch(`${base}/internal/sessions/${sessionId}`, {
     method: 'POST',
     headers: {
@@ -49,7 +61,10 @@ async function signal(sessionId, command) {
     },
     body,
   });
-  if (!res.ok) console.error(`signal ${command.action} on ${sessionId}: HTTP ${res.status}`);
+  if (!res.ok)
+    console.error(
+      `signal ${command.action} on ${sessionId}: HTTP ${res.status}`,
+    );
 }
 
 const client = new pg.Client({ connectionString: url });
@@ -62,7 +77,9 @@ try {
       'update public.platform_sanctions set "revokedAt" = now() where id = $1 and "revokedAt" is null',
       [revokeId],
     );
-    console.log(rowCount ? 'sanction revoked' : 'no active sanction with that id');
+    console.log(
+      rowCount ? 'sanction revoked' : 'no active sanction with that id',
+    );
   } else {
     const profileId = arg('user');
     const scope = arg('scope');
@@ -78,7 +95,9 @@ try {
        returning id, "expiresAt"`,
       [profileId, scope, reason, hours ?? null],
     );
-    console.log(`sanction ${rows[0].id} (${scope}) until ${rows[0].expiresAt ?? 'forever'}`);
+    console.log(
+      `sanction ${rows[0].id} (${scope}) until ${rows[0].expiresAt ?? 'forever'}`,
+    );
 
     if (scope === 'platform' || scope === 'party_host') {
       const owned = await client.query(
@@ -86,8 +105,10 @@ try {
           where "roomId" = $1 and "endedAt" is null returning id`,
         [profileId],
       );
-      for (const s of owned.rows) await signal(s.id, { action: 'end', reason: 'sanction' });
-      if (owned.rowCount) console.log(`ended ${owned.rowCount} owned session(s)`);
+      for (const s of owned.rows)
+        await signal(s.id, { action: 'end', reason: 'sanction' });
+      if (owned.rowCount)
+        console.log(`ended ${owned.rowCount} owned session(s)`);
     }
     if (scope === 'platform' || scope === 'party_join') {
       const live = await client.query(
@@ -96,8 +117,14 @@ try {
           where p."profileId" = $1 and p."leftAt" is null and s."endedAt" is null`,
         [profileId],
       );
-      for (const r of live.rows) await signal(r.sessionId, { action: 'remove', profileId, reason: 'sanction' });
-      if (live.rowCount) console.log(`removed from ${live.rowCount} live session(s)`);
+      for (const r of live.rows)
+        await signal(r.sessionId, {
+          action: 'remove',
+          profileId,
+          reason: 'sanction',
+        });
+      if (live.rowCount)
+        console.log(`removed from ${live.rowCount} live session(s)`);
     } else if (scope === 'party_stream' || scope === 'party_chat') {
       const live = await client.query(
         `select p."sessionId" from public.party_session_participants p
@@ -105,7 +132,8 @@ try {
           where p."profileId" = $1 and p."leftAt" is null and s."endedAt" is null`,
         [profileId],
       );
-      for (const r of live.rows) await signal(r.sessionId, { action: 'refresh', profileId });
+      for (const r of live.rows)
+        await signal(r.sessionId, { action: 'refresh', profileId });
     }
   }
 } finally {

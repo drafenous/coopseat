@@ -37,6 +37,9 @@ export async function getPartyPolicy(): Promise<PartyPolicy> {
   };
 }
 
-export function roomCapacity(policy: PartyPolicy, room: { maxParticipants: number | null } | null): number {
+export function roomCapacity(
+  policy: PartyPolicy,
+  room: { maxParticipants: number | null } | null,
+): number {
   return room?.maxParticipants ?? policy.maxParticipants;
 }

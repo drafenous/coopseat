@@ -1,0 +1,25 @@
+package-lock.json
+
+# Build output and local previews (nested .gitignore files are not read by Prettier)
+.next
+.email-preview
+dist
+release
+coverage
+out
+.wrangler
+native/build
+native/build-cross
+
+# Vendored Prisma agent skills
+coopseat-web/.agents
+coopseat-web/.claude
+coopseat-web/.cursor
+coopseat-web/.devin
+
+# Generated Prisma contract and migration packages. Hashes are over the file bytes.
+coopseat-web/src/prisma
+coopseat-web/migrations
+
+# Third-party license texts
+coopseat/licenses

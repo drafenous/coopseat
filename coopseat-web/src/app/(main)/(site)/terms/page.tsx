@@ -6,7 +6,13 @@ import { TERMS_VERSION } from '@/lib/validation/account';
 
 export async function generateMetadata(): Promise<Metadata> {
   const [{ meta }, locale] = await Promise.all([getDictionary(), getLocale()]);
-  return pageMetadata({ locale, path: '/terms', title: meta.terms, description: meta.termsDescription, imageAlt: meta.title });
+  return pageMetadata({
+    locale,
+    path: '/terms',
+    title: meta.terms,
+    description: meta.termsDescription,
+    imageAlt: meta.title,
+  });
 }
 
 export default async function TermsPage() {

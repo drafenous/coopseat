@@ -19,6 +19,11 @@
     "dist:desktop": "npm run dist -w coopseat",
     "dist:desktop:portable": "npm run dist:portable -w coopseat",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "test": "npm test --workspaces --if-present"
+    "test": "npm test --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.9.9"
   }
 }
