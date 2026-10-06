@@ -27,7 +27,7 @@ const PACKAGES = {
     paths: ['packages/ui'],
   },
 };
-const UI_DEPENDENTS = ['coopseat', 'coopseat-web'];
+const UI_DEPENDENTS = ['coopseat', 'coopseat-web', 'coopseat-signal'];
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)$/;
 
 const run = (cmd) =>

@@ -4,6 +4,14 @@ All notable changes to `@coopseat/ui` are documented here. The format is based o
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-06
+
+### Added
+
+- Gaming-Party room: a stage for up to 10 streams, chat, a people list, room settings, and a picker for a capture device, a screen, or a window.
+- A window stream can include only that program's audio, and a screen stream can include the PC's audio except CoopSeat.
+- When the camera or microphone cannot start, the app says whether Windows privacy, the site permission, or another program is blocking it.
+
 ## [0.2.1] - 2026-10-03
 
 ### Added

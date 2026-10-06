@@ -4,6 +4,14 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-06
+
+### Added
+
+- Gaming-Party rooms at `/party/<nickname>`. A verified account has its own room, opened from My room on the account page.
+- A room can ask for a password, approval to enter, or an invite list. The host can name moderators.
+- The room stays open while the host is streaming. When they stop, everyone leaves and the chat is erased.
+
 ## [0.3.0] - 2026-10-03
 
 ### Added

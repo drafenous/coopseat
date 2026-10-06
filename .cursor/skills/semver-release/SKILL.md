@@ -20,7 +20,7 @@ node .cursor/skills/semver-release/scripts/release.mjs status
 node .cursor/skills/semver-release/scripts/release.mjs bump <desktop|web|ui> <major|minor|patch|x.y.z>
 ```
 
-`bump` edits `package.json`, updates the exact `@coopseat/ui` pin in `coopseat/` and `coopseat-web/` when bumping `ui`, and runs `npm install` so `package-lock.json` stays valid for `npm ci`.
+`bump` edits `package.json`, updates the exact `@coopseat/ui` pin in `coopseat/`, `coopseat-web/` and `coopseat-signal/` when bumping `ui`, and runs `npm install` so `package-lock.json` stays valid for `npm ci`.
 
 ## Workflow
 

@@ -1,7 +1,7 @@
 {
   "name": "coopseat-web",
   "type": "module",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "scripts": {
     "predev": "prisma contract emit",
@@ -23,7 +23,7 @@
     "email:preview": "node scripts/preview-emails.mjs"
   },
   "dependencies": {
-    "@coopseat/ui": "0.2.1",
+    "@coopseat/ui": "0.2.2",
     "@prisma/orm-extension-supabase": "8.0.0-rc.13",
     "@prisma/orm-postgres": "8.0.0-rc.13",
     "@prisma/orm-target-postgres": "8.0.0-rc.13",

@@ -59,11 +59,14 @@ test('the packaged app stays on production even if the environment says otherwis
 
 test('the signal Worker follows the same environment rules', () => {
   assert.equal(SIGNALS.development, 'http://localhost:8787');
-  assert.equal(SIGNALS.production, 'https://sinal.coopseat.com');
+  assert.equal(
+    SIGNALS.production,
+    'https://coopseat-signal.rodrigo-roberto-almeida.workers.dev',
+  );
   assert.equal(resolveSignal({ dev: true }), 'http://localhost:8787');
   assert.equal(
     resolveSignal({ packaged: true, override: 'http://localhost:8787' }),
-    'https://sinal.coopseat.com',
+    'https://coopseat-signal.rodrigo-roberto-almeida.workers.dev',
   );
   assert.equal(
     resolveSignal({ dev: true, override: 'https://signal.preview.example/x' }),

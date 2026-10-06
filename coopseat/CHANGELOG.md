@@ -4,6 +4,15 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-06
+
+### Added
+
+- Gaming-Party: join a room and watch up to 10 streams at once. Your room opens from the app, and a room link opens in the app.
+- Stream a capture device, a screen, or a window into the room.
+- A window stream can include only that program's audio. A screen stream can include the PC's audio except CoopSeat. On older Windows, the stream uses all system audio.
+- When a capture device cannot start, the app explains whether Windows camera or microphone privacy, the site permission, or another program is blocking it.
+
 ## [0.2.0] - 2026-10-03
 
 ### Added

@@ -18,6 +18,8 @@ type Props = {
   /** Shown as an overlay when set (the transport bar's stats toggle). */
   metrics?: InboundMetrics | null;
   showMetrics?: boolean;
+  /** Bound to this tile's video when it is the focused stream, for picture-in-picture. */
+  videoRef?: RefObject<HTMLVideoElement | null>;
   /** Native capture draws into this tile, so the copied stream is not shown here. */
   surfaceRef?: RefObject<HTMLElement | null>;
 };

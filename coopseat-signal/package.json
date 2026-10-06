@@ -11,7 +11,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@coopseat/ui": "0.2.1",
+    "@coopseat/ui": "0.2.2",
     "jose": "6.2.12"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 {
   "name": "coopseat",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "CoopSeat: jogue o console numa janela do Windows pela placa de captura USB",
   "author": "Rodrigo Almeida",
@@ -18,7 +18,7 @@
     "dist:portable": "npm run native:build && npm run build && electron-builder --win portable --x64 --config portable.config.cjs"
   },
   "devDependencies": {
-    "@coopseat/ui": "0.2.1",
+    "@coopseat/ui": "0.2.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
