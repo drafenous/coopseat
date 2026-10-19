@@ -51,7 +51,7 @@ export const ptBR: Dictionary = {
     nav: {
       features: 'Recursos',
       how: 'Como funciona',
-      party: 'Watch party',
+      party: 'Gaming Party',
       faq: 'Dúvidas',
     },
     signIn: 'Entrar',
@@ -64,14 +64,14 @@ export const ptBR: Dictionary = {
     headlineLead: 'Seu console no PC.',
     headlineAccent: 'Seus amigos no sofá.',
     pitch:
-      'Ligue o videogame no computador com uma placa de captura e jogue na tela do PC, com imagem nítida, som do jogo e quase nenhum atraso. Em breve, dá para chamar os amigos para assistir e jogar junto.',
+      'Ligue o videogame no computador com uma placa de captura e jogue na tela do PC, com imagem nítida, som do jogo e quase nenhum atraso. Com a Gaming Party (beta), dá para chamar os amigos para assistir e jogar junto.',
     heroNote:
       'Grátis · Não precisa de conta para jogar · Nunca gravamos o seu jogo',
     mock: {
       title: 'CoopSeat',
       live: 'Ao vivo',
       watching: (n: number) => `${n} assistindo`,
-      soon: 'Em breve',
+      soon: 'Beta',
       chain: 'Console → placa de captura → PC',
     },
     stats: [
@@ -127,10 +127,10 @@ export const ptBR: Dictionary = {
       },
     ],
     party: {
-      kicker: 'Watch party',
-      soon: 'Em breve',
+      kicker: 'Gaming Party',
+      soon: 'Beta',
       title: 'O sofá, agora online.',
-      body: 'Abra uma sala e chame os amigos para ver você jogar e conversar pelo chat, como se eles estivessem no sofá do seu lado.',
+      body: 'Abra uma sala e chame os amigos para ver você jogar e conversar pelo chat, como se eles estivessem no sofá do seu lado. Já disponível em beta.',
       points: [
         'Os amigos assistem direto pelo navegador, sem instalar nada.',
         'Assistir e usar o chat é só para contas de maiores de 18 anos verificadas, como a lei brasileira exige.',
@@ -159,7 +159,7 @@ export const ptBR: Dictionary = {
       },
       {
         title: 'Verificação de idade sem exposição',
-        body: 'Para a watch party guardamos só se você é maior de idade e a data, nunca fotos ou dados do documento.',
+        body: 'Para a Gaming Party guardamos só se você é maior de idade e a data, nunca fotos ou dados do documento.',
       },
     ],
     faqTitle: 'Perguntas frequentes',
@@ -174,7 +174,7 @@ export const ptBR: Dictionary = {
       },
       {
         q: 'Preciso de conta para jogar?',
-        a: 'Não. Dá para jogar sem conta. Para assistir e conversar com os amigos, que chega em breve, vai ser preciso uma conta de maior de 18 anos verificada.',
+        a: 'Não. Dá para jogar sem conta. Para assistir e conversar com os amigos na Gaming Party (beta), é preciso uma conta de maior de 18 anos verificada.',
       },
       {
         q: 'Quais placas de captura funcionam?',

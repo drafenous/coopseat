@@ -52,7 +52,7 @@ export const en = {
     nav: {
       features: 'Features',
       how: 'How it works',
-      party: 'Watch party',
+      party: 'Gaming Party',
       faq: 'FAQ',
     },
     signIn: 'Sign in',
@@ -65,13 +65,13 @@ export const en = {
     headlineLead: 'Your console on your PC.',
     headlineAccent: 'Your friends on the couch.',
     pitch:
-      'Connect your console to the computer with a capture card and play on your PC screen, with a sharp picture, game sound and almost no delay. Soon you will also be able to invite friends to watch and play along.',
+      'Connect your console to the computer with a capture card and play on your PC screen, with a sharp picture, game sound and almost no delay. With Gaming Party (beta), you can invite friends to watch and play along.',
     heroNote: 'Free · No account needed to play · We never record your game',
     mock: {
       title: 'CoopSeat',
       live: 'Live',
       watching: (n: number) => `${n} watching`,
-      soon: 'Soon',
+      soon: 'Beta',
       chain: 'Console → capture card → PC',
     },
     stats: [
@@ -130,10 +130,10 @@ export const en = {
       },
     ],
     party: {
-      kicker: 'Watch party',
-      soon: 'Coming soon',
+      kicker: 'Gaming Party',
+      soon: 'Beta',
       title: 'The couch, now online.',
-      body: 'Open a room and invite your friends to watch you play and chat along, as if they were sitting on the couch with you.',
+      body: 'Open a room and invite your friends to watch you play and chat along, as if they were sitting on the couch with you. Available now in beta.',
       points: [
         'Friends watch straight from the browser, with nothing to install.',
         'Watching and chat are only for verified adult accounts (18+), as Brazilian law requires.',
@@ -162,7 +162,7 @@ export const en = {
       },
       {
         title: 'Age check without exposure',
-        body: 'For the watch party we only keep whether you are an adult and the date, never photos or document data.',
+        body: 'For Gaming Party we only keep whether you are an adult and the date, never photos or document data.',
       },
     ],
     faqTitle: 'Frequently asked questions',
@@ -177,7 +177,7 @@ export const en = {
       },
       {
         q: 'Do I need an account to play?',
-        a: 'No. You can play without an account. To watch and chat with friends, which is coming soon, you will need a verified adult account (18+).',
+        a: 'No. You can play without an account. To watch and chat with friends in Gaming Party (beta), you need a verified adult account (18+).',
       },
       {
         q: 'Which capture cards work?',
