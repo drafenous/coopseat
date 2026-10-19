@@ -13,7 +13,8 @@ export async function accessPayload(
   const roomInfo = {
     owner: owner.nickname,
     ownerId: owner.id,
-    defaultLayout: room?.defaultLayout ?? 'stage',
+    defaultLayout:
+      room?.defaultLayout === 'grid' ? 'grid' : 'stage',
   };
   if (result.state !== 'admitted' && result.state !== 'pending')
     return { ...result, room: roomInfo };

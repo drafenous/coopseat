@@ -4,6 +4,7 @@ import { useCapture } from '../../hooks/useCapture';
 import { useCinema } from '../../hooks/useCinema';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useNativeBounds } from '../../hooks/useNativeBounds';
+import { useOwnerRoomSettings } from '../../hooks/useOwnerRoomSettings';
 import { useParty } from '../../hooks/useParty';
 import { usePictureInPicture } from '../../hooks/usePictureInPicture';
 import { usePresets } from '../../hooks/usePresets';
@@ -12,6 +13,7 @@ import { useStreamPicker } from '../../hooks/useStreamPicker';
 import { useToasts } from '../../hooks/useToasts';
 import { openDonation } from '../../lib/donate';
 import { errorText } from '../../lib/errors';
+import type { BanEntry } from '../../lib/party/api';
 import { effectIndex, smoothingLevel } from '../../lib/settings';
 import { cardSource } from '../../lib/stream-source';
 import {
@@ -29,6 +31,7 @@ import {
   PARTY_PANEL_KEY,
   STATS_KEY,
 } from '../../lib/storage';
+import { PanelRail } from '../molecules';
 import {
   AccountCta,
   AppFooter,
@@ -101,15 +104,12 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
   useEffect(() => {
     localStorage.setItem(STATS_KEY, showStats ? '1' : '0');
   }, [showStats]);
-  const [panelSide, setPanelSide] = useState<PanelSide>(() =>
+  const [panelSide] = useState<PanelSide>(() =>
     localStorage.getItem(PANEL_SIDE_KEY) === 'left' ? 'left' : 'right',
   );
   const [panelCollapsed, setPanelCollapsed] = useState(
     () => localStorage.getItem(PANEL_COLLAPSED_KEY) === '1',
   );
-  useEffect(() => {
-    localStorage.setItem(PANEL_SIDE_KEY, panelSide);
-  }, [panelSide]);
   useEffect(() => {
     localStorage.setItem(PANEL_COLLAPSED_KEY, panelCollapsed ? '1' : '0');
   }, [panelCollapsed]);
@@ -117,12 +117,22 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
   const [partyNick, setPartyNick] = useState<string | null>(initialParty);
   const auth = useAuth({ setError, setNotice, onPartyLink: setPartyNick });
   const signedIn = auth.status === 'signedIn';
+  const setBansRef = useRef<(bans: BanEntry[]) => void>(() => {});
   const party = useParty({
     nickname: partyNick ?? '',
     enabled: Boolean(partyNick) && signedIn,
     setError,
     setNotice,
+    smoothing: smoothingLevel(s.smoothing),
+    effect: effectIndex(s.effect),
+    onBansChange: (bans) => setBansRef.current(bans),
   });
+  const ownerSettings = useOwnerRoomSettings(
+    partyNick,
+    Boolean(partyNick) && signedIn && party.isOwner,
+    setError,
+  );
+  setBansRef.current = ownerSettings.setBans;
   const [roomCollapsed, setRoomCollapsed] = useState(
     () => localStorage.getItem(PARTY_PANEL_KEY) === '1',
   );
@@ -266,6 +276,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
     party,
     enabled: partyMode && streamer && !panelCollapsed,
     cardReady: running,
+    ensureCard: capture.start,
     cardStream: capture.mediaStream,
     cardLabel: videoName ?? '',
     onCardStop: capture.releaseStream,
@@ -278,10 +289,10 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
   const resumeCard = useRef(false);
   useEffect(() => {
     if (running || party.source?.kind !== 'card') return;
-    resumeCard.current = party.isOwner;
+    resumeCard.current = true;
     party.source.end();
-  }, [running, party.source, party.isOwner]);
-  // The owner restarting the capture (e.g. to change its format) resumes the room's stream.
+  }, [running, party.source]);
+  // Restarting the capture (for example to change its format) resumes whoever was streaming it.
   useEffect(() => {
     if (
       !resumeCard.current ||
@@ -336,6 +347,11 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
   const start = () => void capture.start(),
     stop = () => void capture.stop(),
     permit = () => void capture.permit();
+  const stopTransmit = () => {
+    resumeCard.current = false;
+    party.stopStreaming();
+    if (streamPicker.kind === 'card') void capture.stop();
+  };
 
   const currentMode = modes.find((m) => m.index === s.mode);
   const formatLabel =
@@ -348,11 +364,12 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
     loaded && Boolean(s.video) && (s.backend !== 'native' || modes.length > 0);
   const needsPermission = s.backend === 'compat' && !devices.video.length,
     canPermit = needsPermission || (s.backend === 'compat' && capture.locked);
+  const roomSide: PanelSide = 'right';
+  const settingsSide: PanelSide = partyMode && streamer ? 'right' : panelSide;
 
   const settingsPanel = (
     <SettingsPanel
-      side={panelSide}
-      onSwapSide={() => setPanelSide((x) => (x === 'right' ? 'left' : 'right'))}
+      side={settingsSide}
       onCollapse={() => setPanelCollapsed(true)}
       settings={s}
       change={change}
@@ -388,19 +405,34 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
       onBackendChange={capture.changeBackend}
       onStart={start}
       onStop={stop}
+      transmit={
+        partyMode
+          ? {
+              streaming: Boolean(party.source),
+              busy: party.busy || busy,
+              canStart:
+                streamPicker.kind === 'card' ? canStart : !streamPicker.blocked,
+              blocked: streamPicker.blocked,
+              onStart: streamPicker.start,
+              onStop: stopTransmit,
+            }
+          : undefined
+      }
     />
   );
   const gated = !signedIn || party.phase !== 'live';
-  const roomSide: PanelSide =
-    panelSide === 'right' && streamer && !panelCollapsed ? 'left' : panelSide;
+  // Prefer inbound stats for whoever is on the main tile; when that is us, use send-side stats.
+  const mainTileId = party.slots.main[0];
+  const partyMetrics =
+    mainTileId && mainTileId !== party.self?.id
+      ? (party.metrics[mainTileId] ?? null)
+      : (party.outbound ?? null);
+  const partyStatsActive = Boolean(
+    (mainTileId && mainTileId !== party.self?.id) || party.source,
+  );
   const activePip = partyMode ? stagePip : pip;
   const transport = (
     <TransportBar
-      panelSide={partyMode ? roomSide : panelSide}
-      panelOpen={partyMode ? !roomCollapsed : !panelCollapsed}
-      onTogglePanel={() =>
-        partyMode ? setRoomCollapsed((x) => !x) : setPanelCollapsed((x) => !x)
-      }
       volume={s.volume}
       onVolume={(v) => change('volume', v)}
       onToggleMute={toggleMute}
@@ -433,6 +465,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
       immersive={cinema.chromeHidden}
       panelSide={panelSide}
       panelCollapsed={panelCollapsed}
+      roomCollapsed={roomCollapsed}
       header={
         <AppHeader
           status={running ? 'live' : busy ? 'busy' : 'idle'}
@@ -450,10 +483,6 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         partyMode ? (
           <StreamStage
             party={party}
-            panelOpen={!roomCollapsed && signedIn}
-            onOpenPanel={() => setRoomCollapsed(false)}
-            onStartStream={streamPicker.start}
-            startBlocked={streamPicker.blocked}
             onLeave={leaveParty}
             transport={transport}
             volume={s.volume}
@@ -473,6 +502,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
                   onSignIn={login}
                   onOpenAccount={myAccount}
                   onStart={streamPicker.start}
+                  busy={busy}
                   startBlocked={streamPicker.blocked}
                 />
               ) : undefined
@@ -526,17 +556,41 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
           <AccountCta onSignUp={signUp} onSignIn={login} />
         )
       }
-      panel={!partyMode || streamer ? settingsPanel : undefined}
+      panel={
+        !partyMode || streamer
+          ? panelCollapsed
+            ? (
+                <PanelRail
+                  label={t.settings.title}
+                  expandLabel={t.settings.expand}
+                  side={settingsSide}
+                  onExpand={() => setPanelCollapsed(false)}
+                />
+              )
+            : settingsPanel
+          : undefined
+      }
       roomPanel={
-        partyMode && signedIn && !roomCollapsed ? (
-          <RoomPanel
-            party={party}
-            side={roomSide}
-            shareUrl={shareUrl}
-            onCollapse={() => setRoomCollapsed(true)}
-            setError={setError}
-            setNotice={setNotice}
-          />
+        partyMode && signedIn ? (
+          roomCollapsed ? (
+            <PanelRail
+              label={t.party.tabs.chat}
+              expandLabel={t.party.stage.openPanel}
+              side={roomSide}
+              onExpand={() => setRoomCollapsed(false)}
+              badge={party.chat.unread || undefined}
+            />
+          ) : (
+            <RoomPanel
+              party={party}
+              side={roomSide}
+              shareUrl={shareUrl}
+              ownerSettings={party.isOwner ? ownerSettings : null}
+              onCollapse={() => setRoomCollapsed(true)}
+              setError={setError}
+              setNotice={setNotice}
+            />
+          )
         ) : undefined
       }
       toasts={
@@ -553,9 +607,15 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
       }
       metrics={
         showStats &&
-        !partyMode && (
+        (partyMode ? (
+          <MetricsBar
+            kind="stream"
+            metrics={partyMetrics}
+            active={partyStatsActive}
+          />
+        ) : (
           <MetricsBar stats={stats} backend={s.backend} running={running} />
-        )
+        ))
       }
       footer={<AppFooter onDonate={openDonation} />}
       modals={

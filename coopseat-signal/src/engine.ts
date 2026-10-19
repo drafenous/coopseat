@@ -129,13 +129,6 @@ export class RoomEngine {
     return m.role === 'owner' || m.role === 'moderator' ? m.mod : null;
   }
 
-  private ownerLive(): boolean {
-    const owner = this.state.ownerId
-      ? this.state.members[this.state.ownerId]
-      : undefined;
-    return Boolean(owner?.streaming);
-  }
-
   // ---------- effect helpers ----------
 
   private send(to: string, msg: ServerMessage) {
@@ -179,6 +172,12 @@ export class RoomEngine {
         to: claims.sub,
         code: CLOSE.ended,
         reason: s.ended,
+      });
+      // The end notice can be lost while the app server is restarting. Say it again so the
+      // room row closes and the next visit can open a new session.
+      this.fx.push({
+        k: 'event',
+        event: { type: 'ended', sessionId: s.sid, reason: s.ended },
       });
       return this.flush();
     }
@@ -383,18 +382,18 @@ export class RoomEngine {
         this.remove(m, 'denied');
         continue;
       }
-      if (m.goneAt === null) continue;
-      if (m.id === s.ownerId) {
-        if (now - m.goneAt >= (s.cfg?.ownerGraceSeconds ?? 60) * 1000)
-          return this.end('owner_timeout', true);
-      } else if (now - m.goneAt >= RECONNECT_GRACE_MS) {
-        this.forget(m);
+      if (m.goneAt === null || now - m.goneAt < RECONNECT_GRACE_MS) continue;
+      const admitted = m.status !== 'pending';
+      this.forget(m);
+      if (admitted) {
         this.fx.push({
           k: 'event',
           event: { type: 'left', sessionId: s.sid, profileId: m.id },
         });
       }
     }
+    // Temporary access and stream grants live only in this session. They go away when nobody admitted is left.
+    if (s.cfg && this.admitted().length === 0) return this.end('empty', true);
     return this.flush();
   }
 
@@ -406,13 +405,7 @@ export class RoomEngine {
     for (const m of Object.values(s.members)) {
       if (m.connected) times.push(m.lastSeen + SOCKET_DEAD_MS);
       if (m.status === 'pending') times.push(m.joinedAt + PENDING_TTL_MS);
-      if (m.goneAt !== null) {
-        const grace =
-          m.id === s.ownerId
-            ? (s.cfg?.ownerGraceSeconds ?? 60) * 1000
-            : RECONNECT_GRACE_MS;
-        times.push(m.goneAt + grace);
-      }
+      if (m.goneAt !== null) times.push(m.goneAt + RECONNECT_GRACE_MS);
     }
     return times.length ? Math.min(...times) : null;
   }
@@ -498,7 +491,6 @@ export class RoomEngine {
         this.streamStart(m);
         break;
       case 'stream_stop':
-        if (m.role === 'owner') return this.end('owner_ended', true);
         if (m.streaming) this.stopStream(m);
         break;
       case 'stream_request':
@@ -582,8 +574,6 @@ export class RoomEngine {
       return;
     }
     if (!this.streamAllowed(m)) return this.error(m.id, 'stream_forbidden');
-    if (m.role !== 'owner' && !this.ownerLive())
-      return this.error(m.id, 'owner_not_live');
     const live = this.admitted().filter((p) => p.streaming).length;
     if (live >= (this.state.cfg?.maxStreamers ?? 10))
       return this.error(m.id, 'stream_full');

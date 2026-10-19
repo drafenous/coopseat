@@ -26,7 +26,13 @@ export type LiveAccess = {
   room: RoomInfo;
 };
 export type ClosedAccess =
-  | { state: 'offline'; isOwner: boolean; room: RoomInfo }
+  | {
+      state: 'offline';
+      isOwner: boolean;
+      /** Owner, or a durable allow-list stream grant, may open the room. */
+      canOpen: boolean;
+      room: RoomInfo;
+    }
   | { state: 'password_required'; room: RoomInfo }
   | { state: 'not_invited'; room: RoomInfo }
   | { state: 'banned'; room: RoomInfo }
@@ -75,8 +81,8 @@ export const partyApi = {
     api<Access>(`${room(nick)}/join`, { method: 'POST', body }),
   refresh: (nick: string, sessionId: string) =>
     api<Access>(`${room(nick)}/token`, { method: 'POST', body: { sessionId } }),
-  startSession: () =>
-    api<Access>('/api/party/session', { method: 'POST', body: {} }),
+  startSession: (nick: string) =>
+    api<Access>(`${room(nick)}/session`, { method: 'POST', body: {} }),
   endSession: () =>
     api<{ ok: true }>('/api/party/session', { method: 'DELETE', body: {} }),
   approve: (nick: string, profileId: string, approve: boolean) =>

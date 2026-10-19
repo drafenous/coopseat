@@ -20,6 +20,8 @@ export type SignalClientOptions = {
   onStatus(status: SignalStatus): void;
   /** The server closed with an invalid-token code; the owner should refresh admission. */
   onInvalid(): Promise<boolean>;
+  /** The session is already over. The close can arrive without the `session_end` message. */
+  onEnded?(reason: string): void;
 };
 
 const BACKOFF_MS = [500, 1_000, 2_000, 4_000, 8_000, 15_000];
@@ -116,7 +118,12 @@ export class SignalClient {
       this.clearTimers();
       if (this.ws !== ws || this.stopped) return;
       this.ws = null;
-      if (e.code === SIGNAL_CLOSE.removed || e.code === SIGNAL_CLOSE.ended) {
+      if (e.code === SIGNAL_CLOSE.ended) {
+        this.opts.onEnded?.(e.reason);
+        this.close();
+        return;
+      }
+      if (e.code === SIGNAL_CLOSE.removed) {
         this.close();
         return;
       }

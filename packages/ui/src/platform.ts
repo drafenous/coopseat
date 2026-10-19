@@ -52,6 +52,8 @@ export type DesktopBridge = {
   watchPointer(on: boolean): Promise<void>;
   onPointer(callback: () => void): () => void;
   onNative(callback: (event: NativeEvent) => void): () => void;
+  /** The page finished with the last native video frame, so another one may be sent. */
+  ackMedia?(): void;
   /** Frames of the open native capture, only while a party stream has asked for them. */
   onNativeMedia?(
     callback: (

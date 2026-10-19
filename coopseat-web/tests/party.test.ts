@@ -12,6 +12,7 @@ import { permissionsFor, type GateInput } from '@/lib/gates';
 import {
   assertCanTarget,
   decideAccess,
+  openLiveSession,
   type AccessResult,
   type Viewer,
 } from '@/server/party/access';
@@ -103,11 +104,64 @@ describe('decideAccess', () => {
     expect(await access(viewer('u1'))).toEqual({
       state: 'offline',
       isOwner: false,
+      canOpen: false,
     });
     expect(await access(viewer(OWNER.id))).toEqual({
       state: 'offline',
       isOwner: true,
+      canOpen: true,
     });
+  });
+
+  it('lets a durable streamer open a closed room, and nobody else', async () => {
+    await tables().PartyRoom.create({
+      ownerId: OWNER.id,
+      requireApproval: false,
+      whitelistEnabled: true,
+    });
+    await tables().PartyRoomWhitelist.create({
+      roomId: OWNER.id,
+      profileId: 'u1',
+      canStream: true,
+    });
+    await tables().PartyRoomWhitelist.create({
+      roomId: OWNER.id,
+      profileId: 'u2',
+      canStream: false,
+    });
+    await tables().PartyRoomModerator.create({
+      roomId: OWNER.id,
+      profileId: 'mod',
+    });
+    expect(await access(viewer('u1'))).toEqual({
+      state: 'offline',
+      isOwner: false,
+      canOpen: true,
+    });
+    expect(await access(viewer('u2'))).toEqual({
+      state: 'offline',
+      isOwner: false,
+      canOpen: false,
+    });
+    expect(await access(viewer('mod'))).toMatchObject({
+      state: 'offline',
+      canOpen: false,
+    });
+
+    const opened = await openLiveSession({
+      viewer: viewer('u1'),
+      owner: OWNER,
+    });
+    expect(opened.state).toBe('admitted');
+    if (opened.state === 'admitted')
+      expect(opened.claims.canStream).toBe(true);
+    expect(fake.current.data.PartySession).toHaveLength(1);
+
+    await expect(
+      openLiveSession({ viewer: viewer('u3'), owner: OWNER }),
+    ).rejects.toMatchObject({ status: 403, code: 'party_forbidden' });
+    expect(fake.current.data.PartySession).toHaveLength(1);
+    expect(await access(viewer('u3'))).toEqual({ state: 'not_invited' });
   });
 
   it('treats a stale session id as offline (the session ended and another started)', async () => {
@@ -194,10 +248,11 @@ describe('decideAccess', () => {
     ).toBe('pending');
   });
 
-  it('admits with the password alone when approval is off', async () => {
+  it('admits with the password alone in a public room', async () => {
     const session = await liveRoom({
       passwordHash: await hashRoomPassword('pw-123'),
       requireApproval: false,
+      whitelistEnabled: false,
     });
     expect(
       admitted(await access(viewer('u1'), { password: 'pw-123' })).state,
@@ -209,6 +264,56 @@ describe('decideAccess', () => {
         removal: null,
       }),
     ]);
+  });
+
+  it('admits anyone immediately in a public room without a password', async () => {
+    const session = await liveRoom({
+      requireApproval: false,
+      whitelistEnabled: false,
+    });
+    expect(admitted(await access(viewer('u1'))).state).toBe('admitted');
+    expect(fake.current.data.PartySessionParticipant).toEqual([
+      expect.objectContaining({
+        sessionId: session.id,
+        profileId: 'u1',
+        removal: null,
+      }),
+    ]);
+  });
+
+  it('queues strangers in a protected room and lets the allow list bypass', async () => {
+    await liveRoom({ requireApproval: true, whitelistEnabled: true });
+    expect(admitted(await access(viewer('u1'))).state).toBe('pending');
+    await tables().PartyRoomWhitelist.create({
+      roomId: OWNER.id,
+      profileId: 'u2',
+      canStream: false,
+    });
+    expect(admitted(await access(viewer('u2'))).state).toBe('admitted');
+  });
+
+  it('lets a durable streamer open a public room via the allow list', async () => {
+    await tables().PartyRoom.create({
+      ownerId: OWNER.id,
+      requireApproval: false,
+      whitelistEnabled: false,
+    });
+    await tables().PartyRoomWhitelist.create({
+      roomId: OWNER.id,
+      profileId: 'u1',
+      canStream: true,
+    });
+    expect(await access(viewer('u1'))).toEqual({
+      state: 'offline',
+      isOwner: false,
+      canOpen: true,
+    });
+    const opened = await openLiveSession({
+      viewer: viewer('u1'),
+      owner: OWNER,
+    });
+    expect(opened.state).toBe('admitted');
+    if (opened.state === 'admitted') expect(opened.claims.canStream).toBe(true);
   });
 
   it('lets admitted participants back in without protections until they are kicked', async () => {

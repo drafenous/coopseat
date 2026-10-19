@@ -425,7 +425,7 @@ export function useCapture({
           accessNote.current = false;
           throw e;
         }
-        return;
+        return true;
       }
       const [width, height] = cfg.resolution.split('x').map(Number);
       const v = await openDevice('camera', () =>
@@ -434,14 +434,14 @@ export function useCapture({
             deviceId: { exact: cfg.video },
             width: { exact: width },
             height: { exact: height },
-            frameRate: { ideal: cfg.fps },
+            frameRate: { ideal: cfg.fps, max: cfg.fps },
           },
           audio: false,
         }),
       );
       if (token !== generation.current) {
         v.getTracks().forEach((t) => t.stop());
-        return;
+        return false;
       }
       stream.current = v;
       const track = v.getVideoTracks()[0];
@@ -474,7 +474,7 @@ export function useCapture({
           );
           if (token !== generation.current) {
             a.getTracks().forEach((t) => t.stop());
-            return;
+            return false;
           }
           audioStream.current = a;
           if (audioRef.current) {
@@ -489,7 +489,7 @@ export function useCapture({
         } catch (e) {
           audioStream.current?.getTracks().forEach((t) => t.stop());
           audioStream.current = null;
-          if (token !== generation.current) return;
+          if (token !== generation.current) return false;
           setNotice(
             tRef.current.capture.audioFailed(
               e instanceof Error ? e.message : niceError(e),
@@ -497,7 +497,7 @@ export function useCapture({
           );
         }
       }
-      if (token !== generation.current) return;
+      if (token !== generation.current) return false;
       const actual = track.getSettings();
       setStats({
         type: 'started',
@@ -508,13 +508,15 @@ export function useCapture({
       });
       setRunning(true);
       setBusy(false);
+      return true;
     } catch (e) {
-      if (token !== generation.current) return;
+      if (token !== generation.current) return false;
       accessNote.current = false;
       release();
       setBusy(false);
       setRunning(false);
       setError(niceError(e));
+      return false;
     }
   }, [armWait, cancelWait, finishWait, release, stop, top]);
   useEffect(() => {

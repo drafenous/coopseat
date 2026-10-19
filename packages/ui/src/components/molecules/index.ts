@@ -17,6 +17,7 @@ export { StreamTile } from './StreamTile';
 export { MetricCard } from './MetricCard';
 export { Modal, ModalActions, modalTitleClass } from './Modal';
 export { ModeCard } from './ModeCard';
+export { PanelRail } from './PanelRail';
 export { ProviderButton } from './ProviderButton';
 export { SelectField } from './SelectField';
 export { Shortcut } from './Shortcut';

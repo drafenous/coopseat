@@ -9,7 +9,6 @@ export const PANEL_COLLAPSED_KEY = 'input-panel-collapsed';
 export const LOCALE_KEY = 'input-locale';
 export const TELEMETRY_KEY = 'input-telemetry';
 export const TELEMETRY_ID_KEY = 'input-telemetry-id';
-export const PARTY_CHAT_KEY = 'party-chat-visible';
 export const PARTY_LAYOUT_KEY = 'party-layout';
 export const PARTY_PANEL_KEY = 'party-panel-collapsed';
 export const PARTY_SOURCE_KEY = 'party-source-kind';

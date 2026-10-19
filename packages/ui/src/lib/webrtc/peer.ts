@@ -21,15 +21,56 @@ export type PeerLinkOptions = {
   onState?(state: LinkState): void;
 };
 
+function addressClass(address: string | null | undefined): string {
+  if (!address) return 'none';
+  if (address.endsWith('.local')) return 'mdns';
+  if (address === '::1' || address.startsWith('127.')) return 'loopback';
+  if (address.startsWith('169.254.') || address.startsWith('fe80:')) return 'linklocal';
+  if (
+    address.startsWith('10.') ||
+    address.startsWith('192.168.') ||
+    address.startsWith('fc') ||
+    address.startsWith('fd') ||
+    /^172\.(1[6-9]|2\d|3[0-1])\./.test(address)
+  ) {
+    return 'private';
+  }
+  return 'other';
+}
+
 /** Survives brief packet loss: ICE `disconnected` often recovers by itself. */
 export const DISCONNECT_GRACE_MS = 5_000;
 export const MAX_ICE_RESTARTS = 4;
 const RESTART_BACKOFF_MS = [0, 2_000, 5_000, 10_000];
+/**
+ * Holds a short, steady jitter buffer. With the default (as small as possible) a clump of late
+ * frames is rendered faster than realtime until the buffer is empty again.
+ */
+const PLAYOUT_TARGET_MS = 100;
+
+function holdPlayout(receiver: RTCRtpReceiver) {
+  const hint = receiver as RTCRtpReceiver & {
+    jitterBufferTarget?: number | null;
+    playoutDelayHint?: number | null;
+  };
+  try {
+    if ('jitterBufferTarget' in receiver)
+      hint.jitterBufferTarget = PLAYOUT_TARGET_MS;
+    else if ('playoutDelayHint' in receiver)
+      hint.playoutDelayHint = PLAYOUT_TARGET_MS / 1000;
+  } catch {
+    /* closed, or the engine rejected the target */
+  }
+}
 
 /** One RTCPeerConnection between a streamer and one viewer, with perfect negotiation and ICE restarts. */
 export class PeerLink {
   readonly pc: RTCPeerConnection;
   private makingOffer = false;
+  /** Set while this side is restarting ICE, so the viewer may send that one offer. */
+  private iceRestart = false;
+  /** The local SDP was already sent. Gathering can keep `setLocalDescription` pending. */
+  private localSent = false;
   private ignoreOffer = false;
   private restarts = 0;
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -37,6 +78,7 @@ export class PeerLink {
   private paused = false;
   private state: LinkState = 'connecting';
   private closed = false;
+  private queued: RTCIceCandidate[] = [];
 
   constructor(private opts: PeerLinkOptions) {
     this.pc = new RTCPeerConnection({
@@ -45,15 +87,32 @@ export class PeerLink {
     });
     this.pc.onnegotiationneeded = () => void this.offer();
     this.pc.onicecandidate = ({ candidate }) => {
-      this.opts.send({
-        pc: opts.id,
-        candidate: candidate
-          ? (candidate.toJSON() as SignalData['candidate'])
-          : null,
+      if (candidate) {
+        this.queued.push(candidate);
+        return;
+      }
+      const lan = this.queued.some((c) => {
+        const k = addressClass(c.address);
+        return c.type === 'host' && (k === 'private' || k === 'loopback');
       });
+      const chosen = this.queued.filter((c) => {
+        const k = addressClass(c.address);
+        if (k === 'mdns' || k === 'linklocal') return false;
+        if (lan && c.type === 'host' && k === 'other') return false;
+        return true;
+      });
+      for (const c of chosen) {
+        this.opts.send({
+          pc: opts.id,
+          candidate: c.toJSON() as SignalData['candidate'],
+        });
+      }
+      this.queued = [];
+      this.opts.send({ pc: opts.id, candidate: null });
     };
     this.pc.oniceconnectionstatechange = () => this.onIce();
-    this.pc.ontrack = ({ streams, track }) => {
+    this.pc.ontrack = ({ streams, track, receiver }) => {
+      holdPlayout(receiver);
       opts.onTrack?.(streams[0] ?? new MediaStream([track]));
     };
   }
@@ -144,18 +203,16 @@ export class PeerLink {
             : desc.sdp;
         await pc.setRemoteDescription({ type: desc.type, sdp });
         if (desc.type === 'offer') {
-          await pc.setLocalDescription();
-          if (pc.localDescription)
-            this.opts.send({
-              pc: this.opts.id,
-              description: {
-                type: pc.localDescription.type,
-                sdp: pc.localDescription.sdp,
-              },
-            });
+          this.localSent = false;
+          const op = pc.setLocalDescription();
+          this.publishLocal();
+          await op;
+          this.publishLocal();
         }
       } else if ('candidate' in data) {
         try {
+          const line = data.candidate?.candidate ?? '';
+          if (line.includes('.local')) return;
           await pc.addIceCandidate(data.candidate ?? undefined);
         } catch (e) {
           if (!this.ignoreOffer) throw e;
@@ -179,27 +236,40 @@ export class PeerLink {
   }
 
   private async offer() {
+    // Only the streamer offers, except when this side is restarting ICE. Answering and
+    // offering at the same time leaves setLocalDescription stuck.
     if (
       this.closed ||
-      (this.opts.side !== 'streamer' &&
-        this.pc.signalingState === 'stable' &&
-        !this.pc.remoteDescription)
+      this.makingOffer ||
+      (this.opts.side !== 'streamer' && !this.iceRestart)
     )
       return;
     try {
       this.makingOffer = true;
-      await this.pc.setLocalDescription();
-      const d = this.pc.localDescription;
-      if (d)
-        this.opts.send({
-          pc: this.opts.id,
-          description: { type: d.type, sdp: d.sdp },
-        });
+      this.localSent = false;
+      const op = this.pc.setLocalDescription();
+      this.publishLocal();
+      await op;
+      if (this.pc.localDescription) this.publishLocal();
     } catch (e) {
       console.warn('WebRTC offer failed', this.opts.id, e);
     } finally {
       this.makingOffer = false;
+      this.iceRestart = false;
     }
+  }
+
+  /** Sends the local SDP as soon as it exists, without waiting out ICE gathering. */
+  private publishLocal(): boolean {
+    const d = this.pc.pendingLocalDescription ?? this.pc.localDescription;
+    if (!d?.sdp.includes('ice-ufrag') || this.localSent || this.closed)
+      return false;
+    this.localSent = true;
+    this.opts.send({
+      pc: this.opts.id,
+      description: { type: d.type, sdp: d.sdp },
+    });
+    return this.pc.localDescription === null;
   }
 
   private onIce() {
@@ -238,6 +308,7 @@ export class PeerLink {
       if (this.closed) return;
       const s = this.pc.iceConnectionState;
       if (s === 'connected' || s === 'completed') return;
+      this.iceRestart = true;
       this.pc.restartIce();
       this.timer = setTimeout(() => {
         const now = this.pc.iceConnectionState;

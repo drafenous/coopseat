@@ -24,9 +24,9 @@ class Audio {
   try{ComInit com;ComPtr<IMMDeviceEnumerator> e;check(CoCreateInstance(__uuidof(MMDeviceEnumerator),nullptr,CLSCTX_ALL,IID_PPV_ARGS(&e)),"Audio enumerator");ComPtr<IMMDevice> in,out;check(e->GetDevice(wide(input).c_str(),&in),"Audio input");if(output.empty())check(e->GetDefaultAudioEndpoint(eRender,eConsole,&out),"Default audio output");else check(e->GetDevice(wide(output).c_str(),&out),"Audio output");
    auto capture=activate(in.Get());auto render=activate(out.Get());WAVEFORMATEX* raw=nullptr;check(capture->GetMixFormat(&raw),"Capture mix format");std::unique_ptr<WAVEFORMATEX,decltype(&CoTaskMemFree)> fmt(raw,&CoTaskMemFree);
    Handle capEvent{CreateEvent(nullptr,FALSE,FALSE,nullptr)},renderEvent{CreateEvent(nullptr,FALSE,FALSE,nullptr)};
-   // IAudioClient3 minimum shared period when accepted by the capture driver.
-   ComPtr<IAudioClient3> c3;bool low=false;if(SUCCEEDED(capture.As(&c3))){UINT32 def=0,fund=0,min=0,max=0;if(SUCCEEDED(c3->GetSharedModeEnginePeriod(fmt.get(),&def,&fund,&min,&max)))low=SUCCEEDED(c3->InitializeSharedAudioStream(AUDCLNT_STREAMFLAGS_EVENTCALLBACK,min,fmt.get(),nullptr));}
-   if(!low){c3.Reset();capture=activate(in.Get());check(capture->Initialize(AUDCLNT_SHAREMODE_SHARED,AUDCLNT_STREAMFLAGS_EVENTCALLBACK,0,0,fmt.get(),nullptr),"WASAPI capture initialize");}
+   // Shared default period only. IAudioClient3 minimum-period init has faulted some HDMI/USB
+   // capture audio drivers (BSOD); the party path prefers stability over sub-3 ms latency.
+   check(capture->Initialize(AUDCLNT_SHAREMODE_SHARED,AUDCLNT_STREAMFLAGS_EVENTCALLBACK,0,0,fmt.get(),nullptr),"WASAPI capture initialize");
    // Use the capture format as input to the output engine; Windows converts channel/rate if necessary.
    check(render->Initialize(AUDCLNT_SHAREMODE_SHARED,AUDCLNT_STREAMFLAGS_EVENTCALLBACK|AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM,0,0,fmt.get(),nullptr),"WASAPI render initialize");
    check(capture->SetEventHandle(capEvent),"Capture event");check(render->SetEventHandle(renderEvent),"Render event");ComPtr<IAudioCaptureClient> reader;ComPtr<IAudioRenderClient> writer;ComPtr<ISimpleAudioVolume> vol;check(capture->GetService(IID_PPV_ARGS(&reader)),"Audio reader");check(render->GetService(IID_PPV_ARGS(&writer)),"Audio writer");check(render->GetService(IID_PPV_ARGS(&vol)),"Audio volume");UINT32 capacity=0;check(render->GetBufferSize(&capacity),"Audio buffer size");

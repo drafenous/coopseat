@@ -1,25 +1,25 @@
-import type { ReactNode, RefObject } from 'react';
-import { LogOut, MessageSquare, PanelRightOpen, Tv } from 'lucide-react';
+import {
+  useCallback,
+  useState,
+  type DragEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
+import { LogOut, Tv } from 'lucide-react';
 import type { Party } from '../../hooks/useParty';
+import { mainGridClass } from '../../lib/party/layout';
 import { cx } from '../../lib/cx';
 import { IconButton } from '../atoms';
 import {
   Alert,
   LayoutPicker,
   RequestStreamButton,
-  StreamButton,
   StreamTile,
 } from '../molecules';
 import { useT } from '../../i18n';
 
 type Props = {
   party: Party;
-  panelOpen: boolean;
-  onOpenPanel(): void;
-  /** Starts streaming the source chosen in the side panel. */
-  onStartStream(): void;
-  /** Why the panel's choice can't be streamed yet, if it can't. */
-  startBlocked?: string;
   onLeave?(): void;
   gate?: ReactNode;
   /** Bottom controls (the same TransportBar as /play). */
@@ -37,24 +37,13 @@ type Props = {
   nativeSlotRef?: RefObject<HTMLElement | null>;
 };
 
-const mainGrid = (n: number, layout: string) =>
-  layout === 'split'
-    ? 'grid-cols-2 max-[750px]:grid-cols-1'
-    : layout !== 'grid' || n <= 1
-      ? 'grid-cols-1'
-      : n <= 4
-        ? 'grid-cols-2'
-        : n <= 9
-          ? 'grid-cols-3'
-          : 'grid-cols-4';
+type DragPayload = { id: string; from: 'main' | 'strip'; index: number };
+
+const MIME = 'application/x-coopseat-stream';
 
 /** The stage: who is streaming, laid out per the chosen layout, plus the stream controls. */
 export function StreamStage({
   party: p,
-  panelOpen,
-  onOpenPanel,
-  onStartStream,
-  startBlocked,
   onLeave,
   gate,
   transport,
@@ -67,47 +56,148 @@ export function StreamStage({
   const t = useT().party;
   const nick = (id: string) => p.peers[id]?.nick ?? '';
   const selfId = p.self?.id;
-  const tile = (id: string, small: boolean) => (
-    <StreamTile
-      key={id}
-      nick={nick(id)}
-      self={id === selfId}
-      owner={id === p.ownerId}
-      small={small}
-      stream={
-        id === selfId
-          ? (p.source?.stream ?? null)
-          : (p.remoteStreams[id] ?? null)
+  const occupied = p.slots.main.filter((id): id is string => id != null);
+  const [dragOver, setDragOver] = useState<string | null>(null);
+
+  const readPayload = (e: DragEvent): DragPayload | null => {
+    try {
+      const raw = e.dataTransfer.getData(MIME) || e.dataTransfer.getData('text/plain');
+      if (!raw) return null;
+      return JSON.parse(raw) as DragPayload;
+    } catch {
+      return null;
+    }
+  };
+
+  const onDragStart = useCallback(
+    (e: DragEvent, payload: DragPayload) => {
+      e.dataTransfer.setData(MIME, JSON.stringify(payload));
+      e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+      e.dataTransfer.effectAllowed = 'move';
+    },
+    [],
+  );
+
+  const allowDrop = (e: DragEvent, key: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOver(key);
+  };
+
+  const clearDrag = () => setDragOver(null);
+
+  const dropOnMain = (e: DragEvent, toIndex: number) => {
+    e.preventDefault();
+    clearDrag();
+    const payload = readPayload(e);
+    if (!payload) return;
+    if (p.layout === 'stage') {
+      if (payload.from === 'strip') p.setFocus(payload.id);
+      return;
+    }
+    if (payload.from === 'main') p.moveGridSlot(payload.index, toIndex);
+    else p.dropIntoGrid(payload.id, toIndex);
+  };
+
+  const dropOnStrip = (e: DragEvent) => {
+    e.preventDefault();
+    clearDrag();
+    const payload = readPayload(e);
+    if (!payload || p.layout !== 'grid') return;
+    if (payload.from === 'main') p.hideFromGrid(payload.id);
+  };
+
+  const tile = (
+    id: string,
+    opts: {
+      small: boolean;
+      index: number;
+      from: 'main' | 'strip';
+      videoRef?: RefObject<HTMLVideoElement | null>;
+    },
+  ) => (
+    <div
+      key={`${opts.from}-${id}-${opts.index}`}
+      draggable
+      onDragStart={(e) =>
+        onDragStart(e, { id, from: opts.from, index: opts.index })
       }
-      state={p.links[id]}
-      volume={volume}
-      metrics={p.metrics[id]}
-      showMetrics={showMetrics}
-      videoRef={!small && id === p.slots.main[0] ? mainVideoRef : undefined}
-      surfaceRef={id === selfId ? nativeSlotRef : undefined}
-      onFocus={
-        p.slots.main[0] !== id || p.layout === 'grid'
-          ? () => {
-              p.setFocus(id);
-              if (p.layout === 'grid') p.setLayout('stage');
-            }
+      onDragEnd={clearDrag}
+      onDragOver={
+        opts.from === 'main'
+          ? (e) => allowDrop(e, `main-${opts.index}`)
           : undefined
       }
-    />
+      onDragLeave={clearDrag}
+      onDrop={
+        opts.from === 'main' ? (e) => dropOnMain(e, opts.index) : undefined
+      }
+      className={cx(
+        'min-h-0 min-w-0',
+        dragOver === `main-${opts.index}` && 'ring-2 ring-accent rounded-lg',
+        'opacity-100 [[data-dragging]_&]:opacity-60',
+      )}
+    >
+      <StreamTile
+        nick={nick(id)}
+        self={id === selfId}
+        owner={id === p.ownerId}
+        small={opts.small}
+        stream={
+          id === selfId
+            ? (p.localStream ?? p.source?.stream ?? null)
+            : (p.remoteStreams[id] ?? null)
+        }
+        state={p.links[id]}
+        volume={volume}
+        metrics={p.metrics[id]}
+        showMetrics={showMetrics}
+        videoRef={opts.videoRef}
+        surfaceRef={id === selfId ? nativeSlotRef : undefined}
+        onFocus={
+          p.layout === 'stage' && opts.from === 'strip'
+            ? () => p.setFocus(id)
+            : p.layout === 'grid' && opts.from === 'strip'
+              ? () => p.showInGrid(id)
+              : undefined
+        }
+        focusLabel={
+          p.layout === 'grid' && opts.from === 'strip'
+            ? t.stage.showInGrid
+            : undefined
+        }
+      />
+    </div>
   );
-  const stop = () => {
-    if (!p.isOwner || confirm(t.stream.confirmStop)) void p.stopStreaming();
-  };
+
+  const emptyCell = (index: number) => (
+    <div
+      key={`empty-${index}`}
+      role="button"
+      tabIndex={0}
+      aria-label={t.stage.emptyCell}
+      onDragOver={(e) => allowDrop(e, `main-${index}`)}
+      onDragLeave={clearDrag}
+      onDrop={(e) => dropOnMain(e, index)}
+      className={cx(
+        'flex min-h-[120px] items-center justify-center rounded-lg border border-dashed border-line-soft bg-[#0e141b] text-[12px] text-[#6f7f90]',
+        dragOver === `main-${index}` && 'border-accent text-accent ring-2 ring-accent',
+      )}
+    >
+      {t.stage.emptyCell}
+    </div>
+  );
+
   const live = p.phase === 'live';
   const canRequest =
     live && !p.isOwner && !p.canStream && !p.self?.streamBlocked;
-  const showStream = p.isOwner || (live && p.canStream);
   const statusText =
     p.phase === 'live'
       ? t.status[p.signalStatus]
       : p.phase === 'connecting'
         ? t.status.connecting
         : null;
+  const firstMainId = occupied[0];
 
   return (
     <section className="flex min-h-0 flex-col overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#0b1016] immersive:fixed immersive:inset-0 immersive:z-9 immersive:rounded-none immersive:border-0">
@@ -129,35 +219,20 @@ export function StreamStage({
           </span>
         )}
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          {live && <LayoutPicker value={p.layout} onChange={p.setLayout} />}
+          {live && (
+            <LayoutPicker
+              value={p.layout}
+              onChange={p.setLayout}
+              splitOrientation={p.splitOrientation}
+              onSplitOrientation={p.setSplitOrientation}
+              showSplitToggle={p.layout === 'grid' && occupied.length === 2}
+            />
+          )}
           {canRequest && (
             <RequestStreamButton
               requested={p.requested}
-              disabled={!p.ownerLive}
-              title={p.ownerLive ? undefined : t.stream.ownerFirst}
               onRequest={p.requestStream}
             />
-          )}
-          {showStream && (
-            <StreamButton
-              streaming={Boolean(p.source)}
-              busy={p.busy}
-              disabled={(!p.isOwner && !p.ownerLive) || Boolean(startBlocked)}
-              title={
-                !p.isOwner && !p.ownerLive ? t.stream.ownerFirst : startBlocked
-              }
-              onStart={onStartStream}
-              onStop={stop}
-            />
-          )}
-          {!panelOpen && (
-            <IconButton label={t.stage.openPanel} onClick={onOpenPanel}>
-              {p.chat.unread > 0 ? (
-                <MessageSquare size={18} className="text-accent" />
-              ) : (
-                <PanelRightOpen size={18} />
-              )}
-            </IconButton>
           )}
           {onLeave && (
             <IconButton label={t.leave} onClick={onLeave}>
@@ -182,22 +257,67 @@ export function StreamStage({
           <div className={previewRef ? 'flex-none overflow-auto' : 'contents'}>
             {gate}
           </div>
-        ) : p.slots.main.length ? (
+        ) : occupied.length || p.slots.main.some((x) => x == null) ? (
           <>
             <div
               className={cx(
                 'grid min-h-0 flex-1 gap-2',
-                mainGrid(p.slots.main.length, p.layout),
+                mainGridClass(
+                  occupied.length,
+                  p.layout,
+                  p.splitOrientation,
+                ),
               )}
+              onDragOver={
+                p.layout === 'stage'
+                  ? (e) => allowDrop(e, 'stage-main')
+                  : undefined
+              }
+              onDrop={
+                p.layout === 'stage'
+                  ? (e) => {
+                      e.preventDefault();
+                      clearDrag();
+                      const payload = readPayload(e);
+                      if (payload?.from === 'strip') p.setFocus(payload.id);
+                    }
+                  : undefined
+              }
             >
-              {p.slots.main.map((id) => tile(id, false))}
+              {p.slots.main.map((id, index) =>
+                id == null
+                  ? emptyCell(index)
+                  : tile(id, {
+                      small: false,
+                      index,
+                      from: 'main',
+                      videoRef:
+                        id === firstMainId && p.layout === 'stage'
+                          ? mainVideoRef
+                          : id === firstMainId
+                            ? mainVideoRef
+                            : undefined,
+                    }),
+              )}
             </div>
             {p.slots.strip.length > 0 && (
-              <div className="grid flex-none grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2">
-                {p.slots.strip.map((id) => tile(id, true))}
+              <div
+                className={cx(
+                  'grid flex-none grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2 rounded-lg p-0.5',
+                  dragOver === 'strip' && 'ring-2 ring-accent',
+                )}
+                onDragOver={(e) => {
+                  if (p.layout === 'grid') allowDrop(e, 'strip');
+                }}
+                onDragLeave={clearDrag}
+                onDrop={dropOnStrip}
+              >
+                {p.slots.strip.map((id, index) =>
+                  tile(id, { small: true, index, from: 'strip' }),
+                )}
               </div>
             )}
-            {p.slots.hidden.length > 0 && (
+            {p.layout === 'grid' && p.slots.hidden.length > 0 && (
               <p className="flex-none text-center text-[12px] text-[#6f7f90]">
                 {t.stage.hidden(p.slots.hidden.length)}
               </p>

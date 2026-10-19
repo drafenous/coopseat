@@ -60,3 +60,27 @@ test('skips a stray byte and still reads the next frame', () => {
   assert.equal(frames[0].meta.format, 'bgra');
   assert.deepEqual([...frames[0].data], [7]);
 });
+
+test('a busy video frame is skipped without hiding the audio after it', () => {
+  const video = Buffer.from([1, 2, 3, 4]);
+  const audio = Buffer.from([9, 8]);
+  const frames = [];
+  let busy = true;
+  const parse = createFrameParser((frame) => frames.push(frame), {
+    skipVideo: () => busy,
+  });
+  parse(
+    Buffer.concat([
+      header(1, 2, 2, 1, 2, video.length),
+      video,
+      header(2, 48000, 2, 0, 0, audio.length),
+      audio,
+    ]),
+  );
+  assert.equal(frames.length, 1);
+  assert.equal(frames[0].meta.kind, 'audio');
+  busy = false;
+  parse(Buffer.concat([header(1, 2, 2, 1, 2, video.length), video]));
+  assert.equal(frames.length, 2);
+  assert.equal(frames[1].meta.kind, 'video');
+});

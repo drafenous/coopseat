@@ -15,7 +15,7 @@ export const updateRoomSchema = z
     password: roomPasswordSchema.nullable().optional(),
     requireApproval: z.boolean().optional(),
     whitelistEnabled: z.boolean().optional(),
-    defaultLayout: z.enum(['stage', 'grid', 'split', 'focus']).optional(),
+    defaultLayout: z.enum(['stage', 'grid']).optional(),
   })
   .strict();
 

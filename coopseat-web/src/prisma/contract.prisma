@@ -182,14 +182,13 @@ namespace public {
     owner            Profile                    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
     passwordHash     String?
     requireApproval  Boolean                    @default(true)
-    whitelistEnabled Boolean                    @default(false)
+    whitelistEnabled Boolean                    @default(true)
     defaultLayout    String                     @default("stage")
     maxParticipants  Int?
     createdAt        TimestamptzString          @default(now())
     updatedAt        temporal.updatedAtString()
 
-    @@check(expression: "\"passwordHash\" IS NOT NULL OR \"requireApproval\" OR \"whitelistEnabled\"", name: "party_rooms_protected")
-    @@check(expression: "\"defaultLayout\" IN ('stage', 'grid', 'split', 'focus')", name: "party_rooms_layout")
+    @@check(expression: "\"defaultLayout\" IN ('stage', 'grid')", name: "party_rooms_layout")
     @@check(expression: "\"maxParticipants\" IS NULL OR \"maxParticipants\" BETWEEN 2 AND 50", name: "party_rooms_participants")
     @@map("party_rooms")
     @@rls
@@ -255,7 +254,7 @@ namespace public {
 
     @@index([roomId], where: "\"endedAt\" IS NULL", unique: true, name: "party_sessions_one_active")
     @@index([startedAt])
-    @@check(expression: "\"endReason\" IS NULL OR \"endReason\" IN ('owner_ended', 'owner_timeout', 'max_duration', 'sanction', 'operator')", name: "party_sessions_end_reason")
+    @@check(expression: "\"endReason\" IS NULL OR \"endReason\" IN ('owner_ended', 'owner_timeout', 'empty', 'max_duration', 'sanction', 'operator')", name: "party_sessions_end_reason")
     @@map("party_sessions")
     @@rls
   }

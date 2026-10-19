@@ -1,16 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Link2,
   MessageSquare,
-  MessageSquareOff,
   PanelLeftClose,
   PanelRightClose,
   Settings2,
   Users,
 } from 'lucide-react';
+import type { OwnerRoomSettings } from '../../hooks/useOwnerRoomSettings';
 import type { Party } from '../../hooks/useParty';
 import { cx } from '../../lib/cx';
-import { Button, IconButton } from '../atoms';
+import { IconButton } from '../atoms';
 import type { PanelSide } from '../templates/MainLayout';
 import { ApprovalQueue } from './ApprovalQueue';
 import { ChatPanel } from './ChatPanel';
@@ -24,6 +24,7 @@ type Props = {
   party: Party;
   side: PanelSide;
   shareUrl: string;
+  ownerSettings: OwnerRoomSettings | null;
   onCollapse(): void;
   setError(message: string): void;
   setNotice(message: string): void;
@@ -34,6 +35,7 @@ export function RoomPanel({
   party: p,
   side,
   shareUrl,
+  ownerSettings,
   onCollapse,
   setError,
   setNotice,
@@ -43,6 +45,10 @@ export function RoomPanel({
   const [tab, setTab] = useState<Tab>('chat');
   const live = p.phase === 'live';
   const peers = Object.values(p.peers);
+  useEffect(() => {
+    p.chat.setViewing(tab === 'chat');
+    return () => p.chat.setViewing(false);
+  }, [tab, p.chat]);
   const copy = () =>
     void navigator.clipboard.writeText(shareUrl).then(
       () => setNotice(t.copied),
@@ -54,7 +60,7 @@ export function RoomPanel({
         id: 'chat',
         label: t.tabs.chat,
         icon: MessageSquare,
-        badge: p.chat.unread,
+        badge: p.chat.unread || undefined,
       },
       {
         id: 'people',
@@ -66,29 +72,50 @@ export function RoomPanel({
         ? [{ id: 'settings' as const, label: t.tabs.settings, icon: Settings2 }]
         : []),
     ];
+  const active = tabs.find((x) => x.id === tab) ?? tabs[0]!;
+  const ActiveIcon = active.icon;
   return (
     <aside className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#121921] immersive:hidden max-[750px]:min-h-[420px]">
-      <div className="flex flex-none items-center gap-1 border-b border-line-soft px-2 py-1.5">
-        <div role="tablist" className="flex min-w-0 flex-1 gap-0.5">
-          {tabs.map(({ id, label, icon: Icon, badge }) => (
+      <div className="flex flex-none flex-col px-5 pt-[18px] min-[1800px]:px-6 min-[1800px]:pt-[22px]">
+        <div className="mb-[14px] flex items-center gap-[9px] text-[#c3d0dd]">
+          <ActiveIcon size={18} />
+          <h2 className="min-w-0 flex-1 truncate text-[16px] font-[550] min-[1800px]:text-[17px]">
+            {active.label}
+          </h2>
+          <IconButton size="sm" label={t.copyLink} onClick={copy}>
+            <Link2 size={16} />
+          </IconButton>
+          <IconButton
+            size="sm"
+            label={all.settings.collapse}
+            onClick={onCollapse}
+          >
+            {side === 'right' ? (
+              <PanelRightClose size={16} />
+            ) : (
+              <PanelLeftClose size={16} />
+            )}
+          </IconButton>
+        </div>
+        <div
+          role="tablist"
+          className="mb-3 flex gap-0.5 rounded-lg bg-[#ffffff08] p-0.5"
+        >
+          {tabs.map(({ id, label, badge }) => (
             <button
               key={id}
               type="button"
               role="tab"
               aria-selected={tab === id}
-              onClick={() => {
-                setTab(id);
-                if (id === 'chat' && !p.chat.visible) p.chat.setVisible(true);
-              }}
+              onClick={() => setTab(id)}
               className={cx(
-                'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[13px] font-semibold',
+                'flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-[12px] font-semibold',
                 tab === id
-                  ? 'bg-[#ffffff0d] text-[#e3ebf2]'
+                  ? 'bg-[#1c2630] text-[#e3ebf2] shadow-sm'
                   : 'text-[#8494a5] hover:text-[#c3d0dd]',
               )}
             >
-              <Icon size={15} />
-              {label}
+              <span className="truncate">{label}</span>
               {badge ? (
                 <span className="rounded-full bg-[#ffffff14] px-1.5 text-[11px]">
                   {badge}
@@ -97,33 +124,6 @@ export function RoomPanel({
             </button>
           ))}
         </div>
-        <IconButton size="sm" label={t.copyLink} onClick={copy}>
-          <Link2 size={16} />
-        </IconButton>
-        {tab === 'chat' && (
-          <IconButton
-            size="sm"
-            label={p.chat.visible ? t.chat.hide : t.chat.show}
-            onClick={() => p.chat.setVisible(!p.chat.visible)}
-          >
-            {p.chat.visible ? (
-              <MessageSquareOff size={16} />
-            ) : (
-              <MessageSquare size={16} />
-            )}
-          </IconButton>
-        )}
-        <IconButton
-          size="sm"
-          label={all.settings.collapse}
-          onClick={onCollapse}
-        >
-          {side === 'right' ? (
-            <PanelRightClose size={16} />
-          ) : (
-            <PanelLeftClose size={16} />
-          )}
-        </IconButton>
       </div>
       {live && p.perms?.approve && (
         <ApprovalQueue
@@ -139,28 +139,18 @@ export function RoomPanel({
         />
       )}
       <div className="flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-width:thin]">
-        {tab === 'chat' &&
-          (p.chat.visible ? (
-            <ChatPanel
-              messages={p.chat.messages}
-              selfId={p.self?.id ?? null}
-              ownerId={p.ownerId}
-              enabled={live && p.chatEnabled}
-              canChat={Boolean(p.self?.chat)}
-              canDelete={Boolean(p.perms?.deleteMessages)}
-              onSend={p.sendChat}
-              onDelete={p.moderation.deleteMessage}
-            />
-          ) : (
-            <div className="flex flex-1 items-center justify-center p-6">
-              <Button
-                variant="secondary"
-                onClick={() => p.chat.setVisible(true)}
-              >
-                <MessageSquare size={15} /> {t.chat.show}
-              </Button>
-            </div>
-          ))}
+        {tab === 'chat' && (
+          <ChatPanel
+            messages={p.chat.messages}
+            selfId={p.self?.id ?? null}
+            ownerId={p.ownerId}
+            enabled={live && p.chatEnabled}
+            canChat={Boolean(p.self?.chat)}
+            canDelete={Boolean(p.perms?.deleteMessages)}
+            onSend={p.sendChat}
+            onDelete={p.moderation.deleteMessage}
+          />
+        )}
         {tab === 'people' && (
           <ParticipantList
             peers={peers}
@@ -170,10 +160,11 @@ export function RoomPanel({
             actions={p.moderation}
           />
         )}
-        {tab === 'settings' && p.isOwner && (
+        {tab === 'settings' && p.isOwner && ownerSettings && (
           <RoomSettings
             nickname={p.nickname}
             live={live}
+            settings={ownerSettings}
             setError={setError}
             setNotice={setNotice}
             onEndSession={() => void p.endSession()}

@@ -71,7 +71,12 @@ describe('RoomEngine', () => {
       'removed',
     ]);
     e.end('owner_ended', true);
-    expect(types(e.join(claims('bia'), T0), 'bia')).toEqual(['session_end']);
+    const again = e.join(claims('bia'), T0);
+    expect(types(again, 'bia')).toEqual(['session_end']);
+    expect(again).toContainEqual({
+      k: 'event',
+      event: { type: 'ended', sessionId: SID, reason: 'owner_ended' },
+    });
   });
 
   it('enforces the participant cap, never against the owner', () => {
@@ -122,15 +127,12 @@ describe('RoomEngine', () => {
     expect(e.state.members['ana']).toBeUndefined();
   });
 
-  it('only lets others stream while the owner is live, up to maxStreamers', () => {
+  it('lets permitted members stream without the owner, up to maxStreamers', () => {
     const e = room();
     e.join(claims('ana', { canStream: true }), T0);
-    expect(
-      sent(e.message('ana', msg({ t: 'stream_start' }), T0), 'ana'),
-    ).toEqual([{ t: 'error', code: 'owner_not_live' }]);
-    e.message('owner', msg({ t: 'stream_start' }), T0);
     e.message('ana', msg({ t: 'stream_start' }), T0);
     expect(e.state.members['ana']!.streaming).toBe(true);
+    e.message('owner', msg({ t: 'stream_start' }), T0);
 
     const capped = new RoomEngine(initialState(SID));
     const one = { ...cfg, maxStreamers: 1 };
@@ -398,40 +400,53 @@ describe('RoomEngine', () => {
     });
   });
 
-  it('ends the session when the owner stays away past the grace window', () => {
+  it('keeps the session when the owner leaves and someone else is still there', () => {
     const e = room();
     e.join(claims('ana'), T0);
     e.disconnect('owner', T0);
-    e.message('ana', msg({ t: 'ping' }), T0 + 59_000);
-    expect(e.alarm(T0 + 59_000).some((f) => f.k === 'event')).toBe(false);
-    e.message('ana', msg({ t: 'ping' }), T0 + 60_000);
-    const fx = e.alarm(T0 + 60_000);
-    expect(sent(fx, 'ana')).toEqual([
-      { t: 'session_end', reason: 'owner_timeout' },
-    ]);
+    e.message('ana', msg({ t: 'ping' }), T0 + RECONNECT_GRACE_MS);
+    const fx = e.alarm(T0 + RECONNECT_GRACE_MS);
+    expect(e.state.ended).toBeNull();
+    expect(e.state.members['owner']).toBeUndefined();
+    expect(e.state.members['ana']!.connected).toBe(true);
     expect(fx).toContainEqual({
       k: 'event',
-      event: { type: 'ended', sessionId: SID, reason: 'owner_timeout' },
+      event: { type: 'left', sessionId: SID, profileId: 'owner' },
     });
-    expect(e.state.ended).toBe('owner_timeout');
-    expect(e.state.chat).toEqual([]);
   });
 
-  it('ends everything when the owner stops streaming, and at max duration', () => {
+  it('ends the session once the room stays empty and drops session grants', () => {
     const e = room();
     e.join(claims('ana'), T0);
+    e.message('owner', msg({ t: 'stream_grant', to: 'ana' }), T0);
+    expect(e.state.members['ana']!.granted).toBe(true);
+    e.message('ana', msg({ t: 'chat', text: 'oi' }), T0);
+    e.disconnect('owner', T0);
+    e.disconnect('ana', T0);
+    expect(e.alarm(T0 + RECONNECT_GRACE_MS - 1).some((f) => f.k === 'event')).toBe(
+      false,
+    );
+    expect(e.state.ended).toBeNull();
+    const fx = e.alarm(T0 + RECONNECT_GRACE_MS);
+    expect(e.state.ended).toBe('empty');
+    expect(e.state.members).toEqual({});
+    expect(e.state.chat).toEqual([]);
+    expect(fx).toContainEqual({
+      k: 'event',
+      event: { type: 'ended', sessionId: SID, reason: 'empty' },
+    });
+  });
+
+  it('stopping the owner stream does not end the session, which still ends at max duration', () => {
+    const e = room();
+    e.join(claims('ana'), T0);
+    e.message('owner', msg({ t: 'stream_start' }), T0);
     e.message('ana', msg({ t: 'chat', text: 'oi' }), T0);
     const fx = e.message('owner', msg({ t: 'stream_stop' }), T0);
-    expect(sent(fx, 'ana')).toEqual([
-      { t: 'session_end', reason: 'owner_ended' },
-    ]);
-    expect(
-      fx
-        .filter((f) => f.k === 'close')
-        .map((f) => (f as { to: string }).to)
-        .sort(),
-    ).toEqual(['ana', 'owner']);
-    expect(e.state.chat).toEqual([]);
+    expect(e.state.ended).toBeNull();
+    expect(e.state.members['owner']!.streaming).toBe(false);
+    expect(e.state.chat).toHaveLength(1);
+    expect(types(fx, 'ana')).not.toContain('session_end');
 
     const timed = room();
     expect(timed.alarm(cfg.endsAt * 1000)).toContainEqual({

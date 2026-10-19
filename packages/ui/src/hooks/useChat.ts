@@ -1,32 +1,20 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import {
   CHAT_HISTORY,
   graphemeCount,
   sanitizeChat,
   type ChatMessage,
 } from '../party/protocol';
-import { PARTY_CHAT_KEY } from '../lib/storage';
 
 /** Ephemeral session chat: lives in memory only and is wiped when the session ends. */
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [visible, setVisibleState] = useState(() => {
-    try {
-      return localStorage.getItem(PARTY_CHAT_KEY) !== '0';
-    } catch {
-      return true;
-    }
-  });
   const [unread, setUnread] = useState(0);
+  const viewing = useRef(false);
 
-  const setVisible = useCallback((v: boolean) => {
-    setVisibleState(v);
+  const setViewing = useCallback((v: boolean) => {
+    viewing.current = v;
     if (v) setUnread(0);
-    try {
-      localStorage.setItem(PARTY_CHAT_KEY, v ? '1' : '0');
-    } catch {
-      /* storage unavailable */
-    }
   }, []);
   const reset = useCallback((initial: ChatMessage[] = []) => {
     setMessages(initial.slice(-CHAT_HISTORY));
@@ -36,7 +24,7 @@ export function useChat() {
     setMessages((x) =>
       x.some((m) => m.id === msg.id) ? x : [...x, msg].slice(-CHAT_HISTORY),
     );
-    if (!mine) setUnread((n) => n + 1);
+    if (!mine && !viewing.current) setUnread((n) => n + 1);
   }, []);
   const remove = useCallback(
     (id: string) => setMessages((x) => x.filter((m) => m.id !== id)),
@@ -45,9 +33,8 @@ export function useChat() {
 
   return {
     messages,
-    visible,
-    unread: visible ? 0 : unread,
-    setVisible,
+    unread,
+    setViewing,
     reset,
     add,
     remove,

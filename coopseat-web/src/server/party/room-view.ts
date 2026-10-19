@@ -23,7 +23,7 @@ export async function roomView(ownerId: string, ownerNickname: string | null) {
     hasPassword: room.passwordHash !== null,
     requireApproval: room.requireApproval,
     whitelistEnabled: room.whitelistEnabled,
-    defaultLayout: room.defaultLayout,
+    defaultLayout: room.defaultLayout === 'grid' ? 'grid' : 'stage',
     maxParticipants: roomCapacity(policy, room),
     maxStreamers: policy.maxStreamers,
     enabled: policy.enabled,

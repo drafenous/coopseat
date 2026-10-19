@@ -9,6 +9,16 @@ export type OutboundSample = {
   availableKbps: number | null;
   limitation: string | null;
   fps: number | null;
+  width: number | null;
+  height: number | null;
+};
+export type OutboundMetrics = {
+  kbps: number;
+  lossRate: number;
+  rttMs: number | null;
+  fps: number | null;
+  width: number | null;
+  height: number | null;
 };
 export type InboundSample = {
   at: number;
@@ -48,12 +58,16 @@ export async function outboundSample(
     availableKbps: null,
     limitation: null,
     fps: null,
+    width: null,
+    height: null,
   };
   stats.forEach((r: Stat) => {
     if (r.type === 'outbound-rtp' && r.kind === 'video') {
       s.bytesSent += num(r.bytesSent) ?? 0;
       s.packetsSent += num(r.packetsSent) ?? 0;
       s.fps = num(r.framesPerSecond);
+      s.width = num(r.frameWidth);
+      s.height = num(r.frameHeight);
       s.limitation =
         typeof r.qualityLimitationReason === 'string'
           ? r.qualityLimitationReason
@@ -131,14 +145,40 @@ export function inboundMetrics(
   };
 }
 
+export function outboundMetrics(
+  prev: OutboundSample,
+  next: OutboundSample,
+): OutboundMetrics {
+  const secs = Math.max(0.001, (next.at - prev.at) / 1000);
+  const sent = next.packetsSent - prev.packetsSent,
+    lost = Math.max(0, next.packetsLost - prev.packetsLost);
+  return {
+    kbps: Math.max(
+      0,
+      ((next.bytesSent - prev.bytesSent) * 8) / 1000 / secs,
+    ),
+    lossRate: sent + lost > 0 ? lost / (sent + lost) : 0,
+    rttMs: next.rttMs,
+    fps: next.fps,
+    width: next.width,
+    height: next.height,
+  };
+}
+
 /**
  * Per-viewer send-rate controller (AIMD on top of the browser's congestion control): backs off fast
- * on loss, high RTT or bandwidth limitation, recovers slowly after sustained clean samples, and never
- * exceeds the allocation from the upload budget or the estimated available bandwidth.
+ * on loss or high RTT, and after a few clean samples climbs back toward the allocation. The
+ * available-bandwidth estimate is not followed tick by tick: it wobbles on a healthy link, and
+ * rewriting `maxBitrate` for each wobble makes the encoder stall and then dump the frames it held.
+ * It is applied only when it falls below half the target, which is a real hole rather than noise.
+ * The encoder's `qualityLimitationReason` of `bandwidth` is not congestion: it also fires when the
+ * picture is merely sitting on the cap we set, and treating it as loss collapses the bitrate.
  */
 export class BitrateAdapter {
   private target: number;
   private clean = 0;
+  /** Set when the estimate collapses, so the climb cannot walk back out of that hole. */
+  private hole: number | null = null;
   private prev: OutboundSample | null = null;
   constructor(private ceiling: number) {
     this.target = ceiling;
@@ -158,20 +198,29 @@ export class BitrateAdapter {
     const sent = s.packetsSent - prev.packetsSent,
       lost = Math.max(0, s.packetsLost - prev.packetsLost);
     const loss = sent + lost > 0 ? lost / (sent + lost) : 0;
-    const congested =
-      loss > 0.05 || (s.rttMs ?? 0) > 350 || s.limitation === 'bandwidth';
+    const congested = loss > 0.05 || (s.rttMs ?? 0) > 350;
     const before = this.target;
     if (congested) {
       this.clean = 0;
       this.target = Math.max(MIN_VIDEO_KBPS, Math.floor(this.target * 0.75));
     } else if (loss < 0.01 && ++this.clean >= 3) {
-      this.target = Math.min(this.ceiling, Math.ceil(this.target * 1.1));
-    }
-    if (s.availableKbps !== null)
-      this.target = Math.max(
-        MIN_VIDEO_KBPS,
-        Math.min(this.target, Math.floor(s.availableKbps * 0.9)),
+      this.target = Math.min(
+        this.hole ?? this.ceiling,
+        Math.ceil(this.target * 1.1),
       );
+    }
+    if (s.availableKbps !== null) {
+      const raw = Math.max(
+        MIN_VIDEO_KBPS,
+        Math.floor(s.availableKbps * 0.9),
+      );
+      if (raw < this.target * 0.5) {
+        this.clean = 0;
+        this.hole = raw;
+        this.target = raw;
+      } else if (this.hole !== null && raw >= this.ceiling * 0.5)
+        this.hole = null;
+    }
     return Math.abs(this.target - before) >= Math.max(50, before * 0.05)
       ? this.target
       : null;

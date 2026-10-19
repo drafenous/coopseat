@@ -120,19 +120,25 @@ export class PartySession extends DurableObject<Env> {
 
   private async report(event: unknown): Promise<void> {
     const body = JSON.stringify(event);
-    try {
-      const res = await fetch(
-        `${this.env.APP_URL.replace(/\/$/, '')}/api/party/internal/events`,
-        {
-          method: 'POST',
-          headers: await internalHeaders(this.env.PARTY_SIGNAL_SECRET, body),
-          body,
-        },
-      );
-      if (!res.ok) console.warn('event rejected', res.status, body);
-    } catch (err) {
-      console.warn('event failed', String(err));
+    let last = 'unknown';
+    for (let attempt = 0; attempt < 5; attempt++) {
+      if (attempt) await scheduler.wait(1000 * 2 ** (attempt - 1));
+      try {
+        const res = await fetch(
+          `${this.env.APP_URL.replace(/\/$/, '')}/api/party/internal/events`,
+          {
+            method: 'POST',
+            headers: await internalHeaders(this.env.PARTY_SIGNAL_SECRET, body),
+            body,
+          },
+        );
+        if (!res.ok) throw new Error(String(res.status));
+        return;
+      } catch (err) {
+        last = String(err);
+      }
     }
+    console.warn('event failed', last);
   }
 
   async fetch(req: Request): Promise<Response> {

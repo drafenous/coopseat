@@ -12,10 +12,12 @@ class Relay {
   static constexpr uint32_t MAX_WIDTH = 1280, MAX_HEIGHT = 720;
   std::atomic<bool> enabled{false}, stopped{false};
   std::mutex mu;
+  std::mutex audioMu;
   std::condition_variable cv;
   std::vector<BYTE> video, audio;
   uint32_t width = 0, height = 0, format = 0, stride = 0, sampleRate = 0;
   bool videoDirty = false;
+  std::atomic<bool> audioDirty{false};
   std::atomic<int64_t> nextVideoTicks{0};
   std::thread worker;
   static bool writeAll(HANDLE out, const void* data, DWORD size) {
@@ -142,11 +144,11 @@ class Relay {
     std::vector<BYTE> frame, pcm, packed;
     while (!stopped) {
       uint32_t w = 0, h = 0, fmt = 0, pitch = 0, rate = 0;
-      bool sendVideo = false;
+      bool sendVideo = false, sendAudio = false;
       {
         std::unique_lock lock(mu);
         cv.wait_for(lock, std::chrono::milliseconds(50), [this] {
-          return stopped.load() || videoDirty || !audio.empty();
+          return stopped.load() || videoDirty || audioDirty.load();
         });
         if (stopped) break;
         if (videoDirty) {
@@ -158,9 +160,17 @@ class Relay {
           pitch = stride;
           sendVideo = true;
         }
+      }
+      {
+        std::lock_guard lock(audioMu);
         if (!audio.empty()) {
-          pcm.swap(audio);
+          // Move — do not swap. swap() would put the previous pcm back into
+          // `audio`, so the next loop re-sent a full ~192 KB buffer (~100× realtime).
+          pcm = std::move(audio);
+          audio.clear();
           rate = sampleRate;
+          audioDirty = false;
+          sendAudio = true;
         }
       }
       if (sendVideo) {
@@ -171,7 +181,10 @@ class Relay {
           : toNv12(frame.data(), pitch, w, h, fmt, ow, oh, packed);
         if (ok) send(out, KIND_VIDEO, ow, oh, 1, ow, packed);
       }
-      if (!pcm.empty()) send(out, KIND_AUDIO, rate, 2, 0, 0, pcm);
+      if (sendAudio) {
+        send(out, KIND_AUDIO, rate, 2, 0, 0, pcm);
+        pcm.clear();
+      }
     }
   }
  public:
@@ -213,10 +226,20 @@ class Relay {
   }
   void pushAudio(const BYTE* data, size_t bytes, uint32_t rate) {
     if (!enabled.load(std::memory_order_relaxed) || !data || !bytes || bytes > 256u * 1024u) return;
-    std::unique_lock lock(mu, std::try_to_lock);
-    if (!lock.owns_lock()) return;
-    if (audio.size() > 192u * 1024u) audio.clear();
-    audio.insert(audio.end(), data, data + bytes);
-    sampleRate = rate;
+    // Own mutex so the WASAPI tap never contends with video capture or waits on try_lock drops.
+    {
+      std::lock_guard lock(audioMu);
+      constexpr size_t kMax = 192u * 1024u;
+      if (audio.size() + bytes > kMax) {
+        size_t drop = audio.size() + bytes - kMax;
+        drop = (drop + 3u) & ~size_t(3); // stereo s16 frames
+        if (drop >= audio.size()) audio.clear();
+        else audio.erase(audio.begin(), audio.begin() + static_cast<std::ptrdiff_t>(drop));
+      }
+      audio.insert(audio.end(), data, data + bytes);
+      sampleRate = rate;
+      audioDirty = true;
+    }
+    cv.notify_one();
   }
 };

@@ -7,6 +7,11 @@ type Options = {
   smoothing: SmoothingLevel;
   effect: EffectIndex;
   enabled: boolean;
+  /**
+   * Match the canvas to the source frame size (for `captureStream` outbound).
+   * Default scales to the video element's layout box (local preview).
+   */
+  fullRes?: boolean;
 };
 type FrameVideo = HTMLVideoElement & {
   requestVideoFrameCallback?(cb: () => void): number;
@@ -137,6 +142,7 @@ export function useVideoFilters({
   smoothing,
   effect,
   enabled,
+  fullRes = false,
 }: Options) {
   const [active, setActive] = useState(false);
   useEffect(() => {
@@ -180,11 +186,26 @@ export function useVideoFilters({
       const vw = video.videoWidth,
         vh = video.videoHeight;
       if (vw && vh && video.readyState >= 2) {
-        const scale =
-          Math.min(video.clientWidth / vw, video.clientHeight / vh) *
-          devicePixelRatio;
-        const cw = Math.max(1, Math.round(vw * scale)),
-          ch = Math.max(1, Math.round(vh * scale));
+        const cw = fullRes
+          ? vw
+          : Math.max(
+              1,
+              Math.round(
+                vw *
+                  Math.min(video.clientWidth / vw, video.clientHeight / vh) *
+                  devicePixelRatio,
+              ),
+            );
+        const ch = fullRes
+          ? vh
+          : Math.max(
+              1,
+              Math.round(
+                vh *
+                  Math.min(video.clientWidth / vw, video.clientHeight / vh) *
+                  devicePixelRatio,
+              ),
+            );
         if (canvas.width !== cw || canvas.height !== ch) {
           canvas.width = cw;
           canvas.height = ch;
@@ -274,6 +295,6 @@ export function useVideoFilters({
       gl.deleteProgram(programs.fxaa.p);
       gl.deleteProgram(programs.final.p);
     };
-  }, [videoRef, canvasRef, smoothing, effect, enabled]);
+  }, [videoRef, canvasRef, smoothing, effect, enabled, fullRes]);
   return active;
 }

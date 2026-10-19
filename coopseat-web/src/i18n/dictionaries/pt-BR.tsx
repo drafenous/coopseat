@@ -828,8 +828,6 @@ export const ptBR: Dictionary = {
     party_no_session: 'Esta sala não está ao vivo agora.',
     party_password_invalid: 'Senha da sala incorreta.',
     party_password_format: 'A senha deve ter de 4 a 64 caracteres.',
-    party_protection_required:
-      'Mantenha pelo menos uma proteção ativa: senha, aprovação ou lista de acesso.',
     party_target_invalid: 'Você não pode fazer isso com essa pessoa.',
     party_target_unverified:
       'Só é possível adicionar pessoas com identidade verificada.',

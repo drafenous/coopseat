@@ -1,4 +1,10 @@
 const { contextBridge, ipcRenderer } = require('electron');
+let mediaCallback = null;
+// Always acknowledge, so a frame sent before the page is listening cannot stall the rest.
+ipcRenderer.on('native:media', (_, meta, data) => {
+  if (mediaCallback) mediaCallback(meta, data);
+  else if (meta?.kind === 'video') ipcRenderer.send('native:media:ack');
+});
 contextBridge.exposeInMainWorld('input', {
   info: () => ipcRenderer.invoke('info'),
   mediaPrivacy: () => ipcRenderer.invoke('privacy:media'),
@@ -34,10 +40,12 @@ contextBridge.exposeInMainWorld('input', {
     ipcRenderer.on('native:event', fn);
     return () => ipcRenderer.removeListener('native:event', fn);
   },
+  ackMedia: () => ipcRenderer.send('native:media:ack'),
   onNativeMedia: (callback) => {
-    const fn = (_, meta, data) => callback(meta, data);
-    ipcRenderer.on('native:media', fn);
-    return () => ipcRenderer.removeListener('native:media', fn);
+    mediaCallback = callback;
+    return () => {
+      if (mediaCallback === callback) mediaCallback = null;
+    };
   },
   auth: {
     open: (url) => ipcRenderer.invoke('auth:open', url),

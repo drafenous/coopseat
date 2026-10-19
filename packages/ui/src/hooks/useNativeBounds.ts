@@ -76,25 +76,52 @@ export function useNativeBounds(
       return;
     }
     let frame = 0,
-      last = '';
+      last = '',
+      holesAt = 0,
+      timer = 0;
     const shadowless = new Set<HTMLElement>();
+    let cachedHoles: Hole[] = [];
+    let pending: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+      holes: Hole[];
+      dim: number;
+    } | null = null;
+    const flush = () => {
+      timer = 0;
+      const next = pending;
+      pending = null;
+      if (next) void bridge()?.bounds(next);
+    };
     const tick = () => {
       const el = screen.current;
       if (el) {
         const r = el.getBoundingClientRect(),
           k = window.devicePixelRatio;
+        const now = performance.now();
+        // Reading overlay styles forces layout. Once a window resize starts, doing it
+        // every frame keeps the page busy after the drag has ended.
+        if (now - holesAt > 250) {
+          holesAt = now;
+          cachedHoles = holes(r, k, shadowless);
+        }
         const rect = {
           x: Math.round(r.left * k),
           y: Math.round(r.top * k),
           width: Math.round(r.width * k),
           height: Math.round(r.height * k),
-          holes: holes(r, k, shadowless),
+          holes: cachedHoles,
           dim: dimmed ? BACKDROP_DIM : 0,
         };
         const key = JSON.stringify(rect);
         if (key !== last) {
           last = key;
-          void bridge()?.bounds(rect);
+          pending = rect;
+          // A drag sends a new size every frame. Applying each one resets the preview
+          // surface and is what freezes the page.
+          if (!timer) timer = window.setTimeout(flush, 100);
         }
       }
       frame = requestAnimationFrame(tick);
@@ -102,6 +129,8 @@ export function useNativeBounds(
     tick();
     return () => {
       cancelAnimationFrame(frame);
+      if (timer) clearTimeout(timer);
+      flush();
       for (const el of shadowless) el.style.boxShadow = '';
     };
   }, [screen, active, dimmed]);

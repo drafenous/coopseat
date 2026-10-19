@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ClientMessage, Quality, ServerMessage } from '../party/protocol';
 import {
   fetchIceConfig,
-  PeerMesh,
+  PlainMesh,
   type InboundMetrics,
   type LinkState,
+  type OutboundMetrics,
 } from '../lib/webrtc';
 
 type Options = {
@@ -14,12 +15,13 @@ type Options = {
   send(msg: ClientMessage): void;
 };
 
-/** Owns the PeerMesh for a live session and exposes remote streams as React state. */
+/** Owns the plain peer links for a live session and exposes remote streams as React state. */
 export function usePeerMesh({ selfId, active, token, send }: Options) {
-  const mesh = useRef<PeerMesh | null>(null);
+  const mesh = useRef<PlainMesh | null>(null);
   const [streams, setStreams] = useState<Record<string, MediaStream>>({});
   const [links, setLinks] = useState<Record<string, LinkState>>({});
   const [metrics, setMetrics] = useState<Record<string, InboundMetrics>>({});
+  const [outbound, setOutbound] = useState<OutboundMetrics | null>(null);
   const sendRef = useRef(send),
     tokenRef = useRef(token);
   sendRef.current = send;
@@ -27,7 +29,7 @@ export function usePeerMesh({ selfId, active, token, send }: Options) {
 
   useEffect(() => {
     if (!active || !selfId) return;
-    const m = new PeerMesh({
+    const m = new PlainMesh({
       selfId,
       send: (msg) => sendRef.current(msg),
       getIceConfig: () => {
@@ -35,15 +37,26 @@ export function usePeerMesh({ selfId, active, token, send }: Options) {
         if (!t) return Promise.reject(Error('no_token'));
         return fetchIceConfig(t);
       },
-      onRemoteStream: (id, stream) =>
+      onRemoteStream: (id, stream) => {
         setStreams((x) => {
           const next = { ...x };
           if (stream) next[id] = stream;
           else delete next[id];
           return next;
-        }),
-      onLinkState: (id, state) => setLinks((x) => ({ ...x, [id]: state })),
+        });
+        if (!stream)
+          setMetrics((x) => {
+            if (!(id in x)) return x;
+            const next = { ...x };
+            delete next[id];
+            return next;
+          });
+      },
+      onLinkState: (id, state) => {
+        setLinks((x) => ({ ...x, [id]: state }));
+      },
       onMetrics: (id, value) => setMetrics((x) => ({ ...x, [id]: value })),
+      onOutboundMetrics: setOutbound,
     });
     mesh.current = m;
     return () => {
@@ -52,6 +65,7 @@ export function usePeerMesh({ selfId, active, token, send }: Options) {
       setStreams({});
       setLinks({});
       setMetrics({});
+      setOutbound(null);
     };
   }, [active, selfId]);
 
@@ -90,6 +104,7 @@ export function usePeerMesh({ selfId, active, token, send }: Options) {
     streams,
     links,
     metrics,
+    outbound,
     handle,
     setLocalStream,
     resetOutgoing,

@@ -6,7 +6,8 @@ const MAX_PAYLOAD = 32 * 1024 * 1024;
  * Reads the frames the native core writes to stderr while a party stream is on.
  * Bytes stay in one buffer; a lost byte resyncs to the next header instead of ending the stream.
  */
-function createFrameParser(onFrame) {
+function createFrameParser(onFrame, options = {}) {
+  const skipVideo = options.skipVideo || (() => false);
   let buf = Buffer.allocUnsafe(64 * 1024);
   let start = 0;
   let end = 0;
@@ -27,6 +28,32 @@ function createFrameParser(onFrame) {
     buf = next;
   };
   return (chunk) => {
+    // While a picture is already in flight, drop the next ones without copying them.
+    if (skipVideo() && start === end && chunk.length >= HEADER) {
+      let off = 0;
+      while (chunk.length - off >= HEADER && skipVideo()) {
+        if (chunk.readUInt32LE(off) !== MAGIC) break;
+        const size = chunk.readUInt32LE(off + 24);
+        if (size > MAX_PAYLOAD) {
+          off += 4;
+          continue;
+        }
+        if (chunk.length - off < HEADER + size) break;
+        if (chunk.readUInt32LE(off + 4) !== 1) break;
+        off += HEADER + size;
+      }
+      // A chunk that does not start on a whole video frame is the middle of a
+      // picture. Copying it is what keeps the app busy after the page stalls.
+      if (!off) {
+        // Middle of a picture, or a video frame we are not taking. Audio at the
+        // start of the chunk still has to reach the page.
+        if (chunk.readUInt32LE(0) !== MAGIC || chunk.readUInt32LE(4) === 1)
+          return;
+      } else {
+        chunk = chunk.subarray(off);
+        if (!chunk.length) return;
+      }
+    }
     ensure(chunk.length);
     chunk.copy(buf, end);
     end += chunk.length;
@@ -52,6 +79,12 @@ function createFrameParser(onFrame) {
       const b = buf.readUInt32LE(start + 12);
       const c = buf.readUInt32LE(start + 16);
       const d = buf.readUInt32LE(start + 20);
+      // A video frame already waiting must not be copied. Copying every skipped
+      // picture is what freezes the app.
+      if (kind === 1 && skipVideo()) {
+        start += HEADER + size;
+        continue;
+      }
       const payload = Buffer.from(
         buf.subarray(start + HEADER, start + HEADER + size),
       );

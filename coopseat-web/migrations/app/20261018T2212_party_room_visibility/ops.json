@@ -1,0 +1,113 @@
+[
+  {
+    "id": "dropCheckConstraint.party_rooms.party_rooms_protected_79f84d77",
+    "label": "Drop check constraint \"party_rooms_protected_79f84d77\" on \"party_rooms\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "party_rooms_protected_79f84d77",
+        "table": "party_rooms"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"party_rooms_protected_79f84d77\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_rooms_protected_79f84d77",
+          "public",
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"party_rooms_protected_79f84d77\"",
+        "sql": "ALTER TABLE \"public\".\"party_rooms\" DROP CONSTRAINT \"party_rooms_protected_79f84d77\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"party_rooms_protected_79f84d77\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_rooms_protected_79f84d77",
+          "public",
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "setDefault.party_rooms.whitelistEnabled",
+    "label": "Set default on \"party_rooms\".\"whitelistEnabled\"",
+    "operationClass": "widening",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "whitelistEnabled",
+        "table": "party_rooms"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"whitelistEnabled\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "party_rooms",
+          "whitelistEnabled"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "set default on \"whitelistEnabled\"",
+        "sql": "ALTER TABLE \"public\".\"party_rooms\" ALTER COLUMN \"whitelistEnabled\" SET DEFAULT true"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"whitelistEnabled\" has a default",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"column_default\" IS NOT NULL)) AS \"result\"",
+        "params": [
+          "public",
+          "party_rooms",
+          "whitelistEnabled"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data.party_rooms.backfill-protected-whitelist",
+    "label": "Backfill party_rooms.whitelistEnabled for approval-only rooms",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_rooms",
+        "table": "party_rooms"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "set whitelistEnabled=true on approval-only party_rooms",
+        "sql": "UPDATE \"public\".\"party_rooms\" SET \"whitelistEnabled\" = true WHERE \"requireApproval\" = true AND \"whitelistEnabled\" = false"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify no approval-only rooms remain with whitelistEnabled=false",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"party_rooms\" WHERE \"requireApproval\" = true AND \"whitelistEnabled\" = false LIMIT 1) AS \"result\""
+      }
+    ]
+  }
+]

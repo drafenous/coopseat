@@ -20,8 +20,10 @@ export { PreferencesModal } from './PreferencesModal';
 export { PresetPicker } from './PresetPicker';
 export { SavePresetModal } from './SavePresetModal';
 export { SettingsPanel } from './SettingsPanel';
+export { ShortcutsModal } from './ShortcutsModal';
 export { TelemetryModal } from './TelemetryModal';
 export { ToastStack } from './ToastStack';
 export { TransportBar } from './TransportBar';
+
 export { TroubleshootModal } from './TroubleshootModal';
 export { ViewerEmptyState } from './ViewerEmptyState';

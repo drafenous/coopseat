@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { updateRoomSchema } from '@/lib/validation/party';
 import { adminDb } from '@/prisma/db';
-import { ApiError, readJson, route } from '@/server/http';
+import { readJson, route } from '@/server/http';
 import { ensureRoom } from '@/server/party/access';
 import { hashRoomPassword } from '@/server/party/password';
 import { roomView } from '@/server/party/room-view';
@@ -16,6 +16,11 @@ export const GET = route(async (req) => {
   });
 });
 
+/**
+ * Public rooms may have no password, no approval queue and no allow list.
+ * Password stays optional in every visibility mode; identity / age gates are
+ * separate (party requirements), not room protections.
+ */
 export const PATCH = route(async (req) => {
   const input = await readJson(req, updateRoomSchema);
   const { viewer } = await partyCaller(req);
@@ -34,9 +39,6 @@ export const PATCH = route(async (req) => {
     whitelistEnabled: input.whitelistEnabled ?? room.whitelistEnabled,
     defaultLayout: input.defaultLayout ?? room.defaultLayout,
   };
-  if (!next.passwordHash && !next.requireApproval && !next.whitelistEnabled) {
-    throw new ApiError(400, 'party_protection_required');
-  }
 
   const db = await adminDb();
   await db.orm.public.PartyRoom.where({ ownerId: viewer.profileId }).updateAll(

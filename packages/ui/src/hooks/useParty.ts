@@ -16,13 +16,25 @@ import {
   isLive,
   partyApi,
   type Access,
+  type BanEntry,
   type LiveAccess,
 } from '../lib/party/api';
-import { slotQuality, stageSlots } from '../lib/party/layout';
+import {
+  coerceLayout,
+  placeIntoSlot,
+  removeFromGrid,
+  reorderGridSlots,
+  slotQuality,
+  stageSlots,
+  syncGridSlots,
+  type SplitOrientation,
+} from '../lib/party/layout';
 import type { StreamSource } from '../lib/stream-source';
 import { PARTY_LAYOUT_KEY } from '../lib/storage';
+import type { EffectIndex, SmoothingLevel } from '../types';
 import { useT } from '../i18n';
 import { useChat } from './useChat';
+import { useFilteredStream } from './useFilteredStream';
 import { usePeerMesh } from './usePeerMesh';
 import { useSignal } from './useSignal';
 import { useStreamSource } from './useStreamSource';
@@ -41,6 +53,11 @@ type Options = {
   enabled: boolean;
   setError(message: string): void;
   setNotice(message: string): void;
+  /** Compat WebGL filters applied to the outbound + self-preview stream. */
+  smoothing?: SmoothingLevel;
+  effect?: EffectIndex;
+  /** Keeps the Sala bans list in sync after a ban from the people tab. */
+  onBansChange?(bans: BanEntry[]): void;
 };
 
 const OFFLINE_POLL_MS = 30_000;
@@ -54,19 +71,31 @@ const STREAM_REFUSED = new Set([
 function savedLayout(): Layout | null {
   try {
     const v = localStorage.getItem(PARTY_LAYOUT_KEY);
-    return (LAYOUTS as readonly string[]).includes(v ?? '')
-      ? (v as Layout)
-      : null;
+    if (v == null) return null;
+    if ((LAYOUTS as readonly string[]).includes(v)) return v as Layout;
+    // Legacy split/focus → stage
+    if (v === 'split' || v === 'focus') return 'stage';
+    return null;
   } catch {
     return null;
   }
 }
 
 /** Everything a Gaming-Party client needs: admission, the signaling socket, presence, chat, streams and moderation. */
-export function useParty({ nickname, enabled, setError, setNotice }: Options) {
+export function useParty({
+  nickname,
+  enabled,
+  setError,
+  setNotice,
+  smoothing = 0,
+  effect = 0,
+  onBansChange,
+}: Options) {
   const t = useT().party;
   const tRef = useRef(t);
   tRef.current = t;
+  const onBansChangeRef = useRef(onBansChange);
+  onBansChangeRef.current = onBansChange;
   const [access, setAccessState] = useState<Access | null>(null);
   const accessRef = useRef<Access | null>(null);
   const [phase, setPhase] = useState<PartyPhase>('loading');
@@ -85,6 +114,9 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
   const [busy, setBusy] = useState(false);
   const [layout, setLayoutState] = useState<Layout | null>(savedLayout);
   const [focus, setFocus] = useState<string | null>(null);
+  const [gridSlots, setGridSlots] = useState<(string | null)[]>([]);
+  const [splitOrientation, setSplitOrientation] =
+    useState<SplitOrientation>('horizontal');
   const [stale, setStale] = useState(false);
   /** A stream_start waiting for this session's socket to be authenticated. */
   const [pendingStart, setPendingStart] = useState(false);
@@ -127,7 +159,8 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
       if (!enabled) return;
       try {
         setFailure('');
-        enter(await partyApi.join(nickname, body));
+        const joined = await partyApi.join(nickname, body);
+        enter(joined);
       } catch (e) {
         if (e instanceof ApiError && e.code === 'party_password_invalid')
           throw e;
@@ -185,6 +218,19 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
     token: async () => tokenNow(),
     onMessage: (msg) => onMessageRef.current(msg),
     onInvalid: refresh,
+    onEnded: (reason) => {
+      setEndReason(
+        reason === 'owner_ended' ||
+          reason === 'owner_timeout' ||
+          reason === 'empty' ||
+          reason === 'max_duration' ||
+          reason === 'sanction' ||
+          reason === 'operator'
+          ? reason
+          : 'empty',
+      );
+      setPhase('ended');
+    },
   });
   const meshActive = phase === 'live' && Boolean(self);
   const mesh = usePeerMesh({
@@ -209,6 +255,8 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
     setRequested(false);
     setSelf(null);
     setFocus(null);
+    setGridSlots([]);
+    setSplitOrientation('horizontal');
     setStale(false);
     setPendingStart(false);
   }, [stream, chat]);
@@ -337,17 +385,29 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
     self && !self.streamBlocked && (selfPeer?.canStream ?? self.canStream),
   );
 
+  const localStream = useFilteredStream(
+    stream.source?.stream ?? null,
+    smoothing,
+    effect,
+  );
   useEffect(() => {
-    if (meshActive) void mesh.setLocalStream(stream.source?.stream ?? null);
-  }, [meshActive, stream.source, mesh.setLocalStream]);
+    if (meshActive) void mesh.setLocalStream(localStream);
+  }, [meshActive, localStream, mesh.setLocalStream]);
 
   const startStreaming = useCallback(
     async (source: StreamSource) => {
       setBusy(true);
       try {
         const a = accessRef.current;
-        if (isOwner && (!a || !isLive(a))) {
-          const next = await partyApi.startSession();
+        const closed = !a || !isLive(a);
+        if (closed) {
+          const mayOpen =
+            a?.state === 'offline' && (a.isOwner || a.canOpen);
+          if (!mayOpen) {
+            source.stop();
+            return;
+          }
+          const next = await partyApi.startSession(nickname);
           enter(next);
           if (!isLive(next)) {
             source.stop();
@@ -365,7 +425,7 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
         setBusy(false);
       }
     },
-    [isOwner, enter, stream, fail],
+    [nickname, enter, stream, fail],
   );
 
   useEffect(() => {
@@ -393,12 +453,10 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
     [stream],
   );
 
-  const stopStreaming = useCallback(async () => {
+  const stopStreaming = useCallback(() => {
     signal.send({ t: 'stream_stop' });
     stream.stop();
-    // The owner's stream defines the session: stopping it ends the session for everyone.
-    if (isOwner) await partyApi.endSession().catch(fail);
-  }, [signal, stream, isOwner, fail]);
+  }, [signal, stream]);
 
   const requestStream = useCallback(() => {
     signal.send({ t: 'stream_request' });
@@ -407,12 +465,13 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
 
   // ── layout and visibility ──
 
-  const roomLayout = access?.room.defaultLayout ?? 'stage';
-  const currentLayout = layout ?? roomLayout;
+  const roomLayout = coerceLayout(access?.room.defaultLayout);
+  const currentLayout = coerceLayout(layout ?? roomLayout);
   const setLayout = useCallback((l: Layout) => {
-    setLayoutState(l);
+    const next = coerceLayout(l);
+    setLayoutState(next);
     try {
-      localStorage.setItem(PARTY_LAYOUT_KEY, l);
+      localStorage.setItem(PARTY_LAYOUT_KEY, next);
     } catch {
       /* storage unavailable */
     }
@@ -424,9 +483,40 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
         .map((p) => p.id),
     [peers],
   );
+  useEffect(() => {
+    setGridSlots((prev) => syncGridSlots(prev, streamers, ownerId));
+  }, [streamers, ownerId]);
   const slots = useMemo(
-    () => stageSlots(currentLayout, streamers, focus, ownerId),
-    [currentLayout, streamers, focus, ownerId],
+    () =>
+      stageSlots(currentLayout, streamers, focus, ownerId, gridSlots),
+    [currentLayout, streamers, focus, ownerId, gridSlots],
+  );
+  const hideFromGrid = useCallback((id: string) => {
+    setGridSlots((prev) => removeFromGrid(prev, id));
+  }, []);
+  const showInGrid = useCallback(
+    (id: string) => {
+      setGridSlots((prev) => {
+        if (prev.includes(id)) return prev;
+        return syncGridSlots([...prev, id], streamers, ownerId);
+      });
+    },
+    [streamers, ownerId],
+  );
+  const moveGridSlot = useCallback((fromIndex: number, toIndex: number) => {
+    setGridSlots((prev) => reorderGridSlots(prev, fromIndex, toIndex));
+  }, []);
+  const dropIntoGrid = useCallback((sourceId: string, toIndex: number) => {
+    setGridSlots((prev) => placeIntoSlot(prev, sourceId, toIndex));
+  }, []);
+  const toggleGridMember = useCallback(
+    (id: string) => {
+      setGridSlots((prev) => {
+        if (prev.includes(id)) return removeFromGrid(prev, id);
+        return syncGridSlots([...prev, id], streamers, ownerId);
+      });
+    },
+    [streamers, ownerId],
   );
   useEffect(() => {
     if (!meshActive || !self) return;
@@ -479,10 +569,14 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
     kill: (id: string) => signal.send({ t: 'stream_kill', to: id }),
     kick: (id: string) => signal.send({ t: 'kick', to: id }),
     ban: (id: string, hours?: number) =>
-      act(
-        () => partyApi.ban(nickname, id, hours ? { hours } : {}),
-        tRef.current.banned,
-      ),
+      act(async () => {
+        const r = await partyApi.ban(
+          nickname,
+          id,
+          hours ? { hours } : {},
+        );
+        onBansChangeRef.current?.(r.bans);
+      }, tRef.current.banned),
     deleteMessage: (id: string) => signal.send({ t: 'chat_delete', id }),
   };
 
@@ -536,11 +630,21 @@ export function useParty({ nickname, enabled, setError, setNotice }: Options) {
     setLayout,
     focus,
     setFocus,
+    splitOrientation,
+    setSplitOrientation,
+    hideFromGrid,
+    showInGrid,
+    toggleGridMember,
+    moveGridSlot,
+    dropIntoGrid,
     slots,
     source: stream.source,
+    /** Filtered when effects/smoothing are on; otherwise the raw capture. */
+    localStream,
     remoteStreams: mesh.streams,
     links: mesh.links,
     metrics: mesh.metrics,
+    outbound: mesh.outbound,
     join: load,
     rejoin,
     leave,

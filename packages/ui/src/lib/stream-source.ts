@@ -72,17 +72,13 @@ export function cardSource(
   label: string,
   onStop?: () => void,
 ): StreamSource {
-  return wrap(
-    'card',
-    label,
-    new MediaStream(
-      preview
-        .getTracks()
-        .filter((t) => t.readyState === 'live')
-        .map((t) => t.clone()),
-    ),
-    onStop,
+  const stream = new MediaStream(
+    preview
+      .getTracks()
+      .filter((t) => t.readyState === 'live')
+      .map((t) => t.clone()),
   );
+  return wrap('card', label, stream, onStop);
 }
 
 /**
@@ -139,7 +135,8 @@ export async function displaySource({
       systemAudio: audio ? 'include' : 'exclude',
     } as object),
   } as DisplayMediaStreamOptions);
-  return wrap(kind, label ?? stream.getVideoTracks()[0]?.label ?? '', stream);
+  const name = label ?? stream.getVideoTracks()[0]?.label ?? '';
+  return wrap(kind, name, stream);
 }
 
 export const canShareScreen = () =>

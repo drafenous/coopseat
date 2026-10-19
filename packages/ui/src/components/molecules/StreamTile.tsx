@@ -13,6 +13,7 @@ type Props = {
   state?: LinkState;
   small?: boolean;
   onFocus?(): void;
+  focusLabel?: string;
   /** Page volume (0–1) applied on top of the tile's own mute. */
   volume?: number;
   /** Shown as an overlay when set (the transport bar's stats toggle). */
@@ -32,6 +33,7 @@ export function StreamTile({
   state,
   small,
   onFocus,
+  focusLabel,
   volume = 1,
   metrics,
   showMetrics,
@@ -75,11 +77,7 @@ export function StreamTile({
     }
   };
   const overlay =
-    !self &&
-    (!stream ||
-      state === 'reconnecting' ||
-      state === 'failed' ||
-      state === 'connecting');
+    !self && (!stream || state === 'reconnecting' || state === 'failed');
   const stats =
     showMetrics && !self && metrics
       ? [
@@ -111,6 +109,7 @@ export function StreamTile({
         autoPlay
         playsInline
         muted={self || muted}
+        onClick={autoMuted && !self ? unmute : undefined}
       />
       {overlay && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#0b1016cc] text-[13px] text-[#a5b2c3]">
@@ -133,9 +132,9 @@ export function StreamTile({
         <button
           type="button"
           onClick={unmute}
-          className="absolute top-2 left-2 flex items-center gap-1.5 rounded-md bg-[#000000c0] px-2 py-1 text-[12px] font-semibold text-white hover:bg-[#000000e0] focus-visible:outline-2 focus-visible:outline-[#6ee7b7]"
+          className="absolute inset-0 z-1 flex items-center justify-center gap-2 bg-[#00000099] text-[14px] font-semibold text-white hover:bg-[#000000b3] focus-visible:outline-2 focus-visible:outline-[#6ee7b7]"
         >
-          <VolumeX size={14} />
+          <VolumeX size={18} />
           {t.unmute}
         </button>
       )}
@@ -172,7 +171,7 @@ export function StreamTile({
           <IconButton
             size="xs"
             className="bg-[#000000a8]"
-            label={t.focus}
+            label={focusLabel ?? t.focus}
             onClick={onFocus}
           >
             <Expand size={15} />

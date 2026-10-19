@@ -818,8 +818,6 @@ export const en = {
     party_no_session: "This room isn't live right now.",
     party_password_invalid: 'Wrong room password.',
     party_password_format: 'The password must be 4 to 64 characters.',
-    party_protection_required:
-      'Keep at least one protection on: password, approval or allow list.',
     party_target_invalid: "You can't do that to this person.",
     party_target_unverified:
       'Only people with a verified identity can be added.',

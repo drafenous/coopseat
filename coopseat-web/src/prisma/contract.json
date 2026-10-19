@@ -2757,19 +2757,14 @@
             "party_rooms": {
               "checks": [
                 {
-                  "expression": "\"defaultLayout\" IN ('stage', 'grid', 'split', 'focus')",
-                  "name": "party_rooms_layout_8a3d9b9f",
+                  "expression": "\"defaultLayout\" IN ('stage', 'grid')",
+                  "name": "party_rooms_layout_6afdcbc3",
                   "prefix": "party_rooms_layout"
                 },
                 {
                   "expression": "\"maxParticipants\" IS NULL OR \"maxParticipants\" BETWEEN 2 AND 50",
                   "name": "party_rooms_participants_55ed6ac1",
                   "prefix": "party_rooms_participants"
-                },
-                {
-                  "expression": "\"passwordHash\" IS NOT NULL OR \"requireApproval\" OR \"whitelistEnabled\"",
-                  "name": "party_rooms_protected_79f84d77",
-                  "prefix": "party_rooms_protected"
                 }
               ],
               "columns": {
@@ -2825,7 +2820,7 @@
                   "codecId": "pg/bool@1",
                   "default": {
                     "kind": "literal",
-                    "value": false
+                    "value": true
                   },
                   "nativeType": "bool",
                   "nullable": false
@@ -2972,8 +2967,8 @@
             "party_sessions": {
               "checks": [
                 {
-                  "expression": "\"endReason\" IS NULL OR \"endReason\" IN ('owner_ended', 'owner_timeout', 'max_duration', 'sanction', 'operator')",
-                  "name": "party_sessions_end_reason_56813f84",
+                  "expression": "\"endReason\" IS NULL OR \"endReason\" IN ('owner_ended', 'owner_timeout', 'empty', 'max_duration', 'sanction', 'operator')",
+                  "name": "party_sessions_end_reason_322d0e7e",
                   "prefix": "party_sessions_end_reason"
                 }
               ],
@@ -3675,7 +3670,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "865c0af292ccb63258648dfec3b64677416f9f1c782cac36464cb735724f6435",
+    "storageHash": "4a5168d4a2cbf9a383b65d8bb6a664f12f8dd74348cec3b571d247b6975b56d1",
     "types": {
       "AuthUserId": {
         "codecId": "pg/uuid@1",

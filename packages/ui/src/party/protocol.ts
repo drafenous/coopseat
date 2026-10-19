@@ -5,11 +5,11 @@
 
 export type PartyRole = 'owner' | 'moderator' | 'member';
 export type AdmissionStatus = 'admitted' | 'pending';
-export type Layout = 'stage' | 'grid' | 'split' | 'focus';
+export type Layout = 'stage' | 'grid';
 /** `paused`: the tile is hidden; the streamer stops encoding for that viewer but keeps the connection. */
 export type Quality = 'high' | 'low' | 'paused';
 export const QUALITIES: readonly Quality[] = ['high', 'low', 'paused'];
-export const LAYOUTS: readonly Layout[] = ['stage', 'grid', 'split', 'focus'];
+export const LAYOUTS: readonly Layout[] = ['stage', 'grid'];
 
 export type ModPerms = {
   kick: boolean;
@@ -115,7 +115,12 @@ export type RemovalReason =
   | 'token_expired'
   | 'invalid';
 export type EndReason =
-  'owner_ended' | 'owner_timeout' | 'max_duration' | 'sanction' | 'operator';
+  | 'owner_ended'
+  | 'owner_timeout'
+  | 'empty'
+  | 'max_duration'
+  | 'sanction'
+  | 'operator';
 
 /** SDP / ICE payload relayed between two peers. `pc` identifies the connection (`streamerId>viewerId`). */
 export type SignalData = {

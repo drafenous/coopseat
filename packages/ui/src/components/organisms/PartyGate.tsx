@@ -23,6 +23,8 @@ type Props = {
   onSignIn(): void;
   onOpenAccount(): void;
   onStart(): void;
+  /** Capture is opening, before the party itself reports busy. */
+  busy?: boolean;
   /** Why the side panel's source can't be streamed yet, if it can't. */
   startBlocked?: string;
 };
@@ -61,6 +63,7 @@ export function PartyGate({
   onSignIn,
   onOpenAccount,
   onStart,
+  busy: starting,
   startBlocked,
 }: Props) {
   const tp = useT().party,
@@ -139,15 +142,15 @@ export function PartyGate({
   if (!a) return null;
   switch (a.state) {
     case 'offline':
-      return a.isOwner ? (
+      return a.isOwner || a.canOpen ? (
         <Panel
           icon={<Radio size={24} />}
-          title={t.ownerOffline}
-          body={t.ownerOfflineBody}
+          title={a.isOwner ? t.ownerOffline : t.canOpen}
+          body={a.isOwner ? t.ownerOfflineBody : t.canOpenBody}
         >
           <Button
             inline
-            disabled={p.busy || Boolean(startBlocked)}
+            disabled={p.busy || starting || Boolean(startBlocked)}
             onClick={onStart}
           >
             <Radio size={17} /> {tp.stream.start}

@@ -19,7 +19,7 @@ import {
 /** A hidden tile keeps its (paused) connection this long before it is closed. */
 export const HIDDEN_CLOSE_MS = 20_000;
 const STATS_INTERVAL_MS = 2_000;
-const CONNECT_TIMEOUT_MS = 15_000;
+const CONNECT_TIMEOUT_MS = 45_000;
 const TURN_REFRESH_LEAD_S = 60;
 
 export type PeerMeshOptions = {
@@ -82,6 +82,9 @@ export class PeerMesh {
     );
   }
 
+  /** Viewers whose PeerConnection is still waiting on ICE servers. */
+  private readonly opening = new Set<string>();
+
   async onSubscribe(viewerId: string, quality: Quality) {
     if (this.closed || !this.stream) return;
     const existing = this.out.get(viewerId);
@@ -91,8 +94,24 @@ export class PeerMesh {
       this.rebalance();
       return;
     }
-    const ice = await this.iceConfig();
-    if (this.closed || !this.stream || this.out.has(viewerId)) return;
+    if (this.opening.has(viewerId)) return;
+    this.opening.add(viewerId);
+    let ice: IceConfig;
+    try {
+      ice = await this.iceConfig();
+    } catch {
+      this.opening.delete(viewerId);
+      return;
+    }
+    if (
+      this.closed ||
+      !this.stream ||
+      !this.opening.has(viewerId) ||
+      this.out.has(viewerId)
+    ) {
+      this.opening.delete(viewerId);
+      return;
+    }
     const link = new PeerLink({
       id: pcId(this.opts.selfId, viewerId),
       side: 'streamer',
@@ -111,6 +130,7 @@ export class PeerMesh {
       reported: false,
     };
     this.out.set(viewerId, entry);
+    this.opening.delete(viewerId);
     if (quality === 'paused') await link.setPaused(true);
     await link.setStream(this.stream);
     this.rebalance();
@@ -118,6 +138,7 @@ export class PeerMesh {
 
   /** The viewer unsubscribed or left. */
   dropViewer(viewerId: string) {
+    this.opening.delete(viewerId);
     const o = this.out.get(viewerId);
     if (!o) return;
     o.link.close();
@@ -151,21 +172,35 @@ export class PeerMesh {
       }
       return;
     }
-    const ice = await this.iceConfig();
+    let ice: IceConfig;
+    try {
+      ice = await this.iceConfig();
+    } catch {
+      return;
+    }
     if (this.closed || this.inc.has(streamerId)) return;
+    let entry: Incoming | null = null;
     const link = new PeerLink({
       id: pcId(streamerId, this.opts.selfId),
       side: 'viewer',
       iceServers: ice.iceServers,
       send: (data) => this.opts.send({ t: 'signal', to: streamerId, data }),
-      onTrack: (stream) => this.opts.onRemoteStream(streamerId, stream),
+      onTrack: (stream) => {
+        // The offer can take longer than the old 15s budget, and the answer follows
+        // only after the track is already here. Aborting at that point drops the video.
+        if (entry?.connectTimer) {
+          clearTimeout(entry.connectTimer);
+          entry.connectTimer = null;
+        }
+        this.opts.onRemoteStream(streamerId, stream);
+      },
       onState: (state) => {
         this.opts.onLinkState?.(streamerId, state);
         if (state === 'connected') void this.onIncomingConnected(streamerId);
         if (state === 'failed') void this.resubscribe(streamerId);
       },
     });
-    const entry: Incoming = {
+    entry = {
       link,
       quality,
       hiddenTimer: null,
@@ -221,10 +256,10 @@ export class PeerMesh {
 
   async onSignal(from: string, data: SignalData) {
     const [streamer, viewer] = data.pc.split('>');
-    if (streamer === this.opts.selfId && viewer === from)
-      await this.out.get(from)?.link.handle(data);
-    else if (viewer === this.opts.selfId && streamer === from)
-      await this.inc.get(from)?.link.handle(data);
+    const outgoing = streamer === this.opts.selfId && viewer === from;
+    const incoming = viewer === this.opts.selfId && streamer === from;
+    if (outgoing) await this.out.get(from)?.link.handle(data);
+    else if (incoming) await this.inc.get(from)?.link.handle(data);
   }
 
   /** The peer left the room or stopped streaming. */

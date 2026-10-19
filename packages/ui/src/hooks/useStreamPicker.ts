@@ -25,6 +25,8 @@ type Input = {
   enabled: boolean;
   /** The capture is running, so its picture can be sent. */
   cardReady: boolean;
+  /** Opens the capture device when a card stream starts before it is running. */
+  ensureCard?: () => Promise<boolean>;
   cardStream(): Promise<MediaStream | null>;
   cardLabel: string;
   /** Releases a native relay when this card copy stops. Ignored by compatibility. */
@@ -42,6 +44,7 @@ export function useStreamPicker({
   party,
   enabled,
   cardReady,
+  ensureCard,
   cardStream,
   cardLabel,
   onCardStop,
@@ -79,6 +82,7 @@ export function useStreamPicker({
     try {
       let source: StreamSource | null = null;
       if (k === 'card') {
+        if (!cardReady && (await ensureCard?.()) === false) return;
         const stream = await cardStream();
         if (stream) source = cardSource(stream, cardLabel, onCardStop);
       } else {
@@ -116,9 +120,7 @@ export function useStreamPicker({
 
   const blocked =
     kind === 'card'
-      ? cardReady
-        ? undefined
-        : t.cardNeedsCompat
+      ? undefined
       : desktop && !visible.some((s) => s.id === selected)
         ? t.pickInPanel
         : undefined;

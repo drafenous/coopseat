@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { slotQuality, stageSlots } from '@coopseat/ui/party-layout';
+import {
+  placeIntoSlot,
+  removeFromGrid,
+  reorderGridSlots,
+  slotQuality,
+  stageSlots,
+} from '@coopseat/ui/party-layout';
 import {
   allocateBitrates,
   AUDIO_KBPS,
   BitrateAdapter,
   MIN_VIDEO_KBPS,
+  senderLimits,
   VIDEO_PROFILES,
   withStereoOpus,
   type OutboundSample,
@@ -50,6 +57,8 @@ describe('BitrateAdapter', () => {
     availableKbps: null,
     limitation: null,
     fps: 60,
+    width: null,
+    height: null,
     ...over,
   });
 
@@ -65,15 +74,52 @@ describe('BitrateAdapter', () => {
     expect(adapter.kbps).toBe(4000);
   });
 
-  it('reacts to RTT and bandwidth limitation and respects the available estimate', () => {
+  it('backs off on RTT and only cuts for a real hole in the bandwidth estimate', () => {
     const adapter = new BitrateAdapter(4000);
     adapter.update(sample());
     expect(adapter.update(sample({ rttMs: 500 }))).toBe(3000);
-    expect(adapter.update(sample({ limitation: 'bandwidth' }))).toBe(2250);
+    // The encoder reports this while sitting on the configured cap. That is not loss.
+    expect(adapter.update(sample({ limitation: 'bandwidth' }))).toBeNull();
+    expect(adapter.kbps).toBe(3000);
     expect(adapter.update(sample({ availableKbps: 1000 }))).toBe(900);
-    for (let i = 0; i < 10; i++)
-      adapter.update(sample({ limitation: 'bandwidth' }));
-    expect(adapter.kbps).toBe(MIN_VIDEO_KBPS);
+    adapter.update(sample({ availableKbps: 20000, limitation: 'bandwidth' }));
+    adapter.update(sample({ availableKbps: 20000, limitation: 'bandwidth' }));
+    expect(
+      adapter.update(sample({ availableKbps: 20000, limitation: 'bandwidth' })),
+    ).toBe(Math.ceil(900 * 1.1));
+    const starved = new BitrateAdapter(4000);
+    starved.update(sample());
+    for (let i = 0; i < 5; i++) starved.update(sample({ availableKbps: 200 }));
+    expect(starved.kbps).toBe(MIN_VIDEO_KBPS);
+  });
+
+  it('keeps the bitrate cap still while the estimate only wobbles', () => {
+    const adapter = new BitrateAdapter(6000);
+    adapter.update(sample());
+    for (const availableKbps of [5000, 4200, 5600, 4000, 5400])
+      expect(adapter.update(sample({ availableKbps }))).toBeNull();
+    expect(adapter.kbps).toBe(6000);
+  });
+});
+
+describe('senderLimits', () => {
+  it('caps a browser sender at 30 fps and 4500 kbps', () => {
+    expect(senderLimits('high', 6000, true)).toMatchObject({
+      maxKbps: 4500,
+      maxFramerate: 30,
+      degradationPreference: 'maintain-framerate',
+    });
+    expect(senderLimits('low', 6000, true).maxKbps).toBe(
+      VIDEO_PROFILES.low.maxKbps,
+    );
+  });
+
+  it('leaves the desktop profile alone', () => {
+    expect(senderLimits('high', 6000, false)).toMatchObject({
+      maxKbps: 6000,
+      maxFramerate: 60,
+      degradationPreference: 'balanced',
+    });
   });
 });
 
@@ -117,23 +163,47 @@ describe('stage layouts', () => {
     ]);
   });
 
-  it('hides (and so disconnects) streams the layout has no tile for', () => {
-    expect(stageSlots('focus', streamers, null, 'owner').hidden).toEqual([
-      'b',
-      'c',
-      'd',
-    ]);
-    expect(stageSlots('split', streamers, null, 'owner')).toEqual({
-      main: ['owner', 'b'],
-      strip: [],
-      hidden: ['c', 'd'],
-    });
+  it('shows everyone in the grid by default and pads 3 into a 2x2 with an empty cell', () => {
     expect(stageSlots('grid', streamers, null, 'owner').hidden).toEqual([]);
     expect(stageSlots('grid', [], null, 'owner')).toEqual({
       main: [],
       strip: [],
       hidden: [],
     });
+    const three = stageSlots('grid', ['owner', 'b', 'c'], null, 'owner');
+    expect(three.main).toEqual(['owner', 'b', 'c', null]);
+    expect(three.strip).toEqual([]);
+  });
+
+  it('keeps removed streamers on the strip (paused) in grid mode', () => {
+    const slots = stageSlots(
+      'grid',
+      streamers,
+      null,
+      'owner',
+      ['owner', 'b', null, 'c'],
+    );
+    expect(slots.main).toEqual(['owner', 'b', null, 'c']);
+    expect(slots.strip).toEqual(['d']);
+    expect(slots.hidden).toEqual(['d']);
+  });
+
+  it('reorders, places and removes grid slots', () => {
+    expect(reorderGridSlots(['a', 'b', 'c', null], 0, 2)).toEqual([
+      'b',
+      'c',
+      'a',
+      null,
+    ]);
+    expect(placeIntoSlot(['a', null, 'b'], 'c', 1)).toEqual([
+      'a',
+      'c',
+      'b',
+      null,
+    ]);
+    expect(placeIntoSlot(['a', 'b'], 'c', 0)).toEqual(['c', 'b']);
+    expect(removeFromGrid(['a', 'b', 'c', null], 'b')).toEqual(['a', 'c']);
+    expect(removeFromGrid(['a', 'b', 'c'], 'c')).toEqual(['a', 'b']);
   });
 
   it('asks for the low layer on small or crowded tiles and nothing for hidden ones', () => {
@@ -149,7 +219,10 @@ describe('stage layouts', () => {
       ),
     ).toEqual(['low', 'low', 'low', 'low']);
     expect(
-      slotQuality('focus', stageSlots('focus', ['owner', 'b'], null, 'owner')),
-    ).toEqual({ owner: 'high', b: null });
+      slotQuality(
+        'grid',
+        stageSlots('grid', streamers, null, 'owner', ['owner', 'b']),
+      ),
+    ).toEqual({ owner: 'high', b: 'high', c: null, d: null });
   });
 });

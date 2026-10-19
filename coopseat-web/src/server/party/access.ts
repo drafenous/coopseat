@@ -62,7 +62,7 @@ export async function getRoom(ownerId: string) {
   return db.orm.public.PartyRoom.where({ ownerId }).first();
 }
 
-/** New rooms start with approval on, which satisfies the "at least one protection" rule. */
+/** New rooms start as Protected (approval + allow-list bypass). */
 export async function ensureRoom(ownerId: string) {
   const existing = await getRoom(ownerId);
   if (existing) return existing;
@@ -71,6 +71,7 @@ export async function ensureRoom(ownerId: string) {
     return await db.orm.public.PartyRoom.create({
       ownerId,
       requireApproval: true,
+      whitelistEnabled: true,
     });
   } catch (err) {
     if (isUniqueViolation(err)) return (await getRoom(ownerId))!;
@@ -212,7 +213,7 @@ export type AccessResult =
       sessionId: string;
       endsAt: number;
     }
-  | { state: 'offline'; isOwner: boolean }
+  | { state: 'offline'; isOwner: boolean; canOpen: boolean }
   | { state: 'password_required' }
   | { state: 'not_invited' }
   | { state: 'banned' }
@@ -258,7 +259,12 @@ export async function decideAccess(input: {
     !session ||
     (input.expectedSessionId && input.expectedSessionId !== session.id)
   ) {
-    return { state: 'offline', isOwner };
+    return {
+      state: 'offline',
+      isOwner,
+      canOpen:
+        isOwner || (await durableCanStream(room, viewer, sanctions)),
+    };
   }
 
   const endsAt = sessionEndsAt(session.startedAt, policy);
@@ -304,12 +310,10 @@ export async function decideAccess(input: {
   const db = await adminDb();
   const [moderator, listed, returning] = await Promise.all([
     getModerator(room.ownerId, viewer.profileId),
-    room.whitelistEnabled
-      ? db.orm.public.PartyRoomWhitelist.where({
-          roomId: room.ownerId,
-          profileId: viewer.profileId,
-        }).first()
-      : null,
+    db.orm.public.PartyRoomWhitelist.where({
+      roomId: room.ownerId,
+      profileId: viewer.profileId,
+    }).first(),
     admittedParticipant(session.id, viewer.profileId),
   ]);
   const role = moderator ? ('moderator' as const) : ('member' as const);
@@ -326,9 +330,6 @@ export async function decideAccess(input: {
     return result('admitted', claims);
   }
 
-  if (!room.passwordHash && !room.requireApproval)
-    return { state: 'not_invited' };
-
   if (room.passwordHash) {
     if (!input.password) return { state: 'password_required' };
     await rateLimit('party_password', `${viewer.profileId}:${room.ownerId}`);
@@ -336,10 +337,89 @@ export async function decideAccess(input: {
       throw new ApiError(403, 'party_password_invalid');
   }
 
+  // Protected → pending; Private → not invited; Public → admit.
   if (room.requireApproval) return result('pending', claims);
+  if (room.whitelistEnabled) return { state: 'not_invited' };
 
   await admitParticipant(session.id, viewer.profileId);
   return result('admitted', claims);
+}
+
+/**
+ * True when this person may open a closed room: the owner, or a whitelist entry that already
+ * allows streaming. Session-only grants and password/approval admission do not.
+ * Allow-list stream grants apply in every visibility mode (including Public).
+ */
+async function durableCanStream(
+  room: { ownerId: string } | null,
+  viewer: Viewer,
+  sanctions: Set<SanctionScope>,
+): Promise<boolean> {
+  if (!room) return false;
+  if (!viewer.permissions.host.allowed || isBlocked(sanctions, 'party_stream'))
+    return false;
+  const db = await adminDb();
+  const listed = await db.orm.public.PartyRoomWhitelist.where({
+    roomId: room.ownerId,
+    profileId: viewer.profileId,
+  }).first();
+  return Boolean(listed?.canStream);
+}
+
+/**
+ * Opens the room's live session when none exists, then admits the caller.
+ * The owner can always open their room. Anyone else needs a durable `canStream` on the allow list.
+ */
+export async function openLiveSession(input: {
+  viewer: Viewer;
+  owner: RoomOwner;
+}): Promise<AccessResult> {
+  const { viewer, owner } = input;
+  const isOwner = viewer.profileId === owner.id;
+  const [policy, sanctions] = await Promise.all([
+    getPartyPolicy(),
+    viewer.sanctions ?? activeSanctions(viewer.profileId),
+  ]);
+  if (!policy.enabled) throw new ApiError(503, 'party_disabled');
+  if (
+    isBlocked(sanctions, 'party_join') ||
+    isBlocked(sanctions, 'party_stream') ||
+    (isOwner && isBlocked(sanctions, 'party_host'))
+  ) {
+    throw new ApiError(403, 'party_unavailable');
+  }
+  if (!viewer.permissions.host.allowed) {
+    throw new ApiError(403, 'party_requirements', {
+      missing: viewer.permissions.host.missing,
+    });
+  }
+  if (!viewer.nickname)
+    throw new ApiError(403, 'party_requirements', { missing: ['nickname'] });
+
+  const room = isOwner ? await ensureRoom(owner.id) : await getRoom(owner.id);
+  if (!isOwner) {
+    if (!(await durableCanStream(room, viewer, sanctions)))
+      throw new ApiError(403, 'party_forbidden');
+    if (await getActiveBan(owner.id, viewer.profileId))
+      return { state: 'banned' };
+  }
+
+  if (!(await getActiveSession(owner.id, policy))) {
+    const db = await adminDb();
+    try {
+      await db.orm.public.PartySession.create({ roomId: owner.id });
+    } catch (err) {
+      if (!isUniqueViolation(err)) throw err;
+    }
+  }
+
+  return decideAccess({
+    viewer,
+    owner,
+    policy,
+    sanctions,
+    room: Promise.resolve(room),
+  });
 }
 
 export type Actor = { role: 'owner' | 'moderator'; perms: ModPerms };

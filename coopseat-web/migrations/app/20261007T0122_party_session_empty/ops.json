@@ -1,0 +1,86 @@
+[
+  {
+    "id": "dropCheckConstraint.party_sessions.party_sessions_end_reason_56813f84",
+    "label": "Drop check constraint \"party_sessions_end_reason_56813f84\" on \"party_sessions\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "party_sessions_end_reason_56813f84",
+        "table": "party_sessions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"party_sessions_end_reason_56813f84\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_sessions_end_reason_56813f84",
+          "public",
+          "\"public\".\"party_sessions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"party_sessions_end_reason_56813f84\"",
+        "sql": "ALTER TABLE \"public\".\"party_sessions\" DROP CONSTRAINT \"party_sessions_end_reason_56813f84\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"party_sessions_end_reason_56813f84\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_sessions_end_reason_56813f84",
+          "public",
+          "\"public\".\"party_sessions\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.party_sessions.party_sessions_end_reason_322d0e7e",
+    "label": "Add check constraint \"party_sessions_end_reason_322d0e7e\" on \"party_sessions\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "party_sessions_end_reason_322d0e7e",
+        "table": "party_sessions"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"party_sessions_end_reason_322d0e7e\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_sessions_end_reason_322d0e7e",
+          "public",
+          "\"public\".\"party_sessions\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"party_sessions_end_reason_322d0e7e\"",
+        "sql": "ALTER TABLE \"public\".\"party_sessions\" ADD CONSTRAINT \"party_sessions_end_reason_322d0e7e\" CHECK (\"endReason\" IS NULL OR \"endReason\" IN ('owner_ended', 'owner_timeout', 'empty', 'max_duration', 'sanction', 'operator'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"party_sessions_end_reason_322d0e7e\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_sessions_end_reason_322d0e7e",
+          "public",
+          "\"public\".\"party_sessions\""
+        ]
+      }
+    ]
+  }
+]

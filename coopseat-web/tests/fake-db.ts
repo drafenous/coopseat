@@ -227,7 +227,7 @@ export function createFakeDb() {
         return table(data.PartyRoom, () => ({
           passwordHash: null,
           requireApproval: true,
-          whitelistEnabled: false,
+          whitelistEnabled: true,
           defaultLayout: 'stage',
           maxParticipants: null,
           createdAt: now(),

@@ -8,6 +8,7 @@ import { verifySignalRequest } from '@/server/party/signal';
 const END_REASONS = new Set([
   'owner_ended',
   'owner_timeout',
+  'empty',
   'max_duration',
   'sanction',
   'operator',

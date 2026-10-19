@@ -1,0 +1,113 @@
+[
+  {
+    "id": "dropCheckConstraint.party_rooms.party_rooms_layout_8a3d9b9f",
+    "label": "Drop check constraint \"party_rooms_layout_8a3d9b9f\" on \"party_rooms\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "party_rooms_layout_8a3d9b9f",
+        "table": "party_rooms"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"party_rooms_layout_8a3d9b9f\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_rooms_layout_8a3d9b9f",
+          "public",
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop check constraint \"party_rooms_layout_8a3d9b9f\"",
+        "sql": "ALTER TABLE \"public\".\"party_rooms\" DROP CONSTRAINT \"party_rooms_layout_8a3d9b9f\""
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"party_rooms_layout_8a3d9b9f\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_rooms_layout_8a3d9b9f",
+          "public",
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data.party_rooms.backfill-layout-stage-grid",
+    "label": "Map legacy split/focus defaultLayout values to stage",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "party_rooms",
+        "table": "party_rooms"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "set defaultLayout=stage where split or focus",
+        "sql": "UPDATE \"public\".\"party_rooms\" SET \"defaultLayout\" = 'stage' WHERE \"defaultLayout\" IN ('split', 'focus')"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify no split/focus layouts remain",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"party_rooms\" WHERE \"defaultLayout\" IN ('split', 'focus') LIMIT 1) AS \"result\""
+      }
+    ]
+  },
+  {
+    "id": "checkConstraint.party_rooms.party_rooms_layout_6afdcbc3",
+    "label": "Add check constraint \"party_rooms_layout_6afdcbc3\" on \"party_rooms\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "checkConstraint",
+        "name": "party_rooms_layout_6afdcbc3",
+        "table": "party_rooms"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"party_rooms_layout_6afdcbc3\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_rooms_layout_6afdcbc3",
+          "public",
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add check constraint \"party_rooms_layout_6afdcbc3\"",
+        "sql": "ALTER TABLE \"public\".\"party_rooms\" ADD CONSTRAINT \"party_rooms_layout_6afdcbc3\" CHECK (\"defaultLayout\" IN ('stage', 'grid'))"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"party_rooms_layout_6afdcbc3\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "party_rooms_layout_6afdcbc3",
+          "public",
+          "\"public\".\"party_rooms\""
+        ]
+      }
+    ]
+  }
+]

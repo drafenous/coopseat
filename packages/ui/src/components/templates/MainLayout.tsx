@@ -3,11 +3,12 @@ import { cx } from '../../lib/cx';
 
 export type PanelSide = 'left' | 'right';
 
-/** `roomPanel` (party) sits opposite the settings panel, or on `panelSide` when the settings panel is hidden. */
+/** With both open: stage | chat | settings. Collapsed panels stay as a thin rail. */
 type Props = {
   immersive: boolean;
   panelSide: PanelSide;
   panelCollapsed: boolean;
+  roomCollapsed?: boolean;
   header: ReactNode;
   viewer: ReactNode;
   panelTop?: ReactNode;
@@ -21,24 +22,35 @@ type Props = {
 
 const workspace =
   'grid min-h-[440px] flex-[1_1_0] grid-rows-[minmax(0,1fr)] items-stretch gap-[clamp(16px,1.6vw,28px)] immersive:block max-[750px]:min-h-0 max-[750px]:flex-none max-[750px]:grid-cols-1 max-[750px]:grid-rows-[auto]';
+
+/** Static class names so Tailwind can emit every grid template. */
 const columns = {
-  right:
-    'grid-cols-[minmax(0,1fr)_clamp(300px,21vw,400px)] max-[1000px]:grid-cols-[minmax(0,1fr)_290px]',
+  right: 'grid-cols-[minmax(0,1fr)_clamp(300px,21vw,400px)] max-[1000px]:grid-cols-[minmax(0,1fr)_290px]',
+  rightRail: 'grid-cols-[minmax(0,1fr)_44px]',
   left: 'grid-cols-[clamp(300px,21vw,400px)_minmax(0,1fr)] max-[1000px]:grid-cols-[290px_minmax(0,1fr)] [&>[data-panel]]:order-first [&>[data-room]]:order-first max-[750px]:[&>[data-panel]]:order-none max-[750px]:[&>[data-room]]:order-none',
+  leftRail: 'grid-cols-[44px_minmax(0,1fr)]',
   collapsed: 'grid-cols-[minmax(0,1fr)]',
-  // Both panels: three columns on wide screens; below 1200px the settings panel drops under the stage.
-  bothLeft:
-    'grid-cols-[clamp(260px,18vw,360px)_minmax(0,1fr)_clamp(280px,20vw,380px)] [&>[data-panel]]:order-first',
-  bothRight:
-    'grid-cols-[clamp(280px,20vw,380px)_minmax(0,1fr)_clamp(260px,18vw,360px)] [&>[data-room]]:order-first',
+  // stage | chat | settings
+  both: 'grid-cols-[minmax(0,1fr)_clamp(280px,20vw,380px)_clamp(260px,18vw,360px)]',
+  bothRoomRail: 'grid-cols-[minmax(0,1fr)_44px_clamp(260px,18vw,360px)]',
+  bothPanelRail: 'grid-cols-[minmax(0,1fr)_clamp(280px,20vw,380px)_44px]',
+  bothRails: 'grid-cols-[minmax(0,1fr)_44px_44px]',
   bothNarrow:
-    'max-[1200px]:grid-cols-[minmax(0,1fr)_300px] max-[1200px]:[&>[data-room]]:order-none max-[1200px]:[&>[data-panel]]:order-last max-[1200px]:[&>[data-panel]]:col-span-2 max-[750px]:grid-cols-1 max-[750px]:[&>[data-panel]]:col-span-1',
+    'max-[1200px]:grid-cols-[minmax(0,1fr)_auto] max-[1200px]:grid-rows-[minmax(0,1fr)_minmax(0,1fr)] max-[1200px]:[&>*:first-child]:row-span-2 max-[750px]:grid-cols-1 max-[750px]:grid-rows-[auto] max-[750px]:[&>*:first-child]:row-span-1',
 };
+
+function bothColumns(roomCollapsed: boolean, panelCollapsed: boolean) {
+  if (roomCollapsed && panelCollapsed) return columns.bothRails;
+  if (roomCollapsed) return columns.bothRoomRail;
+  if (panelCollapsed) return columns.bothPanelRail;
+  return columns.both;
+}
 
 export function MainLayout({
   immersive,
   panelSide,
   panelCollapsed,
+  roomCollapsed = false,
   header,
   viewer,
   panelTop,
@@ -49,17 +61,22 @@ export function MainLayout({
   footer,
   modals,
 }: Props) {
-  const showPanel = Boolean(panel) && !panelCollapsed,
+  const showPanel = Boolean(panel),
     showRoom = Boolean(roomPanel);
   const grid =
     showPanel && showRoom
-      ? cx(
-          panelSide === 'left' ? columns.bothLeft : columns.bothRight,
-          columns.bothNarrow,
-        )
-      : showPanel || showRoom
-        ? columns[panelSide]
-        : columns.collapsed;
+      ? cx(bothColumns(roomCollapsed, panelCollapsed), columns.bothNarrow)
+      : showRoom
+        ? roomCollapsed
+          ? columns.rightRail
+          : columns.right
+        : showPanel
+          ? panelCollapsed
+            ? panelSide === 'left'
+              ? columns.leftRail
+              : columns.rightRail
+            : columns[panelSide]
+          : columns.collapsed;
   return (
     <div
       className="flex min-h-screen flex-col"
@@ -69,18 +86,18 @@ export function MainLayout({
       <main className="flex w-full flex-1 flex-col px-[clamp(16px,2.5vw,48px)] pt-[clamp(14px,2vh,24px)] immersive:p-0">
         <div className={cx(workspace, grid)}>
           {viewer}
+          {showRoom && (
+            <div data-room className="flex min-h-0 flex-col immersive:hidden">
+              {roomPanel}
+            </div>
+          )}
           {showPanel && (
             <div
               data-panel
               className="flex min-h-0 flex-col gap-3 immersive:hidden"
             >
-              {panelTop}
+              {!panelCollapsed && panelTop}
               {panel}
-            </div>
-          )}
-          {showRoom && (
-            <div data-room className="flex min-h-0 flex-col immersive:hidden">
-              {roomPanel}
             </div>
           )}
         </div>

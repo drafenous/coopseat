@@ -1,4 +1,5 @@
 import type { Quality } from '../../party/protocol';
+import { bridge } from '../../platform';
 
 export type VideoProfile = {
   maxKbps: number;
@@ -6,7 +7,7 @@ export type VideoProfile = {
   scaleResolutionDownBy: number;
 };
 
-/** Game streams: motion over detail, keep the frame rate and drop resolution first. */
+/** Game streams: keep the picture sharp. A tight link may shed a few frames before it softens the image. */
 export const VIDEO_PROFILES: Record<
   Exclude<Quality, 'paused'>,
   VideoProfile
@@ -14,6 +15,12 @@ export const VIDEO_PROFILES: Record<
   high: { maxKbps: 6000, maxFramerate: 60, scaleResolutionDownBy: 1 },
   low: { maxKbps: 1200, maxFramerate: 30, scaleResolutionDownBy: 2 },
 };
+/**
+ * A browser encode of 1080p60 sits on the cap and sheds frames in clumps. A fixed 30 fps at
+ * 4500 kbps is a rate it can actually hold.
+ */
+export const BROWSER_MAX_KBPS = 4_500;
+export const BROWSER_MAX_FPS = 30;
 export const MIN_VIDEO_KBPS = 300;
 export const AUDIO_KBPS = 128;
 /** Mesh: the streamer uploads one copy per viewer, so the total is split between them. */
@@ -85,11 +92,38 @@ export type SenderTuning = {
   maxKbps: number;
 };
 
+export function senderLimits(
+  quality: Exclude<Quality, 'paused'>,
+  maxKbps: number,
+  browser: boolean,
+) {
+  const profile = VIDEO_PROFILES[quality];
+  return {
+    maxKbps: Math.min(
+      maxKbps,
+      profile.maxKbps,
+      browser ? BROWSER_MAX_KBPS : profile.maxKbps,
+    ),
+    maxFramerate: browser
+      ? Math.min(profile.maxFramerate, BROWSER_MAX_FPS)
+      : profile.maxFramerate,
+    scaleResolutionDownBy: profile.scaleResolutionDownBy,
+    /** Browser keeps the frame clock. Desktop keeps resolution and may shed a few frames. */
+    degradationPreference: browser
+      ? ('maintain-framerate' as const)
+      : ('balanced' as const),
+  };
+}
+
 export async function tuneVideoSender(
   sender: RTCRtpSender,
   { quality, maxKbps }: SenderTuning,
 ) {
-  const profile = VIDEO_PROFILES[quality];
+  const limits = senderLimits(
+    quality,
+    maxKbps,
+    typeof navigator !== 'undefined' && !bridge(),
+  );
   const params = sender.getParameters() as RTCRtpSendParameters & {
     degradationPreference?: string;
   };
@@ -97,11 +131,11 @@ export async function tuneVideoSender(
   params.encodings = params.encodings.map((e) => ({
     ...e,
     active: true,
-    maxBitrate: Math.round(Math.min(maxKbps, profile.maxKbps) * 1000),
-    maxFramerate: profile.maxFramerate,
-    scaleResolutionDownBy: profile.scaleResolutionDownBy,
+    maxBitrate: Math.round(limits.maxKbps * 1000),
+    maxFramerate: limits.maxFramerate,
+    scaleResolutionDownBy: limits.scaleResolutionDownBy,
   }));
-  params.degradationPreference = 'maintain-framerate';
+  params.degradationPreference = limits.degradationPreference;
   try {
     await sender.setParameters(params);
   } catch {

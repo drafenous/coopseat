@@ -27,6 +27,17 @@ const {
   PROTOCOL,
 } = require('./validation.cjs');
 const { resolveBff } = require('./bff.cjs');
+// Host candidates must be real LAN addresses. mDNS (.local) names fail to
+// resolve here, so ICE falls through to a peer-reflexive path that drops.
+app.commandLine.appendSwitch('disable-features', 'WebRtcHideLocalIpsWithMdns');
+/** The capture currently allowed to deliver one video frame to the page. */
+let mediaPump = null;
+ipcMain.on('native:media:ack', (event) => {
+  const pump = mediaPump;
+  if (!pump || event.sender !== pump.contents) return;
+  pump.inFlight = false;
+  pump.arm();
+});
 const { readMediaPrivacy } = require('./privacy.cjs');
 const { createFrameParser } = require('./media-frames.cjs');
 let win,
@@ -252,8 +263,21 @@ function startAudio(id) {
     p.stdin.write(JSON.stringify(request) + '\n');
   });
 }
+let eventsOpen = true;
 function emit(event) {
-  if (win && !win.isDestroyed()) win.webContents.send('native:event', event);
+  if (!eventsOpen || !win || win.isDestroyed()) return;
+  const contents = win.webContents;
+  if (contents.isDestroyed()) return;
+  try {
+    if (contents.mainFrame.isDestroyed()) {
+      eventsOpen = false;
+      return;
+    }
+    contents.send('native:event', event);
+  } catch (e) {
+    if (!/disposed/i.test(String(e?.message))) throw e;
+    eventsOpen = false;
+  }
 }
 function stop() {
   const p = core;
@@ -419,10 +443,124 @@ app.whenReady().then(() => {
         emit(e);
       } catch {}
     });
-    const parseMedia = createFrameParser((frame) => {
-      if (core !== p || !win || win.isDestroyed()) return;
-      win.webContents.send('native:media', frame.meta, frame.data);
-    });
+    let mediaOpen = true;
+    const contents = win.webContents;
+    const pauseMedia = () => {
+      mediaOpen = false;
+      pump.quiet();
+    };
+    const resumeMedia = () => {
+      mediaOpen = true;
+      eventsOpen = true;
+      pump.inFlight = false;
+      pump.arm();
+    };
+    // Same slot as the native relay (one frame per 16 ms). Ack stays immediate.
+    // Keep reading stderr while pacing: pausing the pipe stalled PCM behind video
+    // and made party audio hitch. Excess pictures are dropped in the frame parser
+    // (skipVideo) without copying; audio still reaches the page.
+    const FRAME_MS = 16;
+    const pump = {
+      contents,
+      inFlight: false,
+      latest: null,
+      quieted: false,
+      width: 0,
+      height: 0,
+      nextSend: 0,
+      pace: null,
+      quiet() {
+        if (this.quieted) return;
+        this.quieted = true;
+        p.stderr.pause();
+      },
+      listen() {
+        if (!this.quieted || !mediaOpen) return;
+        this.quieted = false;
+        p.stderr.resume();
+      },
+      arm() {
+        if (this.pace || !mediaOpen) return;
+        const wait = this.nextSend - Date.now();
+        if (wait <= 0) {
+          this.listen();
+          this.flush();
+          return;
+        }
+        this.listen();
+        this.pace = setTimeout(() => {
+          this.pace = null;
+          if (!mediaOpen) return;
+          this.flush();
+        }, wait);
+      },
+      flush() {
+        if (this.inFlight || !this.latest || !mediaOpen) return;
+        if (Date.now() < this.nextSend) {
+          this.arm();
+          return;
+        }
+        if (!win || win.isDestroyed() || contents.isDestroyed()) return;
+        const frame = this.latest;
+        this.latest = null;
+        try {
+          if (contents.mainFrame.isDestroyed()) {
+            mediaOpen = false;
+            eventsOpen = false;
+            this.quiet();
+            return;
+          }
+          this.inFlight = true;
+          this.nextSend = Date.now() + FRAME_MS;
+          contents.send('native:media', frame.meta, frame.data);
+          // Do not pause stderr here — audio must keep flowing until the next slot.
+          this.listen();
+        } catch (e) {
+          this.inFlight = false;
+          mediaOpen = false;
+          eventsOpen = false;
+          this.quiet();
+          if (!/disposed/i.test(String(e?.message))) throw e;
+        }
+      },
+    };
+    mediaPump = pump;
+    contents.on('did-start-loading', pauseMedia);
+    contents.on('did-finish-load', resumeMedia);
+    contents.on('destroyed', pauseMedia);
+    const releaseMedia = () => {
+      contents.removeListener('did-start-loading', pauseMedia);
+      contents.removeListener('did-finish-load', resumeMedia);
+      contents.removeListener('destroyed', pauseMedia);
+    };
+    const parseMedia = createFrameParser(
+      (frame) => {
+        if (!mediaOpen || core !== p || !win || win.isDestroyed()) return;
+        if (contents.isDestroyed()) return;
+        if (frame.meta.kind === 'video') {
+          pump.latest = frame;
+          pump.width = frame.meta.width;
+          pump.height = frame.meta.height;
+          pump.flush();
+          return;
+        }
+        try {
+          if (contents.mainFrame.isDestroyed()) {
+            mediaOpen = false;
+            return;
+          }
+          contents.send('native:media', frame.meta, frame.data);
+        } catch (e) {
+          // send() logs this itself, then throws. Stop calling it until the page loads again.
+          mediaOpen = false;
+          if (!/disposed/i.test(String(e?.message))) throw e;
+        }
+      },
+      {
+        skipVideo: () =>
+          pump.inFlight || Date.now() < pump.nextSend || Boolean(pump.latest),
+      },
+    );
     p.stderr.on('data', parseMedia);
     p.stdin.on('error', () => {});
     p.on('error', (e) => {
@@ -430,6 +568,9 @@ app.whenReady().then(() => {
       emit({ type: 'error', message: e.message });
     });
     p.on('exit', (code) => {
+      clearTimeout(pump.pace);
+      if (mediaPump === pump) mediaPump = null;
+      releaseMedia();
       if (core === p) {
         core = null;
         emit({
@@ -466,9 +607,15 @@ app.whenReady().then(() => {
   handle('native:control', ({ key, value }) => {
     const levels = { smoothing: 2, effect: 7 };
     if (
-      !['volume', 'vsync', 'smoothing', 'effect', 'top', 'fullscreen', 'relay'].includes(
-        key,
-      )
+      ![
+        'volume',
+        'vsync',
+        'smoothing',
+        'effect',
+        'top',
+        'fullscreen',
+        'relay',
+      ].includes(key)
     )
       throw Error('Comando inválido');
     if (

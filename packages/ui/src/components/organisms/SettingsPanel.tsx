@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react';
 import {
-  ArrowLeftRight,
   ArrowUpRight,
   AudioLines,
   Bookmark,
@@ -19,6 +18,7 @@ import {
   CaptureButton,
   Collapsible,
   DeviceSelect,
+  StreamButton,
   ToggleField,
 } from '../molecules';
 import type { PanelSide } from '../templates/MainLayout';
@@ -28,7 +28,6 @@ import { useT } from '../../i18n';
 
 type Props = {
   side: PanelSide;
-  onSwapSide(): void;
   onCollapse(): void;
   settings: Settings;
   change<K extends keyof Settings>(key: K, value: Settings[K]): void;
@@ -50,11 +49,22 @@ type Props = {
   onBackendChange(backend: Backend): void;
   onStart(): void;
   onStop(): void;
+  /**
+   * Gaming Party: the footer starts and stops the transmission instead of a local-only capture.
+   * Omitted on the standalone capture screen.
+   */
+  transmit?: {
+    streaming: boolean;
+    busy: boolean;
+    canStart: boolean;
+    blocked?: string;
+    onStart(): void;
+    onStop(): void;
+  };
 };
 
 export function SettingsPanel({
   side,
-  onSwapSide,
   onCollapse,
   settings: s,
   change,
@@ -74,6 +84,7 @@ export function SettingsPanel({
   onBackendChange,
   onStart,
   onStop,
+  transmit,
 }: Props) {
   const locked = running || busy;
   const t = useT().settings;
@@ -92,14 +103,6 @@ export function SettingsPanel({
             onClick={onRefresh}
           >
             <RefreshCw size={16} />
-          </IconButton>
-          <IconButton
-            size="sm"
-            label={side === 'right' ? t.moveLeft : t.moveRight}
-            className="max-[750px]:hidden"
-            onClick={onSwapSide}
-          >
-            <ArrowLeftRight size={16} />
           </IconButton>
           <IconButton size="sm" label={t.collapse} onClick={onCollapse}>
             {side === 'right' ? (
@@ -160,24 +163,40 @@ export function SettingsPanel({
           onBackendChange={onBackendChange}
         />
       </div>
-      {(!devicesHidden || running || busy) && (
+      {(!devicesHidden || running || busy || transmit) && (
         <div className="flex-none border-t border-line-soft bg-[#121921] px-5 py-3.5 min-[1800px]:px-6 min-[1800px]:py-4">
-          <ToggleField
-            label={t.autoConnect}
-            hint={t.autoConnectHint}
-            checked={s.auto}
-            onChange={(v) => change('auto', v)}
-          />
-          <CaptureButton
-            running={running}
-            busy={busy}
-            canStart={canStart}
-            onStart={onStart}
-            onStop={onStop}
-          />
-          <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[12px] text-[#8494a5]">
-            <Zap size={13} /> {t.local}
-          </p>
+          {(!devicesHidden || running || busy) && (
+            <ToggleField
+              label={t.autoConnect}
+              hint={t.autoConnectHint}
+              checked={s.auto}
+              onChange={(v) => change('auto', v)}
+            />
+          )}
+          {transmit ? (
+            <StreamButton
+              block
+              streaming={transmit.streaming}
+              busy={transmit.busy}
+              disabled={!transmit.streaming && !transmit.canStart}
+              title={transmit.blocked}
+              onStart={transmit.onStart}
+              onStop={transmit.onStop}
+            />
+          ) : (
+            <>
+              <CaptureButton
+                running={running}
+                busy={busy}
+                canStart={canStart}
+                onStart={onStart}
+                onStop={onStop}
+              />
+              <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[12px] text-[#8494a5]">
+                <Zap size={13} /> {t.local}
+              </p>
+            </>
+          )}
         </div>
       )}
     </aside>
