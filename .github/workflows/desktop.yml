@@ -26,6 +26,10 @@ permissions:
 jobs:
   build:
     runs-on: windows-latest
+    # Tag releases upload the installers from this job; a second job + artifacts
+    # hits Actions storage quota (recalculated only every 6–12h after deletes).
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: coopseat
@@ -54,10 +58,10 @@ jobs:
         run: npx electron-builder --win portable --x64 --config portable.config.cjs
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
-      - uses: actions/upload-artifact@v4
-        # Only tags/dispatch need the binaries for the release job; uploading on every
-        # branch push filled the Actions artifact storage quota and blocked desktop-v* releases.
-        if: startsWith(github.ref, 'refs/tags/desktop-v') || github.event_name == 'workflow_dispatch'
+      - name: Upload installers
+        # Manual runs only — branch/PR builds do not keep ~180MB binaries in artifact storage.
+        if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
         with:
           name: CoopSeat-Windows-x64
           path: |
@@ -65,32 +69,24 @@ jobs:
             coopseat/release/*-Portable.exe
           if-no-files-found: error
           retention-days: 1
-
-  release:
-    if: startsWith(github.ref, 'refs/tags/desktop-v')
-    needs: build
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: CoopSeat-Windows-x64
-          path: dist
       - name: Extract changelog section
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        working-directory: .
+        shell: pwsh
         env:
           TAG: ${{ github.ref_name }}
         run: |
-          version="${TAG#desktop-v}"
-          node .cursor/skills/semver-release/scripts/release.mjs notes desktop "$version" > notes.md
-          echo "VERSION=$version" >> "$GITHUB_ENV"
-      - uses: softprops/action-gh-release@v2
+          $version = $env:TAG -replace '^desktop-v',''
+          node .cursor/skills/semver-release/scripts/release.mjs notes desktop $version | Set-Content -Encoding utf8 notes.md
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        uses: softprops/action-gh-release@v2
         with:
           name: CoopSeat ${{ env.VERSION }}
           body_path: notes.md
           files: |
-            dist/*-Setup.exe
-            dist/*-Portable.exe
+            coopseat/release/*-Setup.exe
+            coopseat/release/*-Portable.exe
           generate_release_notes: true
           fail_on_unmatched_files: true
