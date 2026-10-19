@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import { oauthProviderSchema } from '@/lib/validation/account';
 import { env } from '@/server/env';
-import { startGoogleOAuth } from '@/server/oauth-state';
+import { startOAuth } from '@/server/oauth-state';
 import { consumeTicket, type LinkPayload } from '@/server/tickets';
 
 type Ctx = { params: Promise<{ ticket: string }> };
@@ -14,7 +15,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   if (!payload) return fail('link_expired');
 
   try {
-    return startGoogleOAuth({
+    return await startOAuth(oauthProviderSchema.parse(payload.provider), {
       mode: payload.mode,
       linkTo: payload.accessToken,
     });

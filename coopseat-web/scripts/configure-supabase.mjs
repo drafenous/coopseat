@@ -87,13 +87,13 @@ const config = {
   // Captcha is verified by the BFF (Turnstile); GoTrue is only reachable through it.
   security_captcha_enabled: false,
   ...emailTemplates,
-  // Google is the only OAuth provider; the BFF runs its flow and signs in with the id_token, which
-  // Supabase accepts when the audience matches this client id.
+  // Google: the BFF runs the flow and signs in with the id_token. Discord: GoTrue runs the
+  // flow (no id_token); the BFF only starts it and exchanges the PKCE code.
   external_facebook_enabled: false,
   external_twitter_enabled: false,
   external_x_enabled: false,
-  external_discord_enabled: false,
   ...provider('google', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'),
+  ...provider('discord', 'DISCORD_CLIENT_ID', 'DISCORD_CLIENT_SECRET'),
   ...smtp,
 };
 
@@ -116,6 +116,11 @@ if (!res.ok) {
   if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
     console.warn(
       'Google sign-in left unchanged: set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to enable it.',
+    );
+  }
+  if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
+    console.warn(
+      'Discord sign-in left unchanged: set DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET to enable it.',
     );
   }
   if (!pro)

@@ -1,7 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import type { OAuthProvider } from '@/lib/validation/account';
 import { pkceChallenge, randomToken, seal, sha256Hex, unseal } from './crypto';
+import { discordAuthorizeUrl, discordCallbackUrl } from './discord';
 import { env } from './env';
-import type { AuthTokens } from './gotrue';
+import { gotrue, type AuthTokens } from './gotrue';
 import { googleAuthorizeUrl } from './google';
 
 const STATE_COOKIE = 'cs_oauth';
@@ -12,9 +14,10 @@ export const MFA_TTL = 300;
 export type OAuthMode = 'web' | 'desktop' | 'link-web' | 'link-desktop';
 
 export type OAuthState = {
-  /** PKCE verifier for the code exchange with Google. */
+  provider: OAuthProvider;
+  /** PKCE verifier. Google exchanges it with Google; Discord exchanges GoTrue's auth code. */
   verifier: string;
-  /** Echoed back by Google; must match to accept the callback (CSRF). */
+  /** Echoed back by Google; must match to accept the callback (CSRF). Empty for Discord. */
   state: string;
   /** Raw nonce; Google receives its sha256 and GoTrue checks it against the id_token. */
   nonce: string;
@@ -22,11 +25,23 @@ export type OAuthState = {
   next?: string;
   /** PKCE challenge from the desktop app, bound to the login ticket. */
   desktopChallenge?: string;
-  /** Access token of the account receiving the identity (link modes). */
+  /** Access token of the account receiving the identity (Google link modes). */
   linkTo?: string;
 };
 
-export type OAuthFlow = Omit<OAuthState, 'verifier' | 'state' | 'nonce'>;
+export type OAuthFlow = Omit<
+  OAuthState,
+  'provider' | 'verifier' | 'state' | 'nonce'
+>;
+
+/** Redirects the browser to the provider and remembers the flow in a sealed cookie. */
+export function startOAuth(
+  provider: OAuthProvider,
+  flow: OAuthFlow,
+): Promise<NextResponse> {
+  if (provider === 'discord') return startDiscordOAuth(flow);
+  return Promise.resolve(startGoogleOAuth(flow));
+}
 
 /** Redirects the browser to Google and remembers the flow in a sealed cookie. */
 export function startGoogleOAuth(flow: OAuthFlow): NextResponse {
@@ -39,7 +54,37 @@ export function startGoogleOAuth(flow: OAuthFlow): NextResponse {
     codeChallenge: pkceChallenge(verifier),
   });
   const res = NextResponse.redirect(url, 303);
-  setOAuthState(res, { ...flow, verifier, state, nonce });
+  setOAuthState(res, { ...flow, provider: 'google', verifier, state, nonce });
+  return res;
+}
+
+/**
+ * Discord sign-in redirects to GoTrue, which redirects to Discord.
+ * Linking asks GoTrue for that URL while the user's access token is still valid,
+ * so the identity is attached to the signed-in account. The token is not kept in the cookie.
+ */
+export async function startDiscordOAuth(flow: OAuthFlow): Promise<NextResponse> {
+  const verifier = randomToken(48);
+  const codeChallenge = pkceChallenge(verifier);
+  const redirectTo = discordCallbackUrl();
+  const url = flow.linkTo
+    ? await gotrue.identityAuthorizeUrl({
+        token: flow.linkTo,
+        provider: 'discord',
+        redirectTo,
+        codeChallenge,
+      })
+    : discordAuthorizeUrl({ codeChallenge, redirectTo });
+  const res = NextResponse.redirect(url, 303);
+  setOAuthState(res, {
+    provider: 'discord',
+    verifier,
+    state: '',
+    nonce: '',
+    mode: flow.mode,
+    next: flow.next,
+    desktopChallenge: flow.desktopChallenge,
+  });
   return res;
 }
 

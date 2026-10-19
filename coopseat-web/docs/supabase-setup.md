@@ -25,8 +25,8 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    (8+ chars, letters and digits, leaked-password check), TOTP MFA, the Custom Access Token Hook
    (`public.custom_access_token_hook`), redirect allow list (`https://coopseat.com/**`),
    bilingual (English + pt-BR) email templates and security notifications (password, e-mail, 2FA and sign-in
-   method changes) from `supabase/templates/emails.mjs`, Google sign-in and SMTP when their env vars
-   are present. Google is the only OAuth provider; the script turns the others off.
+   method changes) from `supabase/templates/emails.mjs`, Google and Discord sign-in and SMTP when their
+   env vars are present. Other OAuth providers stay off.
 
    Every e-mail shares one layout in `emails.mjs`. Run `npm run email:preview` to render them all with sample data
    into `.email-preview/` and open `index.html` in a browser; `tests/email-templates.test.ts` checks that each
@@ -35,6 +35,7 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    | Service                       | Env vars                                           | Notes                                                    |
    | ----------------------------- | -------------------------------------------------- | -------------------------------------------------------- |
    | Google                        | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`         | see **Google OAuth client** below                        |
+   | Discord                       | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`       | see **Discord OAuth client** below                       |
    | E-mail (Resend)               | `RESEND_API_KEY`                                   | sender `no-reply@coopseat.com` via `smtp.resend.com:465` |
    | Other SMTP (overrides Resend) | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` | same sender                                              |
 
@@ -53,6 +54,17 @@ One-time steps for a new Supabase project. Everything after step 2 is scripted.
    (`grant_type=id_token`, `link_identity` when linking from `/account`). Supabase only needs the same client id to
    accept the token. Google requires exact redirect URIs, so Vercel preview URLs cannot use Google sign-in unless
    they are added to the list.
+
+   **Discord OAuth client.** In the [Discord Developer Portal](https://discord.com/developers/applications),
+   create an application named `CoopSeat`. Under _OAuth2 → Redirects_ add only the Supabase callback
+   (`https://<project-ref>.supabase.co/auth/v1/callback`, shown in the dashboard under _Authentication →
+   Sign In / Providers → Discord_). Copy the client id and secret into `.env.local` and Vercel as
+   `DISCORD_CLIENT_ID` / `DISCORD_CLIENT_SECRET`, then run `npm run supabase:configure`. Do not register
+   `https://coopseat.com/api/auth/callback`: Discord rejects the login unless the redirect is GoTrue's.
+   The BFF sends the browser to GoTrue (`/auth/v1/authorize?provider=discord` with PKCE) and GoTrue sends
+   it back to `/api/auth/callback/discord`, which exchanges the code. Linking from `/account` uses GoTrue's
+   manual-linking URL so the Discord identity is attached to the signed-in account. The consent screen
+   shows the `*.supabase.co` host.
 
    **Resend domain.** In Resend > Domains add `coopseat.com`, create the SPF (`send` MX + TXT) and DKIM
    (`resend._domainkey`) records it lists at the DNS provider, and wait for _Verified_. Add a DMARC record
@@ -78,8 +90,8 @@ With `KYC_PROVIDER=mock` on a dev/preview deployment:
    chat and host unlocked. Repeat with a second account and the same document number: it must be rejected.
 4. Enable TOTP in `/account`, sign out, sign in again: the 2FA step must appear. A "two-step verification added"
    e-mail must arrive.
-5. Link and unlink Google in `/account`; unlinking the last login method must be refused. Each change sends a
-   security e-mail.
+5. Link and unlink Google and Discord in `/account`; unlinking the last login method must be refused. Each
+   change sends a security e-mail.
 6. Desktop (`COOPSEAT_BFF_URL=<preview url> npm run dev` in `coopseat/`): _Continue with Google_ opens the
    browser and returns via `coopseat://auth/callback`; email login, 2FA and _My account_ work in the app.
 7. Switch the language (footer on the site, the language icon in the app header) and repeat a step: pages, API errors

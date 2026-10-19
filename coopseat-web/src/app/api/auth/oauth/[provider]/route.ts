@@ -5,7 +5,7 @@ import {
 } from '@/lib/validation/account';
 import { env } from '@/server/env';
 import { clientIp, errorResponse, safeNextPath } from '@/server/http';
-import { startGoogleOAuth } from '@/server/oauth-state';
+import { startOAuth } from '@/server/oauth-state';
 import { rateLimit } from '@/server/rate-limit';
 
 type Ctx = { params: Promise<{ provider: string }> };
@@ -16,7 +16,7 @@ type Ctx = { params: Promise<{ provider: string }> };
  */
 export async function GET(req: NextRequest, ctx: Ctx) {
   try {
-    oauthProviderSchema.parse((await ctx.params).provider);
+    const provider = oauthProviderSchema.parse((await ctx.params).provider);
     await rateLimit('oauth', clientIp(req));
 
     const params = req.nextUrl.searchParams;
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
       ? pkceChallengeSchema.parse(params.get('challenge'))
       : undefined;
 
-    return startGoogleOAuth({
+    return await startOAuth(provider, {
       mode: desktop ? 'desktop' : 'web',
       next: desktop ? undefined : safeNextPath(params.get('next')),
       desktopChallenge,

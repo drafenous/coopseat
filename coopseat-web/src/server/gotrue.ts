@@ -138,6 +138,40 @@ export const gotrue = {
       query: { grant_type: 'refresh_token' },
     });
   },
+  /** Exchanges the auth code GoTrue appended to `redirect_to` after a PKCE provider flow. */
+  pkceGrant(authCode: string, codeVerifier: string) {
+    return call<AuthTokens>('/token', {
+      method: 'POST',
+      body: { auth_code: authCode, code_verifier: codeVerifier },
+      query: { grant_type: 'pkce' },
+    });
+  },
+  /**
+   * Manual linking. Returns the provider authorize URL; GoTrue remembers which
+   * user the bearer token belongs to and attaches the identity on the way back.
+   */
+  async identityAuthorizeUrl(opts: {
+    token: string;
+    provider: string;
+    redirectTo: string;
+    codeChallenge: string;
+  }) {
+    const data = await call<{ url?: string }>('/user/identities/authorize', {
+      token: opts.token,
+      query: {
+        provider: opts.provider,
+        redirect_to: opts.redirectTo,
+        code_challenge: opts.codeChallenge,
+        code_challenge_method: 's256',
+        skip_http_redirect: 'true',
+      },
+    });
+    if (!data.url) throw new Error('GoTrue did not return an authorize URL');
+    const url = new URL(data.url);
+    if (url.protocol !== 'https:')
+      throw new Error('Refusing a non-https authorize URL');
+    return url.toString();
+  },
   /** Signs in with a provider's OpenID id_token. With `linkTo` (a user access token) the identity is linked instead. */
   idTokenGrant(opts: {
     provider: string;

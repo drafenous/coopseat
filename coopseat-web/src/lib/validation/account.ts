@@ -92,7 +92,7 @@ export const deleteMeSchema = z.object({
   confirm: z.string().min(1, 'confirm_required'),
 });
 
-export const OAUTH_PROVIDERS = ['google'] as const;
+export const OAUTH_PROVIDERS = ['google', 'discord'] as const;
 export type OAuthProvider = (typeof OAUTH_PROVIDERS)[number];
 export const oauthProviderSchema = z.enum(OAUTH_PROVIDERS, {
   error: 'provider_unsupported',
@@ -100,6 +100,7 @@ export const oauthProviderSchema = z.enum(OAUTH_PROVIDERS, {
 
 export const PROVIDER_LABELS: Record<OAuthProvider, string> = {
   google: 'Google',
+  discord: 'Discord',
 };
 
 export const pkceChallengeSchema = z
