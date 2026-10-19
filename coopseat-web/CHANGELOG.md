@@ -4,6 +4,21 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-18
+
+### Added
+
+- Room layout settings (stage or grid) persist with the party session.
+- Room visibility modes for who can see and join a live room.
+
+### Changed
+
+- Opening a party session no longer requires at least one protection (password, approval, or invite).
+
+### Fixed
+
+- Ban list and moderator scopes stay in sync for hosts managing the room.
+
 ## [0.3.1] - 2026-10-06
 
 ### Added

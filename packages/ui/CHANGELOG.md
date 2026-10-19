@@ -4,6 +4,18 @@ All notable changes to `@coopseat/ui` are documented here. The format is based o
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-18
+
+### Added
+
+- Gaming-Party stage and grid layouts with drag-and-drop, empty slots, and a strip for hidden streams.
+- Capture filters and screen effects are baked into the outbound party stream so viewers see them.
+- A clearer full-tile control to unmute remote streams when the browser blocks autoplay with sound.
+
+### Fixed
+
+- Native capture audio for party viewers no longer re-sends the same PCM buffer, which had made the stream choppy and distorted.
+
 ## [0.2.2] - 2026-10-06
 
 ### Added

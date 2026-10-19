@@ -160,7 +160,7 @@ export async function openNativeMedia(b: DesktopBridge): Promise<NativeFeed> {
         numberOfChannels: AUDIO_CHANNELS,
         numberOfFrames: frames,
         timestamp,
-        data: pcm,
+        data: pcm.slice(),
       });
     } catch {
       return false;

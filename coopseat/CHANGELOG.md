@@ -4,6 +4,17 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-18
+
+### Added
+
+- Gaming-Party stage and grid layouts, drag-and-drop, and filters baked into the stream you send.
+
+### Fixed
+
+- Native mode party audio no longer floods the pipe with the same buffer, so viewers hear stable sound instead of choppy distortion.
+- Relaying capture media keeps reading audio while pacing video, so the stream does not stall on PCM.
+
 ## [0.2.1] - 2026-10-06
 
 ### Added
