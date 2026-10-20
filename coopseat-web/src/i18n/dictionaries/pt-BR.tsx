@@ -60,6 +60,7 @@ export const ptBR: Dictionary = {
     download: 'Baixar para Windows',
     downloadShort: 'Baixar',
     playInBrowser: 'Jogar no navegador',
+    playFromMenu: 'Jogue pelo navegador',
     badge: 'Beta · Grátis · Windows 10/11',
     headlineLead: 'Seu console no PC.',
     headlineAccent: 'Seus amigos no sofá.',

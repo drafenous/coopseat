@@ -61,6 +61,7 @@ export const en = {
     download: 'Download for Windows',
     downloadShort: 'Download',
     playInBrowser: 'Play in the browser',
+    playFromMenu: 'Play in the browser',
     badge: 'Beta · Free · Windows 10/11',
     headlineLead: 'Your console on your PC.',
     headlineAccent: 'Your friends on the couch.',

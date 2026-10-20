@@ -4,9 +4,10 @@ import { CookiePreferencesButton } from '@/components/CookieConsent';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { getDictionary } from '@/i18n/server';
 import { DOWNLOAD_URL } from '@/lib/links';
+import { getPageSession } from '@/server/page-session';
 
 export async function SiteFooter() {
-  const t = await getDictionary();
+  const [t, session] = await Promise.all([getDictionary(), getPageSession()]);
   const h = t.home;
 
   return (
@@ -33,11 +34,13 @@ export async function SiteFooter() {
                 {h.playInBrowser}
               </a>
             </li>
-            <li>
-              <Link href="/signup" className="hover:text-strong">
-                {h.createAccount}
-              </Link>
-            </li>
+            {!session && (
+              <li>
+                <Link href="/signup" className="hover:text-strong">
+                  {h.createAccount}
+                </Link>
+              </li>
+            )}
             <li>
               <Link href="/account" className="hover:text-strong">
                 {h.footer.account}

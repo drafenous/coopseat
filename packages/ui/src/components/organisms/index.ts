@@ -10,6 +10,7 @@ export { StreamRequests } from './StreamRequests';
 export { StreamSourceSettings } from './StreamSourceSettings';
 export { StreamStage } from './StreamStage';
 export { AppFooter } from './AppFooter';
+export { AccountMenu, type AccountMenuAccount } from './AccountMenu';
 export { AppHeader } from './AppHeader';
 export { AuthModal } from './AuthModal';
 export { NicknameStep } from './NicknameStep';

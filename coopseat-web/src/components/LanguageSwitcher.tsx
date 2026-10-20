@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { useTransition } from 'react';
+import { cx, Select } from '@coopseat/ui/design';
 import { setLocale } from '@/i18n/actions';
 import { useLocale, useT } from '@/i18n/client';
 import {
@@ -10,6 +11,7 @@ import {
   isLocale,
   localePath,
   splitLocalePath,
+  type Locale,
 } from '@/i18n/config';
 
 export function LanguageSwitcher({ className = '' }: { className?: string }) {
@@ -20,36 +22,25 @@ export function LanguageSwitcher({ className = '' }: { className?: string }) {
   const [pending, startTransition] = useTransition();
 
   return (
-    <label
-      className={`inline-flex items-center gap-2 text-sm text-muted ${className}`}
-    >
-      <span className="sr-only">{t.common.language}</span>
-      <select
-        value={locale}
-        disabled={pending}
-        aria-label={t.common.language}
-        className="rounded-md bg-surface px-2 py-1 text-foreground ring-1 ring-white/10"
-        onChange={(e) => {
-          const next = e.target.value;
-          startTransition(async () => {
-            await setLocale(next);
-            const localized = splitLocalePath(pathname);
-            if (localized && isLocale(next)) {
-              router.replace(
-                `${localePath(next, localized.path)}${window.location.search}${window.location.hash}`,
-              );
-            } else {
-              router.refresh();
-            }
-          });
-        }}
-      >
-        {LOCALES.map((l) => (
-          <option key={l} value={l}>
-            {LOCALE_NAMES[l]}
-          </option>
-        ))}
-      </select>
-    </label>
+    <Select<Locale>
+      className={cx('w-auto!', className)}
+      value={locale}
+      disabled={pending}
+      aria-label={t.common.language}
+      options={LOCALES.map((l) => ({ value: l, label: LOCALE_NAMES[l] }))}
+      onChange={(next) => {
+        startTransition(async () => {
+          await setLocale(next);
+          const localized = splitLocalePath(pathname);
+          if (localized && isLocale(next)) {
+            router.replace(
+              `${localePath(next, localized.path)}${window.location.search}${window.location.hash}`,
+            );
+          } else {
+            router.refresh();
+          }
+        });
+      }}
+    />
   );
 }
