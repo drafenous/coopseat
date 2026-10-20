@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 
 export const en = {
   meta: {
-    title: 'CoopSeat · Play your console on your PC with a capture card',
+    title: 'CoopSeat · Stream your game to your room',
     description:
-      'Free app to play PlayStation, Xbox or Switch on your Windows PC with a capture card: Full HD at 60 fps, game sound and almost no delay.',
+      'Open a public or private room and stream your game to friends, free up to 720p. Or play on your PC with a capture card, without streaming and with no resolution or frame-rate limit.',
     login: 'Sign in',
     loginDescription:
       'Sign in to CoopSeat with Google or e-mail to manage your account and its security.',
@@ -52,7 +52,7 @@ export const en = {
     nav: {
       features: 'Features',
       how: 'How it works',
-      party: 'Gaming Party',
+      local: 'Local player',
       faq: 'FAQ',
     },
     signIn: 'Sign in',
@@ -62,92 +62,99 @@ export const en = {
     downloadShort: 'Download',
     playInBrowser: 'Play in the browser',
     playFromMenu: 'Play in the browser',
-    badge: 'Beta · Free · Windows 10/11',
-    headlineLead: 'Your console on your PC.',
-    headlineAccent: 'Your friends on the couch.',
+    openRoom: 'Open a room',
+    playLocal: 'Play without streaming',
+    badge: 'Beta · Free up to 720p',
+    headlineLead: 'Stream the session.',
+    headlineAccent: 'Play together in one room.',
     pitch:
-      'Connect your console to the computer with a capture card and play on your PC screen, with a sharp picture, game sound and almost no delay. With Gaming Party (beta), you can invite friends to watch and play along.',
-    heroNote: 'Free · No account needed to play · We never record your game',
+      'Open a public or private room and invite friends to watch and chat while you play. Stream your console through a capture card or a window from your own PC, free up to 720p. If you only want to play on your PC with a capture card, without streaming, the player has no limits on use, resolution or frame rate.',
+    heroNote:
+      'Public or private rooms · Nothing is recorded · 18+ to watch and chat',
     mock: {
       title: 'CoopSeat',
       live: 'Live',
-      watching: (n: number) => `${n} watching`,
-      soon: 'Beta',
       chain: 'Console → capture card → PC',
     },
-    stats: [
-      {
-        value: 'Full HD',
-        label: 'sharp, smooth picture, just like on your TV',
-      },
-      { value: '3 steps', label: 'from plugging in to playing' },
-      { value: 'Free', label: 'no subscription and no hidden fees' },
-      { value: '0', label: 'recordings: what you play stays with you' },
-    ],
-    featuresKicker: 'Features',
-    featuresTitle: 'Made for playing, not for streaming.',
-    featuresSubtitle:
-      'No complicated setup. Plug in your capture card, open CoopSeat and your game shows up on the screen, ready to play.',
-    features: [
-      {
-        title: 'Almost no delay',
-        body: 'What you press on the controller shows up on the screen right away, so you can really play instead of just watching.',
-      },
-      {
-        title: 'Sharp, smooth picture',
-        body: 'Full HD at 60 frames per second, with the colors and proportions you would see on your TV.',
-      },
-      {
-        title: 'Game sound included',
-        body: 'The console sound comes along with the picture, through your headphones or speakers.',
-      },
-      {
-        title: 'Full screen, no distractions',
-        body: 'Press F11 and the game fills the screen. Stop moving the mouse and the buttons disappear, leaving only the game.',
-      },
-      {
-        title: 'Works in the browser too',
-        body: "Don't want to install anything? Play straight from a Chrome or Edge tab.",
-      },
-      {
-        title: 'Remembers your settings',
-        body: 'Save your favorite setup and CoopSeat connects on its own every time you open it.',
-      },
-    ],
-    howKicker: 'How it works',
-    howTitle: 'Playing takes three steps.',
-    steps: [
-      {
-        title: 'Plug it in',
-        body: 'Connect the console to the capture card with the HDMI cable. If the card is external, plug it into the computer with the USB cable.',
-      },
-      {
-        title: 'Open CoopSeat',
-        body: 'Choose your capture card from the list. CoopSeat picks the best picture quality for you.',
-      },
-      {
-        title: 'Play',
-        body: "Click Start and grab your controller. That's it!",
-      },
-    ],
-    party: {
-      kicker: 'Gaming Party',
-      soon: 'Beta',
-      title: 'The couch, now online.',
-      body: 'Open a room and invite your friends to watch you play and chat along, as if they were sitting on the couch with you. Available now in beta.',
-      points: [
-        'Friends watch straight from the browser, with nothing to install.',
-        'Watching and chat are only for verified adult accounts (18+), as Brazilian law requires.',
-        'You decide who joins the room and can remove anyone at any time.',
-      ],
-      cta: 'Create your account',
+    room: {
+      live: 'Live',
+      you: 'You',
       host: 'You · host',
       guest: 'Watching',
-      live: 'Live',
       invite: 'Invite',
+      quality: '720p',
       chat: [
         { name: 'luna', text: 'no way you hit that jump 😂' },
         { name: 'theo', text: 'my turn next round!' },
+      ],
+    },
+    stats: [
+      { value: '720p', label: 'free streaming to the room' },
+      { value: 'Public', label: 'or private: you choose who gets in' },
+      {
+        value: 'Local',
+        label: 'play without streaming, at any resolution or frame rate',
+      },
+      {
+        value: '0',
+        unit: 'recordings',
+        label: 'what you play stays with you',
+      },
+    ],
+    featuresKicker: 'Rooms',
+    featuresTitle: 'A room for the session.',
+    featuresSubtitle:
+      'Public for anyone with the link, or private with a password, approval or an allow list. Streaming is free up to 720p.',
+    features: [
+      {
+        title: 'Public room',
+        body: 'Anyone with the link joins right away and watches from the browser.',
+      },
+      {
+        title: 'Private room',
+        body: 'Set a password, ask for approval or allow only people on your list. You can remove anyone.',
+      },
+      {
+        title: 'Streaming up to 720p',
+        body: 'Free for the room, with the picture from a capture card or a PC window, and the sound.',
+      },
+      {
+        title: 'Friends in the browser',
+        body: 'Watchers install nothing. They open the link and join the room.',
+      },
+      {
+        title: 'Room chat',
+        body: 'Talk while the match is on. Watching and chat are for verified adult accounts (18+).',
+      },
+      {
+        title: 'Local player, no limits',
+        body: 'On /play, use a capture card without streaming. No limit on use, resolution or frame rate.',
+      },
+    ],
+    howKicker: 'How it works',
+    howTitle: 'Streaming takes three steps.',
+    steps: [
+      {
+        title: 'Pick the picture',
+        body: 'The console comes in through a capture card. A PC game comes in through its own window, with no card.',
+      },
+      {
+        title: 'Open the room',
+        body: 'Choose whether it is public or private, with a password, approval or an allow list.',
+      },
+      {
+        title: 'Invite everyone',
+        body: 'Friends join from the browser, watch and chat. Nothing to install.',
+      },
+    ],
+    local: {
+      kicker: 'Local player',
+      title: 'Just want to play?',
+      body: 'Use CoopSeat on /play with only a capture card, without opening a room and without streaming. There is no limit on use, resolution or frame rate.',
+      points: [
+        'The picture stays on your computer. Nobody is watching.',
+        'Any resolution and frame rate your capture card can deliver.',
+        'No account needed to play.',
       ],
     },
     trustKicker: 'Privacy',
@@ -163,22 +170,22 @@ export const en = {
       },
       {
         title: 'Age check without exposure',
-        body: 'For Gaming Party we only keep whether you are an adult and the date, never photos or document data.',
+        body: 'To watch and chat we only keep whether you are an adult and the date, never photos or document data.',
       },
     ],
     faqTitle: 'Frequently asked questions',
     faq: [
       {
         q: 'Is CoopSeat free?',
-        a: "Yes. The app and the website are free. If you'd like to support the project, there's a donation button inside the app.",
+        a: "Yes. Streaming to a room is free up to 720p. Playing on your PC with a capture card, without streaming, has no limit on use, resolution or frame rate. If you'd like to support the project, there's a donation button inside the app.",
       },
       {
         q: 'What do I need to play?',
-        a: 'A computer with Windows 10 or 11, a capture card (external USB or internal) and the HDMI cable from your console. That’s all.',
+        a: 'To stream a PC game, pick its window. For a console, use Windows 10 or 11, a capture card and the HDMI cable. People who only watch join from the browser, with nothing to install.',
       },
       {
         q: 'Do I need an account to play?',
-        a: 'No. You can play without an account. To watch and chat with friends in Gaming Party (beta), you need a verified adult account (18+).',
+        a: 'Not to play locally without streaming. To open a room, watch and chat, you need a verified adult account (18+), as Brazilian law requires.',
       },
       {
         q: 'Which capture cards work?',
@@ -197,11 +204,11 @@ export const en = {
         a: 'For now, the app is only for Windows 10 and 11. On other systems you can try the browser version.',
       },
     ],
-    ctaTitle: 'Ready to take your seat?',
+    ctaTitle: 'Open a room and call everyone in.',
     ctaBody:
-      'Download CoopSeat, plug in your capture card and start playing in minutes.',
+      'Create your account, pick a public or private room and stream up to 720p. Or play only on your PC, without streaming.',
     footer: {
-      tagline: 'Play and watch together, as if you were on the same couch.',
+      tagline: 'Stream the session to your room, or play only on your PC.',
       product: 'Product',
       legal: 'Legal',
       account: 'My account',

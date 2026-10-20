@@ -2,9 +2,9 @@ import type { Dictionary } from './en';
 
 export const ptBR: Dictionary = {
   meta: {
-    title: 'CoopSeat · Jogue seu videogame no PC com placa de captura',
+    title: 'CoopSeat · Transmita a jogatina para a sua sala',
     description:
-      'App grátis para jogar PlayStation, Xbox ou Switch no PC com Windows usando placa de captura: Full HD a 60 fps, som do jogo e quase sem atraso.',
+      'Abra uma sala pública ou privada e transmita a jogatina para os amigos, grátis até 720p. Ou jogue no PC com placa de captura, sem transmitir e sem limite de resolução ou FPS.',
     login: 'Entrar',
     loginDescription:
       'Entre no CoopSeat com Google ou e-mail para gerenciar sua conta e a segurança dela.',
@@ -51,7 +51,7 @@ export const ptBR: Dictionary = {
     nav: {
       features: 'Recursos',
       how: 'Como funciona',
-      party: 'Gaming Party',
+      local: 'Player local',
       faq: 'Dúvidas',
     },
     signIn: 'Entrar',
@@ -61,90 +61,99 @@ export const ptBR: Dictionary = {
     downloadShort: 'Baixar',
     playInBrowser: 'Jogar no navegador',
     playFromMenu: 'Jogue pelo navegador',
-    badge: 'Beta · Grátis · Windows 10/11',
-    headlineLead: 'Seu console no PC.',
-    headlineAccent: 'Seus amigos no sofá.',
+    openRoom: 'Abrir uma sala',
+    playLocal: 'Jogar sem transmitir',
+    badge: 'Beta · Grátis até 720p',
+    headlineLead: 'Transmita a jogatina.',
+    headlineAccent: 'Jogue junto na mesma sala.',
     pitch:
-      'Ligue o videogame no computador com uma placa de captura e jogue na tela do PC, com imagem nítida, som do jogo e quase nenhum atraso. Com a Gaming Party (beta), dá para chamar os amigos para assistir e jogar junto.',
+      'Abra uma sala pública ou privada e chame os amigos para assistir e conversar enquanto você joga. Transmita o videogame pela placa de captura ou uma janela do próprio PC, grátis até 720p. Se quiser só jogar no PC com a placa de captura, sem transmitir, o player não tem limite de uso, resolução ou FPS.',
     heroNote:
-      'Grátis · Não precisa de conta para jogar · Nunca gravamos o seu jogo',
+      'Salas públicas ou privadas · Nada é gravado · Maiores de 18 para assistir',
     mock: {
       title: 'CoopSeat',
       live: 'Ao vivo',
-      watching: (n: number) => `${n} assistindo`,
-      soon: 'Beta',
       chain: 'Console → placa de captura → PC',
     },
-    stats: [
-      { value: 'Full HD', label: 'imagem nítida e fluida, como na sua TV' },
-      { value: '3 passos', label: 'de ligar os cabos até começar a jogar' },
-      { value: 'Grátis', label: 'sem assinatura e sem taxas escondidas' },
-      { value: '0', label: 'gravações: o que você joga fica com você' },
-    ],
-    featuresKicker: 'Recursos',
-    featuresTitle: 'Feito para jogar, não para transmitir.',
-    featuresSubtitle:
-      'Nada de configuração complicada. Conecte a placa de captura, abra o CoopSeat e o seu jogo aparece na tela, pronto para jogar.',
-    features: [
-      {
-        title: 'Quase nenhum atraso',
-        body: 'O que você aperta no controle aparece na tela na hora, para você jogar de verdade, e não só assistir.',
-      },
-      {
-        title: 'Imagem nítida e fluida',
-        body: 'Full HD a 60 quadros por segundo, com as cores e o formato de tela que você veria na TV.',
-      },
-      {
-        title: 'Com o som do jogo',
-        body: 'O som do videogame vem junto com a imagem, no seu fone ou nas caixas de som.',
-      },
-      {
-        title: 'Tela cheia, sem distrações',
-        body: 'Aperte F11 e o jogo ocupa a tela toda. Pare de mexer o mouse e os botões somem, deixando só o jogo.',
-      },
-      {
-        title: 'Funciona no navegador também',
-        body: 'Não quer instalar nada? Jogue direto numa aba do Chrome ou do Edge.',
-      },
-      {
-        title: 'Lembra das suas configurações',
-        body: 'Salve o seu jeito preferido e o CoopSeat se conecta sozinho toda vez que você abrir.',
-      },
-    ],
-    howKicker: 'Como funciona',
-    howTitle: 'Para jogar, são só três passos.',
-    steps: [
-      {
-        title: 'Conecte',
-        body: 'Ligue o videogame na placa de captura com o cabo HDMI. Se a placa for externa, ligue-a no computador com o cabo USB.',
-      },
-      {
-        title: 'Abra o CoopSeat',
-        body: 'Escolha a sua placa de captura na lista. O CoopSeat escolhe a melhor qualidade de imagem para você.',
-      },
-      {
-        title: 'Jogue',
-        body: 'Clique em Iniciar e pegue o controle. Pronto!',
-      },
-    ],
-    party: {
-      kicker: 'Gaming Party',
-      soon: 'Beta',
-      title: 'O sofá, agora online.',
-      body: 'Abra uma sala e chame os amigos para ver você jogar e conversar pelo chat, como se eles estivessem no sofá do seu lado. Já disponível em beta.',
-      points: [
-        'Os amigos assistem direto pelo navegador, sem instalar nada.',
-        'Assistir e usar o chat é só para contas de maiores de 18 anos verificadas, como a lei brasileira exige.',
-        'Você decide quem entra na sala e pode tirar qualquer pessoa quando quiser.',
-      ],
-      cta: 'Criar minha conta',
+    room: {
+      live: 'Ao vivo',
+      you: 'Você',
       host: 'Você · anfitrião',
       guest: 'Assistindo',
-      live: 'Ao vivo',
       invite: 'Convidar',
+      quality: '720p',
       chat: [
         { name: 'luna', text: 'não acredito que você acertou esse pulo 😂' },
         { name: 'theo', text: 'próxima rodada é minha!' },
+      ],
+    },
+    stats: [
+      { value: '720p', label: 'transmissão grátis para a sala' },
+      { value: 'Pública', label: 'ou privada: você escolhe quem entra' },
+      {
+        value: 'Local',
+        label: 'jogue sem transmitir, sem limite de resolução ou FPS',
+      },
+      {
+        value: '0',
+        unit: 'gravações',
+        label: 'o que você joga fica com você',
+      },
+    ],
+    featuresKicker: 'Salas',
+    featuresTitle: 'Uma sala para a jogatina.',
+    featuresSubtitle:
+      'Pública para quem tiver o link, ou privada com senha, aprovação ou lista. A transmissão é grátis até 720p.',
+    features: [
+      {
+        title: 'Sala pública',
+        body: 'Qualquer pessoa com o link entra na hora e assiste pelo navegador.',
+      },
+      {
+        title: 'Sala privada',
+        body: 'Defina senha, peça aprovação ou deixe só quem está na lista. Você tira quem quiser.',
+      },
+      {
+        title: 'Transmissão até 720p',
+        body: 'Grátis para a sala, com a imagem da placa de captura ou de uma janela do PC, e o som.',
+      },
+      {
+        title: 'Amigos pelo navegador',
+        body: 'Quem assiste não instala nada. Abre o link e entra na sala.',
+      },
+      {
+        title: 'Chat na sala',
+        body: 'Conversem enquanto a partida acontece. Assistir e usar o chat é para contas de maiores de 18 anos verificadas.',
+      },
+      {
+        title: 'Player local sem limites',
+        body: 'Em /play, jogue com a placa de captura sem transmitir. Sem limite de uso, resolução ou FPS.',
+      },
+    ],
+    howKicker: 'Como funciona',
+    howTitle: 'Para transmitir, são só três passos.',
+    steps: [
+      {
+        title: 'Escolha a imagem',
+        body: 'O videogame entra pela placa de captura. Um jogo do PC entra pela janela dele, sem placa.',
+      },
+      {
+        title: 'Abra a sala',
+        body: 'Escolha se ela é pública ou privada, com senha, aprovação ou lista de acesso.',
+      },
+      {
+        title: 'Chame a galera',
+        body: 'Os amigos entram pelo navegador, assistem e conversam no chat. Nada para instalar.',
+      },
+    ],
+    local: {
+      kicker: 'Player local',
+      title: 'Só quer jogar?',
+      body: 'Use o CoopSeat em /play só com a placa de captura, sem abrir sala e sem transmitir. Não há limite de uso, resolução ou FPS.',
+      points: [
+        'A imagem fica no seu computador. Ninguém assiste.',
+        'Qualquer resolução e FPS que a placa de captura entregar.',
+        'Não precisa de conta para jogar.',
       ],
     },
     trustKicker: 'Privacidade',
@@ -160,22 +169,22 @@ export const ptBR: Dictionary = {
       },
       {
         title: 'Verificação de idade sem exposição',
-        body: 'Para a Gaming Party guardamos só se você é maior de idade e a data, nunca fotos ou dados do documento.',
+        body: 'Para assistir e usar o chat guardamos só se você é maior de idade e a data, nunca fotos ou dados do documento.',
       },
     ],
     faqTitle: 'Perguntas frequentes',
     faq: [
       {
         q: 'O CoopSeat é grátis?',
-        a: 'Sim. O app e o site são gratuitos. Se quiser apoiar o projeto, há um botão de doação dentro do app.',
+        a: 'Sim. Transmitir para a sala é grátis até 720p. Jogar no PC com a placa de captura, sem transmitir, não tem limite de uso, resolução ou FPS. Se quiser apoiar o projeto, há um botão de doação dentro do app.',
       },
       {
         q: 'O que eu preciso para jogar?',
-        a: 'Um computador com Windows 10 ou 11, uma placa de captura (externa USB ou interna) e o cabo HDMI do seu videogame. Só isso.',
+        a: 'Para transmitir um jogo do PC, escolha a janela. Para o videogame, use Windows 10 ou 11, uma placa de captura e o cabo HDMI. Quem só assiste entra pelo navegador, sem instalar nada.',
       },
       {
         q: 'Preciso de conta para jogar?',
-        a: 'Não. Dá para jogar sem conta. Para assistir e conversar com os amigos na Gaming Party (beta), é preciso uma conta de maior de 18 anos verificada.',
+        a: 'Não para jogar localmente, sem transmitir. Para abrir uma sala, assistir e conversar no chat, é preciso uma conta de maior de 18 anos verificada, como a lei brasileira exige.',
       },
       {
         q: 'Quais placas de captura funcionam?',
@@ -194,11 +203,11 @@ export const ptBR: Dictionary = {
         a: 'Por enquanto, o app é só para Windows 10 e 11. Em outros sistemas, dá para testar a versão no navegador.',
       },
     ],
-    ctaTitle: 'Pronto para pegar o seu lugar?',
+    ctaTitle: 'Abra a sala e chame a galera.',
     ctaBody:
-      'Baixe o CoopSeat, conecte a placa de captura e comece a jogar em minutos.',
+      'Crie sua conta, escolha uma sala pública ou privada e transmita até 720p. Ou jogue só no seu PC, sem transmitir.',
     footer: {
-      tagline: 'Jogue e assista junto, como se estivesse no mesmo sofá.',
+      tagline: 'Transmita a jogatina para a sua sala, ou jogue só no seu PC.',
       product: 'Produto',
       legal: 'Legal',
       account: 'Minha conta',

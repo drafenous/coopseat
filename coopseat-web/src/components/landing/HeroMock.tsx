@@ -1,12 +1,6 @@
 import { Cable, Maximize2, Pin, Volume2 } from 'lucide-react';
 import type { Dictionary } from '@/i18n/dictionaries/en';
 
-const FRIENDS = [
-  { initials: 'LU', className: 'bg-[#f3c97a] text-[#3a2a0b]' },
-  { initials: 'TH', className: 'bg-[#9ec5ff] text-[#0f2340]' },
-  { initials: 'MA', className: 'bg-[#f5a5c8] text-[#3d1027]' },
-];
-
 function GameScene() {
   return (
     <div className="relative aspect-video overflow-hidden bg-[#050b12]">
@@ -72,27 +66,6 @@ export function HeroMock({ t }: { t: Dictionary['home']['mock'] }) {
           <span>Full HD</span>
           <span className="text-strong">60 FPS</span>
           <Volume2 size={13} className="ml-auto" />
-        </div>
-      </div>
-
-      <div className="absolute -top-11 -right-2 rounded-xl border border-line bg-surface/90 px-3 py-2.5 shadow-xl backdrop-blur sm:-right-8 motion-safe:animate-float">
-        <div className="flex items-center gap-2.5">
-          <div className="flex -space-x-2">
-            {FRIENDS.map((f) => (
-              <span
-                key={f.initials}
-                className={`grid size-7 place-items-center rounded-full text-[10px] font-bold ring-2 ring-surface ${f.className}`}
-              >
-                {f.initials}
-              </span>
-            ))}
-          </div>
-          <div>
-            <p className="text-xs font-semibold text-strong">{t.watching(3)}</p>
-            <p className="text-[10px] font-semibold tracking-wider text-accent uppercase">
-              {t.soon}
-            </p>
-          </div>
         </div>
       </div>
 

@@ -15,7 +15,7 @@ export async function SiteHeader() {
   const nav = [
     { href: '/#features', label: h.nav.features },
     { href: '/#how', label: h.nav.how },
-    { href: '/#party', label: h.nav.party },
+    { href: '/#local', label: h.nav.local },
     { href: '/#faq', label: h.nav.faq },
   ];
 

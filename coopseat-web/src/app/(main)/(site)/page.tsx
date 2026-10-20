@@ -2,12 +2,9 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import {
-  ArrowRight,
-  AudioLines,
+  AppWindow,
   BadgeCheck,
-  Cable,
   ChevronDown,
-  Download,
   EyeOff,
   Gamepad2,
   Globe,
@@ -18,16 +15,13 @@ import {
   MousePointerClick,
   Play,
   ShieldCheck,
-  SlidersHorizontal,
   Sparkles,
   Users,
-  Zap,
 } from 'lucide-react';
 import { JsonLd } from '@/components/JsonLd';
 import { HeroMock } from '@/components/landing/HeroMock';
 import { PartyMock } from '@/components/landing/PartyMock';
 import { getDictionary, getLocale } from '@/i18n/server';
-import { DOWNLOAD_URL } from '@/lib/links';
 import {
   ORGANIZATION_ID,
   SITE_NAME,
@@ -50,15 +44,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 const FEATURE_ICONS = [
-  Zap,
-  MonitorPlay,
-  AudioLines,
-  Maximize,
   Globe,
-  SlidersHorizontal,
+  Lock,
+  MonitorPlay,
+  Users,
+  MessageSquare,
+  Gamepad2,
 ];
-const STEP_ICONS = [Cable, MousePointerClick, Gamepad2];
-const PARTY_ICONS = [Users, MessageSquare, ShieldCheck];
+const STEP_ICONS = [AppWindow, Lock, Users];
+const LOCAL_ICONS = [EyeOff, Maximize, MousePointerClick];
 const TRUST_ICONS = [EyeOff, Lock, BadgeCheck];
 
 const primaryCta =
@@ -157,19 +151,19 @@ export default async function Home() {
               {h.pitch}
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
-              <a href={DOWNLOAD_URL} className={primaryCta}>
-                <Download size={18} />
-                {h.download}
-              </a>
+              <Link href="/signup" className={primaryCta}>
+                <Users size={18} />
+                {h.openRoom}
+              </Link>
               <a href="/play" className={secondaryCta}>
                 <Play size={17} />
-                {h.playInBrowser}
+                {h.playLocal}
               </a>
             </div>
             <p className="mt-5 text-sm text-subtle">{h.heroNote}</p>
           </div>
           <div className="motion-safe:animate-rise [animation-delay:150ms]">
-            <HeroMock t={h.mock} />
+            <PartyMock t={h.room} />
           </div>
         </div>
       </section>
@@ -179,8 +173,13 @@ export default async function Home() {
           {h.stats.map((s) => (
             <div key={s.value} className="px-2 py-8 sm:px-6">
               <dt className="sr-only">{s.label}</dt>
-              <dd className="text-3xl font-bold tracking-[-0.03em] text-strong">
-                {s.value}
+              <dd className="flex items-baseline gap-2 text-3xl font-bold tracking-[-0.03em] whitespace-nowrap text-strong">
+                <span>{s.value}</span>
+                {'unit' in s && s.unit && (
+                  <span className="tracking-normal">
+                    {s.unit}
+                  </span>
+                )}
               </dd>
               <dd className="mt-1.5 text-sm leading-snug text-muted">
                 {s.label}
@@ -260,7 +259,7 @@ export default async function Home() {
       </section>
 
       <section
-        id="party"
+        id="local"
         className="mx-auto max-w-6xl scroll-mt-20 px-6 py-24 sm:py-32"
       >
         <div className="relative overflow-hidden rounded-3xl border border-line bg-[radial-gradient(ellipse_at_top_right,#1d3346_0%,#131c26_55%)] p-8 sm:p-12 lg:p-16">
@@ -270,23 +269,18 @@ export default async function Home() {
           />
           <div className="relative grid items-center gap-14 lg:grid-cols-2">
             <div>
-              <div className="flex items-center gap-3">
-                <p className="text-sm font-semibold tracking-[0.18em] text-accent uppercase">
-                  {h.party.kicker}
-                </p>
-                <span className="rounded-full border border-[#f3c97a]/40 bg-[#f3c97a]/10 px-2.5 py-0.5 text-xs font-semibold text-warn">
-                  {h.party.soon}
-                </span>
-              </div>
+              <p className="text-sm font-semibold tracking-[0.18em] text-accent uppercase">
+                {h.local.kicker}
+              </p>
               <h2 className="mt-4 text-3xl font-bold tracking-[-0.03em] text-strong sm:text-4xl">
-                {h.party.title}
+                {h.local.title}
               </h2>
               <p className="mt-4 text-lg leading-relaxed text-muted">
-                {h.party.body}
+                {h.local.body}
               </p>
               <ul className="mt-8 space-y-4">
-                {h.party.points.map((p, i) => {
-                  const Icon = PARTY_ICONS[i] ?? Sparkles;
+                {h.local.points.map((p, i) => {
+                  const Icon = LOCAL_ICONS[i] ?? Sparkles;
                   return (
                     <li
                       key={p}
@@ -300,12 +294,14 @@ export default async function Home() {
                   );
                 })}
               </ul>
-              <Link href="/signup" className={`${secondaryCta} mt-10`}>
-                {h.party.cta}
-                <ArrowRight size={17} />
-              </Link>
+              <a href="/play" className={`${primaryCta} mt-10`}>
+                <Play size={17} />
+                {h.playInBrowser}
+              </a>
             </div>
-            <PartyMock t={h.party} />
+            <div className="pb-10">
+              <HeroMock t={h.mock} />
+            </div>
           </div>
         </div>
       </section>
@@ -375,13 +371,13 @@ export default async function Home() {
             {h.ctaBody}
           </p>
           <div className="relative mt-9 flex flex-wrap justify-center gap-3">
-            <a href={DOWNLOAD_URL} className={primaryCta}>
-              <Download size={18} />
-              {h.download}
-            </a>
+            <Link href="/signup" className={primaryCta}>
+              <Users size={18} />
+              {h.openRoom}
+            </Link>
             <a href="/play" className={secondaryCta}>
               <Play size={17} />
-              {h.playInBrowser}
+              {h.playLocal}
             </a>
           </div>
         </div>
