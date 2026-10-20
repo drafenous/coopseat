@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { withAuthDb } from '@/prisma/request-db';
 import { accountSummary } from './account';
 import { gotrue } from './gotrue';
 import { verifyAccessToken } from './jwt';
@@ -13,12 +14,14 @@ export async function getPageSession() {
 }
 
 export async function getPageAccount() {
-  const session = await getPageSession();
-  if (!session) return null;
-  try {
-    const user = await gotrue.getUser(session.token);
-    return accountSummary(user, session.claims);
-  } catch {
-    return null;
-  }
+  return withAuthDb(async () => {
+    const session = await getPageSession();
+    if (!session) return null;
+    try {
+      const user = await gotrue.getUser(session.token);
+      return accountSummary(user, session.claims);
+    } catch {
+      return null;
+    }
+  });
 }

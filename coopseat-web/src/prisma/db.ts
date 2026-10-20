@@ -8,30 +8,34 @@ import contractJson from './contract.json' with { type: 'json' };
 import { useAuthDb } from './request-db';
 
 /**
- * One in-flight query holds the contract-marker connection and the service-role
- * session together, so each pool keeps two slots. The application pool serves
- * party and the rest of the site. Login and /api/me use a second pool, so a
- * live room cannot fill the queue those routes wait on. Idle connections are
- * returned after a second. At peak one instance holds four session-pooler clients.
+ * A query holds the contract-marker connection and its role session at the same
+ * time, so the marker read needs a free slot while those queries are checked
+ * out. The busiest party request runs five queries and needs six slots. Account
+ * summary runs two and needs three. Login, /api/me and the account page use the
+ * auth pool, so a live room filling the application pool does not block them.
+ * Idle connections are returned after a second.
  */
-function createPool(url: string) {
+const APP_POOL_MAX = 6;
+const AUTH_POOL_MAX = 3;
+
+function createPool(url: string, max: number) {
   return new Pool({
     connectionString: url,
-    max: 2,
+    max,
     idleTimeoutMillis: 1_000,
     connectionTimeoutMillis: 20_000,
     allowExitOnIdle: true,
   });
 }
 
-function createDb() {
+function createDb(max: number) {
   const url = process.env['DATABASE_URL'];
   return supabase<Contract>({
     contractJson,
     ...(url
       ? {
           // The app and Prisma resolve different copies of @types/pg.
-          pg: createPool(url) as NonNullable<
+          pg: createPool(url, max) as NonNullable<
             SupabaseOptionsWithContractJson<Contract>['pg']
           >,
         }
@@ -50,12 +54,12 @@ const globalForDb = globalThis as unknown as {
 };
 
 export function getDb(): Promise<Db> {
-  globalForDb.coopseatDb ??= createDb();
+  globalForDb.coopseatDb ??= createDb(APP_POOL_MAX);
   return globalForDb.coopseatDb;
 }
 
 function getAuthDb(): Promise<Db> {
-  globalForDb.coopseatAuthDb ??= createDb();
+  globalForDb.coopseatAuthDb ??= createDb(AUTH_POOL_MAX);
   return globalForDb.coopseatAuthDb;
 }
 
