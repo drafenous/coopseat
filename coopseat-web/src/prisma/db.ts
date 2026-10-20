@@ -8,11 +8,12 @@ import contractJson from './contract.json' with { type: 'json' };
 import { isAuthDb } from './request-db';
 
 /**
- * A query holds the contract-marker connection and its role session at the same
- * time, so the marker read needs a free slot while those queries are checked
- * out. The busiest party request runs five queries and needs six slots. Account
- * summary runs two and needs three. Login, /api/me and the account page use the
- * auth pool, so a live room filling the application pool does not block them.
+ * The role session stays checked out while the runtime reads the contract
+ * marker on a second connection. Parallel queries then fill the pool and the
+ * marker read waits until the 20s connect timeout. Marker drift is checked by
+ * `prisma db migrate` in CI, so requests skip that read and hold one connection
+ * each. The application pool serves party (up to five queries). Login, /api/me
+ * and the account page use the auth pool, so a live room does not block them.
  * Idle connections are returned after a second.
  */
 const APP_POOL_MAX = 6;
@@ -32,6 +33,7 @@ function createDb(max: number) {
   const url = process.env['DATABASE_URL'];
   return supabase<Contract>({
     contractJson,
+    verifyMarker: false,
     ...(url
       ? {
           // The app and Prisma resolve different copies of @types/pg.
