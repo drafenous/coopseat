@@ -5,7 +5,7 @@ import {
 } from '@prisma/orm-extension-supabase/runtime';
 import type { Contract } from './contract.d';
 import contractJson from './contract.json' with { type: 'json' };
-import { useAuthDb } from './request-db';
+import { isAuthDb } from './request-db';
 
 /**
  * A query holds the contract-marker connection and its role session at the same
@@ -64,6 +64,6 @@ function getAuthDb(): Promise<Db> {
 }
 
 export async function adminDb() {
-  const db = await (useAuthDb() ? getAuthDb() : getDb());
+  const db = await (isAuthDb() ? getAuthDb() : getDb());
   return db.asServiceRole();
 }

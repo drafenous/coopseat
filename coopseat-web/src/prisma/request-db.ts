@@ -7,6 +7,6 @@ export function withAuthDb<T>(fn: () => Promise<T>): Promise<T> {
   return authDb.run(true, fn);
 }
 
-export function useAuthDb(): boolean {
+export function isAuthDb(): boolean {
   return authDb.getStore() === true;
 }
