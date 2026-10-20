@@ -12,6 +12,8 @@ import {
   BitrateAdapter,
   MIN_VIDEO_KBPS,
   senderLimits,
+  sendScale,
+  takeFrame,
   VIDEO_PROFILES,
   withStereoOpus,
   type OutboundSample,
@@ -99,6 +101,42 @@ describe('BitrateAdapter', () => {
     for (const availableKbps of [5000, 4200, 5600, 4000, 5400])
       expect(adapter.update(sample({ availableKbps }))).toBeNull();
     expect(adapter.kbps).toBe(6000);
+  });
+});
+
+describe('sendScale', () => {
+  it('fits 1080p and a near-1080 window inside 720p, and leaves a smaller frame', () => {
+    expect(sendScale(1920, 1080)).toBe(1.5);
+    expect(sendScale(1920, 1032)).toBe(1.5);
+    expect(sendScale(3840, 2160)).toBe(3);
+    expect(sendScale(1280, 720)).toBe(1);
+    expect(sendScale(800, 600)).toBe(1);
+    expect(sendScale(0, 0)).toBe(1);
+  });
+});
+
+describe('takeFrame', () => {
+  it('keeps every other frame of a 60fps source', () => {
+    let due = 0;
+    const kept: number[] = [];
+    for (let i = 0; i < 6; i++) {
+      const ts = i * 16_667;
+      const next = takeFrame(ts, due);
+      due = next.dueUs;
+      if (next.emit) kept.push(ts);
+    }
+    expect(kept).toEqual([0, 16_667 * 2, 16_667 * 4]);
+  });
+
+  it('emits a dumped burst once and does not backfill the gap', () => {
+    let due = 0;
+    const kept: number[] = [];
+    for (const ts of [100_000, 101_000, 102_000, 103_000, 150_000]) {
+      const next = takeFrame(ts, due);
+      due = next.dueUs;
+      if (next.emit) kept.push(ts);
+    }
+    expect(kept).toEqual([100_000, 150_000]);
   });
 });
 

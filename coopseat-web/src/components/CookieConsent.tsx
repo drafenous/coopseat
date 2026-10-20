@@ -1,12 +1,34 @@
 'use client';
 
 import { useEffect } from 'react';
+import Clarity from '@microsoft/clarity';
 import * as CC from 'vanilla-cookieconsent';
 import 'vanilla-cookieconsent/dist/cookieconsent.css';
 import './cookie-consent.css';
 import { LOCALES, type Locale } from '@/i18n/config';
 import { dictionaries, type Dictionary } from '@/i18n/dictionaries';
-import { GA_ID, GTAG_SRC } from '@/lib/analytics';
+import { CLARITY_ID, GA_ID, GTAG_SRC, hasOptionalAnalytics } from '@/lib/analytics';
+
+const clarityConsent = (granted: boolean) =>
+  ({
+    ad_Storage: 'denied',
+    analytics_Storage: granted ? 'granted' : 'denied',
+  }) as const;
+
+let clarityStarted = false;
+
+function syncClarity(granted: boolean) {
+  if (!CLARITY_ID) return;
+  if (!granted) {
+    if (clarityStarted) Clarity.consentV2(clarityConsent(false));
+    return;
+  }
+  if (!clarityStarted) {
+    Clarity.init(CLARITY_ID);
+    clarityStarted = true;
+  }
+  Clarity.consentV2(clarityConsent(true));
+}
 
 function translation(t: Dictionary): CC.Translation {
   const c = t.cookies;
@@ -49,13 +71,15 @@ function syncAnalytics() {
   window.gtag?.('consent', 'update', {
     analytics_storage: granted ? 'granted' : 'denied',
   });
-  if (granted) void CC.loadScript(GTAG_SRC, { async: '' });
+  if (granted && GA_ID) void CC.loadScript(GTAG_SRC, { async: '' });
+  syncClarity(granted);
 }
 
 export function CookieConsent({ locale }: { locale: Locale }) {
   useEffect(() => {
-    if (!GA_ID) return;
+    if (!hasOptionalAnalytics) return;
     void CC.run({
+      revision: 1,
       guiOptions: {
         consentModal: {
           layout: 'box inline',
@@ -66,7 +90,11 @@ export function CookieConsent({ locale }: { locale: Locale }) {
       },
       categories: {
         necessary: { enabled: true, readOnly: true },
-        analytics: { autoClear: { cookies: [{ name: /^_ga/ }] } },
+        analytics: {
+          autoClear: {
+            cookies: [{ name: /^_ga/ }, { name: '_clck' }, { name: '_clsk' }],
+          },
+        },
       },
       onConsent: syncAnalytics,
       onChange: syncAnalytics,
@@ -81,7 +109,7 @@ export function CookieConsent({ locale }: { locale: Locale }) {
   }, []);
 
   useEffect(() => {
-    if (GA_ID) void CC.setLanguage(locale);
+    if (hasOptionalAnalytics) void CC.setLanguage(locale);
   }, [locale]);
 
   return null;
@@ -94,7 +122,7 @@ export function CookiePreferencesButton({
   className?: string;
   children: React.ReactNode;
 }) {
-  if (!GA_ID) return null;
+  if (!hasOptionalAnalytics) return null;
   return (
     <button
       type="button"

@@ -1,4 +1,12 @@
 import type { ClientMessage, Quality, SignalData } from '../../party/protocol';
+import {
+  capVideoSender,
+  SEND_MAX_HEIGHT,
+  SEND_MAX_WIDTH,
+  sendScale,
+  trackPixelSize,
+} from './encoding';
+import { lockFrameRate, type FrameGate } from './frame-clock';
 import type { LinkState } from './peer';
 import type { IceConfig } from './relay';
 import {
@@ -24,6 +32,43 @@ export type PlainMeshOptions = {
 };
 
 const STATS_INTERVAL_MS = 2_000;
+const MEASURE_MS = 400;
+
+/** One frame's display size, for tracks whose settings omit width and height. */
+function measureTrack(
+  track: MediaStreamTrack,
+): Promise<{ width: number; height: number } | null> {
+  if (typeof document === 'undefined') return Promise.resolve(null);
+  return new Promise((resolve) => {
+    const video = document.createElement('video');
+    video.muted = true;
+    video.playsInline = true;
+    video.srcObject = new MediaStream([track]);
+    let settled = false;
+    const finish = (width: number, height: number) => {
+      if (settled) return;
+      settled = true;
+      video.srcObject = null;
+      video.remove();
+      resolve(width > 0 && height > 0 ? { width, height } : null);
+    };
+    const timer = setTimeout(() => finish(0, 0), MEASURE_MS);
+    video.onloadedmetadata = () => {
+      clearTimeout(timer);
+      finish(video.videoWidth, video.videoHeight);
+    };
+    video.style.cssText =
+      'position:fixed;left:-9999px;top:0;width:4px;height:4px;opacity:0;pointer-events:none';
+    try {
+      document.body.append(video);
+    } catch {
+      clearTimeout(timer);
+      finish(0, 0);
+      return;
+    }
+    void video.play().catch(() => {});
+  });
+}
 
 type Side = 'streamer' | 'viewer';
 
@@ -42,6 +87,11 @@ class PlainLink {
   private closed = false;
   private queued: RTCIceCandidateInit[] = [];
   private remote = new MediaStream();
+  /** 1 until the source is larger than 720p. Kept across offers for the same track. */
+  private scale = 1;
+  private scaledTrack: string | null = null;
+  /** One extra apply after the offer, so a late encoder still gets the cap. */
+  private recapped = false;
 
   constructor(
     private id: string,
@@ -107,6 +157,7 @@ class PlainLink {
       }
       if (track) this.pc.addTrack(track, stream);
     }
+    await this.applySendCap();
   }
 
   async handle(data: SignalData) {
@@ -134,6 +185,23 @@ class PlainLink {
     }
   }
 
+  /**
+   * The encoded frame is still above 720p. Learn the scale from that frame once, then apply
+   * the cap a single extra time. Repeating `setParameters` on every stats tick stalls the encoder.
+   */
+  noteEncodedSize(width: number, height: number) {
+    if (this.closed || this.side !== 'streamer') return;
+    if (width <= SEND_MAX_WIDTH && height <= SEND_MAX_HEIGHT) return;
+    if (this.scale === 1) {
+      this.scale = sendScale(width, height);
+      void this.applySendCap();
+      return;
+    }
+    if (this.recapped) return;
+    this.recapped = true;
+    void this.applySendCap();
+  }
+
   close() {
     if (this.closed) return;
     this.closed = true;
@@ -149,9 +217,12 @@ class PlainLink {
       return;
     try {
       this.makingOffer = true;
+      await this.applySendCap();
+      if (this.closed || this.pc.signalingState !== 'stable') return;
       const offer = await this.pc.createOffer();
       if (this.closed || this.pc.signalingState !== 'stable') return;
       await this.pc.setLocalDescription(offer);
+      await this.applySendCap();
       this.publish();
     } catch (e) {
       console.warn('WebRTC offer failed', this.id, e);
@@ -169,6 +240,35 @@ class PlainLink {
     });
   }
 
+  /** Fits the outgoing picture in 720p30. The preview keeps the original track. */
+  private async applySendCap() {
+    if (this.closed || this.side !== 'streamer') return;
+    let scale = this.scale;
+    for (const sender of this.pc.getSenders()) {
+      const kind =
+        sender.track?.kind ??
+        this.pc.getTransceivers().find((t) => t.sender === sender)?.receiver
+          .track.kind;
+      if (kind !== 'video') continue;
+      const track = sender.track;
+      if (track) {
+        try {
+          track.contentHint = 'motion';
+        } catch {
+          /* read-only in some engines */
+        }
+        if (this.scaledTrack !== track.id) {
+          const size = trackPixelSize(track) ?? (await measureTrack(track));
+          scale = size ? sendScale(size.width, size.height) : 1;
+          this.scale = scale;
+          this.scaledTrack = track.id;
+          this.recapped = false;
+        } else scale = this.scale;
+      }
+      await capVideoSender(sender, scale);
+    }
+  }
+
   private async flushCandidates() {
     const queued = this.queued;
     this.queued = [];
@@ -181,7 +281,7 @@ class PlainLink {
 
 /**
  * One connection per viewer. Visible tiles subscribe at `high` and hidden tiles
- * unsubscribe. Nothing here rewrites timestamps, SDP or bitrate.
+ * unsubscribe. Video is scaled to 720p and forwarded at a steady 30fps. SDP is left alone.
  */
 export class PlainMesh {
   private out = new Map<string, PlainLink>();
@@ -189,6 +289,11 @@ export class PlainMesh {
   private openingOut = new Set<string>();
   private openingIn = new Set<string>();
   private stream: MediaStream | null = null;
+  /** The capture track the gate is reading, so a repeat of the same stream does not rebuild it. */
+  private gatedSource: MediaStreamTrack | null = null;
+  private gate: FrameGate | null = null;
+  /** Capture video replaced by the 30fps gate. Audio tracks stay the original ones. */
+  private sendStream: MediaStream | null = null;
   private ice: IceConfig | null = null;
   private icePromise: Promise<IceConfig> | null = null;
   private retries = new Map<string, number>();
@@ -206,13 +311,17 @@ export class PlainMesh {
   async setLocalStream(stream: MediaStream | null) {
     this.stream = stream;
     if (!stream) {
+      this.releaseGate();
       for (const id of [...this.out.keys()]) this.dropViewer(id);
       this.prevOut.clear();
       this.opts.onOutboundMetrics?.(null);
       return;
     }
+    this.bindSend(stream);
+    const send = this.outgoing();
+    if (!send) return;
     await Promise.all(
-      [...this.out.values()].map((link) => link.setStream(stream)),
+      [...this.out.values()].map((link) => link.setStream(send)),
     );
   }
 
@@ -236,7 +345,7 @@ export class PlainMesh {
       this.openingOut.delete(viewerId);
       return;
     }
-    const stream = this.stream;
+    const stream = this.outgoing();
     if (
       this.closed ||
       !stream ||
@@ -339,6 +448,7 @@ export class PlainMesh {
   close() {
     if (this.closed) return;
     this.closed = true;
+    this.releaseGate();
     if (this.statsTimer) clearInterval(this.statsTimer);
     this.statsTimer = null;
     this.prevIn.clear();
@@ -399,6 +509,8 @@ export class PlainMesh {
     for (const [id, link] of this.out) {
       const sample = await outboundSample(link.pc).catch(() => null);
       if (!sample || this.closed) continue;
+      if (sample.width && sample.height)
+        link.noteEncodedSize(sample.width, sample.height);
       const prev = this.prevOut.get(id);
       this.prevOut.set(id, sample);
       if (!prev) continue;
@@ -438,6 +550,38 @@ export class PlainMesh {
       width,
       height,
     });
+  }
+
+  /** What viewers receive. The preview keeps `stream`; this one is paced at 30fps. */
+  private outgoing(): MediaStream | null {
+    return this.sendStream ?? this.stream;
+  }
+
+  private bindSend(stream: MediaStream) {
+    const video = stream.getVideoTracks()[0] ?? null;
+    if (video !== this.gatedSource) {
+      this.releaseGate();
+      if (video) {
+        const gate = lockFrameRate(video);
+        if (gate) {
+          this.gate = gate;
+          this.gatedSource = video;
+        }
+      }
+    }
+    const sendVideo = this.gate?.track ?? video;
+    this.sendStream = new MediaStream(
+      [sendVideo, ...stream.getAudioTracks()].filter(
+        (track): track is MediaStreamTrack => Boolean(track),
+      ),
+    );
+  }
+
+  private releaseGate() {
+    this.gate?.stop();
+    this.gate = null;
+    this.gatedSource = null;
+    this.sendStream = null;
   }
 
   private open(id: string, side: Side, peerId: string, ice: IceConfig) {

@@ -588,7 +588,10 @@ export const ptBR: Dictionary = {
           <p>
             Cookies essenciais mantêm sua sessão, o idioma escolhido e a
             segurança do login. Com a sua permissão, também usamos o Google
-            Analytics para ver, de forma agregada, quais páginas são visitadas.
+            Analytics para ver, de forma agregada, quais páginas são visitadas,
+            e o Microsoft Clarity para registrar cliques, rolagem e uma gravação
+            da sessão. Essa gravação pode incluir o que está na tela, inclusive
+            o chat da sala. A Microsoft recebe esses dados só se você permitir.
             Você pode mudar sua escolha a qualquer momento em Preferências de
             cookies, no rodapé do site.
           </p>
@@ -723,7 +726,7 @@ export const ptBR: Dictionary = {
     consent: {
       title: 'Usamos cookies',
       description:
-        'Cookies essenciais fazem o site funcionar. Com a sua permissão, também usamos o Google Analytics para entender como o site é usado. Você pode mudar isso quando quiser.',
+        'Cookies essenciais fazem o site funcionar. Com a sua permissão, também usamos o Google Analytics e o Microsoft Clarity para entender como o site é usado. Você pode mudar isso quando quiser.',
       customize: 'Personalizar',
     },
     intro:
@@ -736,7 +739,7 @@ export const ptBR: Dictionary = {
     analytics: {
       title: 'Estatísticas',
       description:
-        'Google Analytics: mostra para a gente, de forma agregada, quais páginas são visitadas e de onde vêm os acessos. Só é ativado se você permitir.',
+        'Google Analytics mostra para a gente, de forma agregada, quais páginas são visitadas e de onde vêm os acessos. O Microsoft Clarity registra cliques, rolagem e uma gravação da sessão, inclusive o que está visível na tela, como o chat da sala. Só é ativado se você permitir.',
     },
     more: {
       title: 'Mais informações',

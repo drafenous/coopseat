@@ -25,9 +25,11 @@ const signalOrigin = (() => {
   ];
 })();
 const isDev = process.env.NODE_ENV !== 'production';
-const googleAnalytics = [
+const analyticsHosts = [
   'https://www.googletagmanager.com',
   'https://*.google-analytics.com',
+  'https://*.clarity.ms',
+  'https://c.bing.com',
 ];
 
 /**
@@ -36,12 +38,12 @@ const googleAnalytics = [
  */
 const partyCsp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ''}${googleAnalytics.join(' ')}`,
+  `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ''}${analyticsHosts.join(' ')}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob:",
   "font-src 'self' data:",
-  `connect-src 'self' ${[...signalOrigin, ...googleAnalytics, ...(isDev ? ['ws:'] : [])].join(' ')}`,
+  `connect-src 'self' ${[...signalOrigin, ...analyticsHosts, ...(isDev ? ['ws:'] : [])].join(' ')}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

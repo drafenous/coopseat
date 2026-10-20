@@ -151,7 +151,8 @@ export const ptBR: UiDictionary = {
     title: 'Preferências',
     body: 'Valem para o app todo, independente da conta ou do preset.',
     cookies: 'Cookies',
-    cookiesHint: 'Escolha se o site pode usar o Google Analytics',
+    cookiesHint:
+      'Escolha se o site pode usar o Google Analytics e o Microsoft Clarity',
     manage: 'Gerenciar',
     telemetry: 'Enviar estatísticas de uso anônimas',
     telemetryHint:

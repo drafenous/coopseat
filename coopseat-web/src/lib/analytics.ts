@@ -1,6 +1,10 @@
-/** Empty disables Google Analytics and, with it, the cookie banner (no optional cookies left to consent to). */
+/** Empty disables Google Analytics. */
 export const GA_ID = process.env['NEXT_PUBLIC_GA_ID'] ?? '';
 export const GTAG_SRC = `https://www.googletagmanager.com/gtag/js?id=${GA_ID}`;
+
+/** Empty disables Microsoft Clarity. The cookie banner shows when this or GA is set. */
+export const CLARITY_ID = process.env['NEXT_PUBLIC_CLARITY_PROJECT_ID'] ?? '';
+export const hasOptionalAnalytics = Boolean(GA_ID || CLARITY_ID);
 
 declare global {
   interface Window {

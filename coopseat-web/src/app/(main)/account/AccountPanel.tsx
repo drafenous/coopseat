@@ -381,7 +381,6 @@ function AccountSection({
   run,
 }: Omit<SectionProps, 'setFlash'>) {
   const t = useT();
-  const router = useRouter();
   return (
     <>
       <Section title={t.account.sessionTitle}>
@@ -391,8 +390,7 @@ function AccountSection({
           onClick={() =>
             run('logout', async () => {
               await api('/api/auth/logout', { method: 'POST', body: {} });
-              router.push('/');
-              router.refresh();
+              window.location.assign('/');
             })
           }
         >
@@ -695,7 +693,6 @@ function SecuritySection({
 
 function DeleteAccount({ account, run, busy }: Omit<SectionProps, 'setFlash'>) {
   const t = useT();
-  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState('');
   if (!open) {
@@ -722,8 +719,7 @@ function DeleteAccount({ account, run, busy }: Omit<SectionProps, 'setFlash'>) {
           run('delete', async () => {
             await api('/api/me', { method: 'DELETE', body: { confirm } });
             trackEvent({ name: 'account_delete' });
-            router.push('/');
-            router.refresh();
+            window.location.assign('/');
           })
         }
       >

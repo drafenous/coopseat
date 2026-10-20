@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { Turnstile } from '@/components/Turnstile';
 import { Alert, Button, Field } from '@/components/ui';
@@ -10,7 +9,6 @@ import { api, ApiClientError } from '@/lib/client/api';
 
 export function LoginForm({ next }: { next: string }) {
   const t = useT();
-  const router = useRouter();
   const [captcha, setCaptcha] = useState<string>();
   const [captchaReset, setCaptchaReset] = useState(0);
   const [error, setError] = useState<string>();
@@ -30,14 +28,15 @@ export function LoginForm({ next }: { next: string }) {
         },
       });
       trackEvent({ name: 'login', method: 'email' });
-      router.push(
+      // The session lives in cookies set by the route handler. A client
+      // navigation plus refresh can leave the App Router transition pending,
+      // so the dev indicator stays on "Rendering" and this page never swaps.
+      window.location.assign(
         res.mfaRequired ? `/login/2fa?next=${encodeURIComponent(next)}` : next,
       );
-      router.refresh();
     } catch (err) {
       setError(err instanceof ApiClientError ? err.message : t.login.failed);
       setCaptchaReset((n) => n + 1);
-    } finally {
       setPending(false);
     }
   }

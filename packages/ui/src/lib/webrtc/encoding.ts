@@ -21,11 +21,59 @@ export const VIDEO_PROFILES: Record<
  */
 export const BROWSER_MAX_KBPS = 4_500;
 export const BROWSER_MAX_FPS = 30;
+/**
+ * What the live room actually sends. The capture and the local preview stay at their own size;
+ * each video sender is scaled to fit inside this box at 30 fps.
+ */
+export const SEND_MAX_WIDTH = 1280;
+export const SEND_MAX_HEIGHT = 720;
+export const SEND_MAX_FPS = 30;
+/** Upper end of a 720p30 game picture. A quiet scene uses less. */
+export const SEND_MAX_KBPS = 2_500;
 export const MIN_VIDEO_KBPS = 300;
 export const AUDIO_KBPS = 128;
 /** Mesh: the streamer uploads one copy per viewer, so the total is split between them. */
 export const DEFAULT_UPLOAD_BUDGET_KBPS = 20_000;
 const CODEC_ORDER = ['video/H264', 'video/AV1', 'video/VP9', 'video/VP8'];
+
+/** How far to shrink a frame so it fits inside 1280×720. A smaller frame stays at 1. */
+export function sendScale(width: number, height: number): number {
+  if (!(width > 0) || !(height > 0)) return 1;
+  return Math.max(width / SEND_MAX_WIDTH, height / SEND_MAX_HEIGHT, 1);
+}
+
+export function trackPixelSize(
+  track: MediaStreamTrack,
+): { width: number; height: number } | null {
+  const s = track.getSettings?.();
+  const width = s?.width ?? 0;
+  const height = s?.height ?? 0;
+  if (width > 0 && height > 0) return { width, height };
+  return null;
+}
+
+/** Encoder cap for one video sender. Does nothing to the track the preview is showing. */
+export async function capVideoSender(sender: RTCRtpSender, scale: number) {
+  const params = sender.getParameters() as RTCRtpSendParameters & {
+    degradationPreference?: string;
+  };
+  const encodings = params.encodings?.length
+    ? params.encodings
+    : [{} as RTCRtpEncodingParameters];
+  params.encodings = encodings.map((e) => ({
+    ...e,
+    active: true,
+    maxBitrate: SEND_MAX_KBPS * 1000,
+    maxFramerate: SEND_MAX_FPS,
+    scaleResolutionDownBy: scale,
+  }));
+  params.degradationPreference = 'maintain-framerate';
+  try {
+    await sender.setParameters(params);
+  } catch {
+    /* encodings are not writable yet; the next offer retries */
+  }
+}
 
 export function prepareTrack(track: MediaStreamTrack) {
   try {

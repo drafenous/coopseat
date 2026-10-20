@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useState, type FormEvent } from 'react';
 import { Alert, Button, Field } from '@/components/ui';
 import { useT } from '@/i18n/client';
@@ -8,7 +7,6 @@ import { api, ApiClientError } from '@/lib/client/api';
 
 export function MfaForm({ next }: { next: string }) {
   const t = useT();
-  const router = useRouter();
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
   const [recovery, setRecovery] = useState(false);
@@ -20,15 +18,13 @@ export function MfaForm({ next }: { next: string }) {
     setError(undefined);
     try {
       await api('/api/auth/mfa/challenge', { body: { code } });
-      router.push(next);
-      router.refresh();
+      window.location.assign(next);
     } catch (err) {
       if (err instanceof ApiClientError && err.code === 'mfa_expired') {
-        router.push(`/login?next=${encodeURIComponent(next)}`);
+        window.location.assign(`/login?next=${encodeURIComponent(next)}`);
         return;
       }
       setError(err instanceof ApiClientError ? err.message : t.mfa.invalid);
-    } finally {
       setPending(false);
     }
   }

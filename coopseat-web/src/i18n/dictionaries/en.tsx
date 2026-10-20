@@ -584,9 +584,11 @@ export const en = {
           <p>
             Essential cookies keep your session, chosen language and sign-in
             security working. With your permission, we also use Google Analytics
-            to see, in aggregate, which pages are visited. You can change your
-            choice at any time under Cookie preferences, at the bottom of the
-            site.
+            to see, in aggregate, which pages are visited, and Microsoft Clarity
+            to record clicks, scrolling and a replay of the session. That replay
+            can include what is on screen, including room chat. Microsoft
+            receives this data only if you allow it. You can change your choice
+            at any time under Cookie preferences, at the bottom of the site.
           </p>
         ) as ReactNode,
       },
@@ -717,7 +719,7 @@ export const en = {
     consent: {
       title: 'We use cookies',
       description:
-        'Essential cookies keep the site working. With your permission, we also use Google Analytics to understand how the site is used. You can change this at any time.',
+        'Essential cookies keep the site working. With your permission, we also use Google Analytics and Microsoft Clarity to understand how the site is used. You can change this at any time.',
       customize: 'Customize',
     },
     intro:
@@ -730,7 +732,7 @@ export const en = {
     analytics: {
       title: 'Analytics',
       description:
-        'Google Analytics: shows us, in aggregate, which pages are visited and where visits come from. Only enabled if you allow it.',
+        'Google Analytics shows us, in aggregate, which pages are visited and where visits come from. Microsoft Clarity records clicks, scrolling and a replay of the session, including what is visible on screen, such as room chat. Only enabled if you allow it.',
     },
     more: {
       title: 'More information',

@@ -156,7 +156,8 @@ export const en = {
     title: 'Preferences',
     body: 'Apply to the whole app, whatever the account or preset.',
     cookies: 'Cookies',
-    cookiesHint: 'Choose whether the site may use Google Analytics',
+    cookiesHint:
+      'Choose whether the site may use Google Analytics and Microsoft Clarity',
     manage: 'Manage',
     telemetry: 'Share anonymous usage statistics',
     telemetryHint:
