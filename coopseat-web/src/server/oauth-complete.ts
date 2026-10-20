@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import type { ErrorCode } from '@/i18n/dictionaries';
+import { assertLegitimateEmail } from './email-legitimacy';
 import { env } from './env';
 import { gotrue, type AuthTokens } from './gotrue';
+import { ApiError } from './http';
 import {
   hasVerifiedFactor,
   sealMfaToken,
@@ -33,11 +35,47 @@ function avatarOf(tokens: AuthTokens): string | null {
   return null;
 }
 
+const FRESH_ACCOUNT_MS = 2 * 60 * 1000;
+
+function isFreshAccount(createdAt: string | undefined): boolean {
+  if (!createdAt) return false;
+  const created = Date.parse(createdAt);
+  if (Number.isNaN(created)) return false;
+  const age = Date.now() - created;
+  return age >= -30_000 && age <= FRESH_ACCOUNT_MS;
+}
+
+/** Drops a provider signup that just used a disposable or undeliverable address. */
+async function rejectFreshIllegitimateSignup(
+  tokens: AuthTokens,
+): Promise<NextResponse | undefined> {
+  const email = tokens.user.email;
+  if (!email || !isFreshAccount(tokens.user.created_at)) return;
+  try {
+    await assertLegitimateEmail(email);
+  } catch (err) {
+    if (
+      !(err instanceof ApiError) ||
+      (err.code !== 'email_disposable' && err.code !== 'email_undeliverable')
+    )
+      throw err;
+    await gotrue.admin
+      .deleteUser(tokens.user.id)
+      .catch((e) => console.error('rollback oauth signup failed', e));
+    return oauthErrorPage(err.code);
+  }
+}
+
 /** Session, 2FA, desktop ticket or link handoff once a provider has minted tokens. */
 export async function completeOAuth(
   state: OAuthState,
   tokens: AuthTokens,
 ): Promise<NextResponse> {
+  if (state.mode === 'web' || state.mode === 'desktop') {
+    const rejected = await rejectFreshIllegitimateSignup(tokens);
+    if (rejected) return rejected;
+  }
+
   await ensureProfile(tokens.user.id, avatarOf(tokens));
 
   switch (state.mode) {

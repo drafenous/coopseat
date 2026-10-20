@@ -7,6 +7,7 @@ import {
 } from '@/lib/validation/account';
 import { accountSummary } from '@/server/account';
 import { auth } from '@/server/auth-errors';
+import { assertLegitimateEmail } from '@/server/email-legitimacy';
 import { env } from '@/server/env';
 import { gotrue } from '@/server/gotrue';
 import { ApiError, readJson, route } from '@/server/http';
@@ -35,6 +36,7 @@ export const PATCH = route(async (req) => {
   }
   if (input.acceptTerms) await acceptTerms(session.claims.sub, TERMS_VERSION);
   if (input.email !== undefined) {
+    await assertLegitimateEmail(input.email);
     await auth(
       gotrue.updateUser(
         session.token,

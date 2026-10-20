@@ -24,6 +24,7 @@ export type AuthFactor = {
 export type AuthUser = {
   id: string;
   email?: string;
+  created_at?: string;
   new_email?: string;
   email_confirmed_at?: string | null;
   user_metadata?: Record<string, unknown>;

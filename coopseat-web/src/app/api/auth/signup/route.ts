@@ -3,6 +3,7 @@ import { dictionaryFor } from '@/i18n/server';
 import { signupSchema, TERMS_VERSION } from '@/lib/validation/account';
 import { auth } from '@/server/auth-errors';
 import { verifyCaptcha } from '@/server/captcha';
+import { assertLegitimateEmail } from '@/server/email-legitimacy';
 import { env } from '@/server/env';
 import { gotrue, type AuthTokens, type AuthUser } from '@/server/gotrue';
 import { ApiError, clientIp, readJson, route } from '@/server/http';
@@ -24,6 +25,7 @@ export const POST = route(async (req) => {
   await rateLimit('signup', ip);
   const input = await readJson(req, signupSchema);
   await verifyCaptcha(input.captchaToken, ip);
+  await assertLegitimateEmail(input.email);
 
   if (!(await isNicknameAvailable(input.nickname))) {
     throw new ApiError(409, 'nickname_taken');

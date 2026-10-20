@@ -786,6 +786,8 @@ export const en = {
     email_required: 'Enter an e-mail.',
     email_too_long: 'E-mail too long.',
     email_invalid: 'Invalid e-mail.',
+    email_disposable: 'Invalid email.',
+    email_undeliverable: 'Invalid email.',
     password_required: 'Enter a password.',
     password_too_short: 'The password must be at least 8 characters.',
     password_too_long: 'The password must be at most 72 characters.',

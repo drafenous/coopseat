@@ -45,7 +45,12 @@ export function SignupForm() {
         setError(err.message);
         setFields(
           err.fields ??
-            (err.code === 'nickname_taken' ? { nickname: [err.message] } : {}),
+            (err.code === 'nickname_taken'
+              ? { nickname: [err.message] }
+              : err.code === 'email_disposable' ||
+                  err.code === 'email_undeliverable'
+                ? { email: [err.message] }
+                : {}),
         );
       } else {
         setError(t.signup.failed);

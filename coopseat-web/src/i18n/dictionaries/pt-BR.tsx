@@ -792,6 +792,8 @@ export const ptBR: Dictionary = {
     email_required: 'Informe um e-mail.',
     email_too_long: 'E-mail muito longo.',
     email_invalid: 'E-mail inválido.',
+    email_disposable: 'Email inválido.',
+    email_undeliverable: 'Email inválido.',
     password_required: 'Informe uma senha.',
     password_too_short: 'A senha deve ter pelo menos 8 caracteres.',
     password_too_long: 'A senha deve ter no máximo 72 caracteres.',
