@@ -289,5 +289,12 @@ export const gotrue = {
         admin: true,
       });
     },
+    /** Removes a verified factor without an aal2 session (recovery-code disable). */
+    deleteFactor(userId: string, factorId: string) {
+      return call<unknown>(
+        `/admin/users/${encodeURIComponent(userId)}/factors/${encodeURIComponent(factorId)}`,
+        { method: 'DELETE', admin: true },
+      );
+    },
   },
 };

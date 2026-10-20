@@ -5,6 +5,8 @@ export type Session = {
   accessToken: string;
   refreshToken: string;
   expiresAt: number;
+  /** Present after a security-code login. Sent back so the BFF treats the session as aal2. */
+  stepUp?: string;
 };
 export type GateRequirement = 'email' | 'nickname' | 'age' | 'mfa';
 export type Gate = { allowed: boolean; missing: GateRequirement[] };
@@ -26,6 +28,7 @@ export type Account = {
     enabled: boolean;
     factors: { id: string; name: string }[];
     level: 'aal1' | 'aal2';
+    securityCodesRemaining: number;
   };
   permissions: { watch: Gate; chat: Gate; host: Gate };
   message?: string;
@@ -134,6 +137,10 @@ async function send<T>(
   headers['accept-language'] = getLocale();
   const version = await desktopVersion();
   if (version) headers['x-coopseat-version'] = version;
+  if (!cookies) {
+    const stored = await loadSession();
+    if (stored?.stepUp) headers['x-coopseat-stepup'] = stored.stepUp;
+  }
   if (body !== undefined) headers['content-type'] = 'application/json';
   if (token) headers.authorization = `Bearer ${token}`;
   let res: Response;
@@ -171,8 +178,11 @@ export function refreshSession() {
         method: 'POST',
         body: { refreshToken: current.refreshToken },
       });
-      await saveSession(r.session);
-      return r.session;
+      const kept = current.stepUp;
+      const next =
+        kept && !r.session.stepUp ? { ...r.session, stepUp: kept } : r.session;
+      await saveSession(next);
+      return next;
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
         await saveSession(null);

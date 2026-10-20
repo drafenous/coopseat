@@ -294,6 +294,11 @@ export const ptBR: Dictionary = {
     submit: 'Confirmar',
     pending: 'Verificando…',
     invalid: 'Código inválido.',
+    useSecurityCode: 'Usar um código de segurança',
+    useApp: 'Usar o app autenticador',
+    securityCode: 'Código de segurança',
+    securityHint:
+      'Digite um dos códigos de segurança que você guardou ao ativar a verificação em duas etapas.',
   },
   signup: {
     title: 'Criar conta',
@@ -445,6 +450,36 @@ export const ptBR: Dictionary = {
     totpEnabled: 'Verificação em duas etapas ativada.',
     activate: 'Ativar',
     enableTotp: 'Ativar verificação em duas etapas',
+    totpIntro:
+      'Use um app autenticador, como Google Authenticator, 1Password ou Authy. Escaneie o QR code. Se não conseguir, copie a chave de configuração no app.',
+    setupKey: 'Chave de configuração',
+    copy: 'Copiar',
+    copied: 'Copiado',
+    enterCode:
+      'Digite o código de 6 dígitos do app para confirmar que a configuração funcionou.',
+    securityCodesTitle: 'Guarde seus códigos de segurança',
+    securityCodesBody:
+      'Cada código funciona uma vez, no lugar do autenticador, se você perder o app. Eles aparecem só agora. Guarde-os num lugar seguro.',
+    securityCodesFile: (date: string) =>
+      `Códigos de segurança do CoopSeat\nGerados em ${date}.\n\nCada código funciona uma vez, no lugar do app autenticador.\nQuem tiver um destes códigos consegue entrar na sua conta.`,
+    securityCodesLeft: (count: number) =>
+      count === 1
+        ? '1 código de segurança restante.'
+        : `${count} códigos de segurança restantes.`,
+    downloadCodes: 'Baixar .txt',
+    savedCodes: 'Já guardei meus códigos de segurança',
+    done: 'Concluir',
+    cancel: 'Cancelar',
+    enabledStatus: 'A verificação em duas etapas está ativa.',
+    generateCodes: 'Gerar novos códigos de segurança',
+    regenerateBody:
+      'Digite um código do app autenticador. Os códigos de segurança atuais deixam de funcionar.',
+    disableTotp: 'Desativar verificação em duas etapas',
+    disableBody:
+      'Digite um código do app autenticador ou um código de segurança que ainda não foi usado.',
+    disableConfirm: 'Desativar',
+    totpDisabled: 'Verificação em duas etapas desativada.',
+    codesRegenerated: 'Novos códigos de segurança gerados.',
     deleteAccount: 'Excluir conta',
     deleteWarning: (name) => (
       <>

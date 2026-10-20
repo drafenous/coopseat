@@ -160,6 +160,11 @@ export const ptBR: UiDictionary = {
   authModal: {
     mfaTitle: 'Verificação em duas etapas',
     mfaBody: 'Digite o código de 6 dígitos do seu aplicativo autenticador.',
+    useSecurityCode: 'Usar um código de segurança',
+    useApp: 'Usar o app autenticador',
+    securityCode: 'Código de segurança',
+    securityHint:
+      'Digite um dos códigos de segurança que você guardou ao ativar a verificação em duas etapas.',
     code: 'Código',
     title: 'Entrar no CoopSeat',
     pitch: 'Sua conta libera o chat nas sessões e permite criar salas.',

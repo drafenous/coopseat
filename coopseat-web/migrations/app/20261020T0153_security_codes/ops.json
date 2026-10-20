@@ -1,0 +1,203 @@
+[
+  {
+    "id": "table.security_codes",
+    "label": "Create table \"security_codes\"",
+    "summary": "Creates table \"security_codes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "security_codes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"security_codes\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"security_codes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"security_codes\"",
+        "sql": "CREATE TABLE \"public\".\"security_codes\" (\n  \"codeHash\" text NOT NULL,\n  \"createdAt\" timestamptz DEFAULT (now()) NOT NULL,\n  \"id\" uuid NOT NULL,\n  \"profileId\" \"uuid\" NOT NULL,\n  \"usedAt\" timestamptz,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"security_codes\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"security_codes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.security_codes.security_codes_profileId_codeHash_key",
+    "label": "Add unique constraint on \"security_codes\" (profileId, codeHash)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "security_codes_profileId_codeHash_key",
+        "table": "security_codes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"security_codes_profileId_codeHash_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "security_codes_profileId_codeHash_key",
+          "public",
+          "\"public\".\"security_codes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"security_codes_profileId_codeHash_key\"",
+        "sql": "ALTER TABLE \"public\".\"security_codes\" ADD CONSTRAINT \"security_codes_profileId_codeHash_key\" UNIQUE (\"profileId\", \"codeHash\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"security_codes_profileId_codeHash_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "security_codes_profileId_codeHash_key",
+          "public",
+          "\"public\".\"security_codes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.security_codes.security_codes_profileId_idx_d9cdfcaf",
+    "label": "Create index \"security_codes_profileId_idx_d9cdfcaf\" on \"security_codes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "security_codes_profileId_idx_d9cdfcaf",
+        "table": "security_codes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"security_codes_profileId_idx_d9cdfcaf\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"security_codes_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"security_codes_profileId_idx_d9cdfcaf\"",
+        "sql": "CREATE INDEX \"security_codes_profileId_idx_d9cdfcaf\" ON \"public\".\"security_codes\" (\"profileId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"security_codes_profileId_idx_d9cdfcaf\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"security_codes_profileId_idx_d9cdfcaf\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.security_codes.security_codes_profileId_fkey",
+    "label": "Add foreign key \"security_codes_profileId_fkey\" on \"security_codes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "security_codes_profileId_fkey",
+        "table": "security_codes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"security_codes_profileId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "security_codes_profileId_fkey",
+          "public",
+          "\"public\".\"security_codes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"security_codes_profileId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"security_codes\"\nADD CONSTRAINT \"security_codes_profileId_fkey\"\nFOREIGN KEY (\"profileId\")\nREFERENCES \"public\".\"profiles\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"security_codes_profileId_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "security_codes_profileId_fkey",
+          "public",
+          "\"public\".\"security_codes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.security_codes",
+    "label": "Enable row-level security on \"security_codes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "security_codes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"security_codes\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "security_codes"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"security_codes\"",
+        "sql": "ALTER TABLE \"public\".\"security_codes\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"security_codes\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "security_codes"
+        ]
+      }
+    ]
+  }
+]

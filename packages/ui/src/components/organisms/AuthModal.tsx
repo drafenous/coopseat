@@ -14,7 +14,8 @@ export function AuthModal({ auth, onClose }: { auth: Auth; onClose(): void }) {
     t = T.authModal;
   const [email, setEmail] = useState(''),
     [password, setPassword] = useState(''),
-    [code, setCode] = useState('');
+    [code, setCode] = useState(''),
+    [recovery, setRecovery] = useState(false);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState('');
   useEffect(() => {
@@ -35,9 +36,10 @@ export function AuthModal({ auth, onClose }: { auth: Auth; onClose(): void }) {
   const web = (path: string) => void run(() => auth.openWeb(path));
 
   if (auth.mfa) {
+    const ready = recovery ? code.trim().length >= 8 : code.length === 6;
     const submit = (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
-      if (code.length === 6) void run(() => auth.submitMfa(code));
+      if (ready) void run(() => auth.submitMfa(code.trim()));
     };
     return (
       <Modal
@@ -50,16 +52,20 @@ export function AuthModal({ auth, onClose }: { auth: Auth; onClose(): void }) {
         onSubmit={submit}
       >
         <h2 id="mfa-title">{t.mfaTitle}</h2>
-        <p>{t.mfaBody}</p>
+        <p>{recovery ? t.securityHint : t.mfaBody}</p>
         <TextInput
-          code
+          code={!recovery}
           autoFocus
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          aria-label={t.code}
-          maxLength={6}
+          inputMode={recovery ? 'text' : 'numeric'}
+          autoComplete={recovery ? 'off' : 'one-time-code'}
+          aria-label={recovery ? t.securityCode : t.code}
+          maxLength={recovery ? 40 : 6}
           value={code}
-          onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+          onChange={(e) =>
+            setCode(
+              recovery ? e.target.value : e.target.value.replace(/\D/g, ''),
+            )
+          }
         />
         {error && (
           <p className={authError} role="alert">
@@ -70,10 +76,20 @@ export function AuthModal({ auth, onClose }: { auth: Auth; onClose(): void }) {
           <Button variant="secondary" onClick={auth.cancelMfa}>
             {T.common.back}
           </Button>
-          <Button type="submit" inline disabled={busy || code.length !== 6}>
+          <Button type="submit" inline disabled={busy || !ready}>
             {T.common.confirm}
           </Button>
         </ModalActions>
+        <button
+          type="button"
+          className="mt-3 text-left text-[12px] text-accent hover:underline"
+          onClick={() => {
+            setRecovery((value) => !value);
+            setCode('');
+          }}
+        >
+          {recovery ? t.useApp : t.useSecurityCode}
+        </button>
       </Modal>
     );
   }

@@ -71,6 +71,10 @@
     "relay_user_overrides": {
       "model": "RelayUserOverride",
       "namespace": "public"
+    },
+    "security_codes": {
+      "model": "SecurityCode",
+      "namespace": "public"
     }
   },
   "domain": {
@@ -1867,6 +1871,84 @@
               "namespaceId": "public",
               "table": "relay_user_overrides"
             }
+          },
+          "SecurityCode": {
+            "fields": {
+              "codeHash": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "profileId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/uuid@1",
+                  "kind": "scalar"
+                }
+              },
+              "usedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "profile": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "profileId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Profile",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "codeHash": {
+                  "column": "codeHash"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "profileId": {
+                  "column": "profileId"
+                },
+                "usedAt": {
+                  "column": "usedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "security_codes"
+            }
           }
         }
       }
@@ -1976,6 +2058,11 @@
               "kind": "rls",
               "namespaceId": "public",
               "tableName": "relay_user_overrides"
+            },
+            "security_codes": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "security_codes"
             }
           },
           "table": {
@@ -3636,6 +3723,82 @@
                 ]
               },
               "uniques": []
+            },
+            "security_codes": {
+              "columns": {
+                "codeHash": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false
+                },
+                "profileId": {
+                  "codecId": "pg/uuid@1",
+                  "nativeType": "uuid",
+                  "nullable": false,
+                  "typeRef": "AuthUserId"
+                },
+                "usedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "profileId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "security_codes"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "profiles"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "profileId"
+                  ],
+                  "name": "security_codes_profileId_idx_d9cdfcaf",
+                  "prefix": "security_codes_profileId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "profileId",
+                    "codeHash"
+                  ]
+                }
+              ]
             }
           },
           "valueSet": {
@@ -3670,7 +3833,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "4a5168d4a2cbf9a383b65d8bb6a664f12f8dd74348cec3b571d247b6975b56d1",
+    "storageHash": "801aea61a645f68a114948ec6d1482b5b02adb80acd24b20351f8b3017e08263",
     "types": {
       "AuthUserId": {
         "codecId": "pg/uuid@1",
@@ -3680,7 +3843,7 @@
     }
   },
   "execution": {
-    "executionHash": "c943bb841ab8bfe8fe45ffaa85846ccbc1921fe9af2f924d3a8e3a31b0a75ae1",
+    "executionHash": "16212b2a108edf1cbe98d9f03d5e864cbec4a88abc22f9ce1eb15d63c410a8c7",
     "mutations": {
       "defaults": [
         {
@@ -3850,6 +4013,17 @@
           "ref": {
             "entry": "relay_policy",
             "field": "updatedAt",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "security_codes",
+            "field": "id",
             "namespace": "public"
           }
         }

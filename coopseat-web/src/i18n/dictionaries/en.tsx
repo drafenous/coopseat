@@ -293,6 +293,11 @@ export const en = {
     submit: 'Confirm',
     pending: 'Verifying…',
     invalid: 'Invalid code.',
+    useSecurityCode: 'Use a security code',
+    useApp: 'Use the authenticator app',
+    securityCode: 'Security code',
+    securityHint:
+      'Enter one of the security codes you saved when you turned on two-step verification.',
   },
   signup: {
     title: 'Create account',
@@ -444,6 +449,33 @@ export const en = {
     totpEnabled: 'Two-step verification enabled.',
     activate: 'Activate',
     enableTotp: 'Enable two-step verification',
+    totpIntro:
+      'Use an authenticator app such as Google Authenticator, 1Password or Authy. Scan the QR code. If you cannot scan it, copy the setup key into the app.',
+    setupKey: 'Setup key',
+    copy: 'Copy',
+    copied: 'Copied',
+    enterCode: 'Enter the 6-digit code from the app to confirm it is set up.',
+    securityCodesTitle: 'Save your security codes',
+    securityCodesBody:
+      'Each code works once, in place of the authenticator, if you lose the app. They are shown only now. Keep them somewhere safe.',
+    securityCodesFile: (date: string) =>
+      `CoopSeat security codes\nGenerated on ${date}.\n\nEach code works once, instead of the authenticator app.\nAnyone with one of these codes can sign in to your account.`,
+    securityCodesLeft: (count: number) =>
+      count === 1 ? '1 security code left.' : `${count} security codes left.`,
+    downloadCodes: 'Download .txt',
+    savedCodes: 'I have saved my security codes',
+    done: 'Done',
+    cancel: 'Cancel',
+    enabledStatus: 'Two-step verification is on.',
+    generateCodes: 'Generate new security codes',
+    regenerateBody:
+      'Enter a code from your authenticator app. The security codes you have now will stop working.',
+    disableTotp: 'Turn off two-step verification',
+    disableBody:
+      'Enter a code from your authenticator app, or an unused security code.',
+    disableConfirm: 'Turn off',
+    totpDisabled: 'Two-step verification turned off.',
+    codesRegenerated: 'New security codes generated.',
     deleteAccount: 'Delete account',
     deleteWarning: (name: ReactNode): ReactNode => (
       <>

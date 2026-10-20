@@ -16,6 +16,11 @@ import {
   type OAuthProvider,
 } from '@/lib/validation/account';
 import type { AccountSummary } from '@/server/account';
+import {
+  DisableTotpModal,
+  RegenerateCodesModal,
+  TotpEnrollModal,
+} from './TotpModal';
 
 type Tab = 'profile' | 'security' | 'account';
 const TABS: Tab[] = ['profile', 'security', 'account'];
@@ -578,13 +583,9 @@ function SecuritySection({
 }: SectionProps & { reload: () => Promise<void> }) {
   const t = useT();
   const [password, setPassword] = useState('');
-  const [enroll, setEnroll] = useState<{
-    factorId: string;
-    qrCode: string;
-    secret: string;
-  }>();
-  const [code, setCode] = useState('');
+  const [flow, setFlow] = useState<'enroll' | 'regenerate' | 'disable'>();
   const hasPassword = account.identities.some((i) => i.provider === 'email');
+  const factor = account.mfa.factors[0];
 
   return (
     <Section title={t.account.securityTitle}>
@@ -613,82 +614,81 @@ function SecuritySection({
 
       <div className="border-t border-white/5 pt-3">
         <p className="mb-2 text-sm font-medium">{t.account.totpTitle}</p>
-        {account.mfa.enabled ? (
-          <ul className="space-y-2 text-sm">
-            {account.mfa.factors.map((factor) => (
-              <li key={factor.id} className="flex items-center justify-between">
-                <span>✅ {factor.name}</span>
-                <button
-                  className="text-xs text-red-300 hover:underline"
-                  onClick={() =>
-                    run(`mfa:${factor.id}`, async () => {
-                      await api(`/api/auth/mfa/${factor.id}`, {
-                        method: 'DELETE',
-                      });
-                      await reload();
-                      setFlash({
-                        tone: 'success',
-                        text: t.account.authenticatorRemoved,
-                      });
-                    })
-                  }
-                >
-                  {t.account.remove}
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : enroll ? (
+        {account.mfa.enabled && factor ? (
           <div className="space-y-3">
-            <p className="text-sm text-muted">{t.account.scanQr}</p>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={enroll.qrCode}
-              alt={t.account.qrAlt}
-              className="h-44 w-44 rounded bg-white p-2"
-            />
-            <p className="break-all font-mono text-xs text-muted">
-              {enroll.secret}
+            <p className="text-sm">{t.account.enabledStatus}</p>
+            <ul className="space-y-1 text-sm">
+              {account.mfa.factors.map((item) => (
+                <li key={item.id}>{item.name}</li>
+              ))}
+            </ul>
+            <p className="text-sm text-muted">
+              {t.account.securityCodesLeft(account.mfa.securityCodesRemaining)}
             </p>
-            <Field
-              label={t.common.code}
-              inputMode="numeric"
-              maxLength={6}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-            />
-            <Button
-              disabled={code.length !== 6 || busy === 'mfa-verify'}
-              onClick={() =>
-                run('mfa-verify', async () => {
-                  await api('/api/auth/mfa/verify', {
-                    body: { factorId: enroll.factorId, code },
-                  });
-                  trackEvent({ name: 'mfa_enable' });
-                  setEnroll(undefined);
-                  setCode('');
-                  await reload();
-                  setFlash({ tone: 'success', text: t.account.totpEnabled });
-                })
-              }
-            >
-              {t.account.activate}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                wide={false}
+                onClick={() => setFlow('regenerate')}
+              >
+                {t.account.generateCodes}
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
+                wide={false}
+                onClick={() => setFlow('disable')}
+              >
+                {t.account.disableTotp}
+              </Button>
+            </div>
           </div>
         ) : (
           <Button
+            type="button"
             variant="secondary"
-            disabled={busy === 'mfa-enroll'}
-            onClick={() =>
-              run('mfa-enroll', async () => {
-                setEnroll(await api('/api/auth/mfa/enroll', { body: {} }));
-              })
-            }
+            onClick={() => setFlow('enroll')}
           >
             {t.account.enableTotp}
           </Button>
         )}
       </div>
+      {flow === 'enroll' ? (
+        <TotpEnrollModal
+          onClose={() => setFlow(undefined)}
+          onEnabled={() => {
+            trackEvent({ name: 'mfa_enable' });
+            setFlow(undefined);
+            void reload().then(() =>
+              setFlash({ tone: 'success', text: t.account.totpEnabled }),
+            );
+          }}
+        />
+      ) : null}
+      {flow === 'disable' && factor ? (
+        <DisableTotpModal
+          factorId={factor.id}
+          onClose={() => setFlow(undefined)}
+          onDisabled={() => {
+            setFlow(undefined);
+            void reload().then(() =>
+              setFlash({ tone: 'success', text: t.account.totpDisabled }),
+            );
+          }}
+        />
+      ) : null}
+      {flow === 'regenerate' ? (
+        <RegenerateCodesModal
+          onClose={() => setFlow(undefined)}
+          onDone={() => {
+            setFlow(undefined);
+            void reload().then(() =>
+              setFlash({ tone: 'success', text: t.account.codesRegenerated }),
+            );
+          }}
+        />
+      ) : null}
     </Section>
   );
 }

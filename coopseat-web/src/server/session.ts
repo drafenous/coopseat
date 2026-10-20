@@ -3,6 +3,11 @@ import { env } from './env';
 import { withExpiry, type AuthTokens } from './gotrue';
 import { ApiError } from './http';
 import { verifyAccessToken, type AccessClaims } from './jwt';
+import {
+  elevateClaims,
+  setStepUpCookie,
+  STEPUP_COOKIE,
+} from './oauth-state';
 
 export const ACCESS_COOKIE = 'cs_at';
 export const REFRESH_COOKIE = 'cs_rt';
@@ -36,13 +41,26 @@ export async function getAuth(req: NextRequest): Promise<AuthContext | null> {
   if (header?.startsWith('Bearer ')) {
     const token = header.slice(7).trim();
     const claims = await verifyAccessToken(token);
-    return claims ? { token, claims, mode: 'bearer' } : null;
+    return claims
+      ? { token, claims: elevate(req, claims), mode: 'bearer' }
+      : null;
   }
   const token = req.cookies.get(ACCESS_COOKIE)?.value;
   if (!token) return null;
   assertSameOrigin(req);
   const claims = await verifyAccessToken(token);
-  return claims ? { token, claims, mode: 'cookie' } : null;
+  return claims
+    ? { token, claims: elevate(req, claims), mode: 'cookie' }
+    : null;
+}
+
+function elevate(req: NextRequest, claims: AccessClaims): AccessClaims {
+  return elevateClaims(
+    claims,
+    req.cookies.get(STEPUP_COOKIE)?.value ??
+      req.headers.get('x-coopseat-stepup') ??
+      undefined,
+  );
 }
 
 /** `allowSuspended` is only for leaving the platform (account deletion) while under a `platform` sanction. */
@@ -88,6 +106,7 @@ export function setSessionCookies(res: NextResponse, tokens: AuthTokens): void {
 export function clearSessionCookies(res: NextResponse): void {
   res.cookies.delete(ACCESS_COOKIE);
   res.cookies.delete(REFRESH_COOKIE);
+  res.cookies.delete(STEPUP_COOKIE);
 }
 
 export function desktopSession(tokens: AuthTokens) {
@@ -104,10 +123,19 @@ export function sessionResponse(
   req: NextRequest,
   tokens: AuthTokens,
   body: Record<string, unknown> = {},
+  opts?: { stepUp?: string },
 ): NextResponse {
-  if (isDesktop(req))
-    return NextResponse.json({ ...body, session: desktopSession(tokens) });
+  if (isDesktop(req)) {
+    return NextResponse.json({
+      ...body,
+      session: {
+        ...desktopSession(tokens),
+        ...(opts?.stepUp ? { stepUp: opts.stepUp } : {}),
+      },
+    });
+  }
   const res = NextResponse.json(body);
   setSessionCookies(res, tokens);
+  if (opts?.stepUp) setStepUpCookie(res, opts.stepUp);
   return res;
 }

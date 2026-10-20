@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
+import type { AccessClaims } from './jwt';
 import type { OAuthProvider } from '@/lib/validation/account';
 import { pkceChallenge, randomToken, seal, sha256Hex, unseal } from './crypto';
 import { discordAuthorizeUrl, discordCallbackUrl } from './discord';
@@ -8,8 +9,12 @@ import { googleAuthorizeUrl } from './google';
 
 const STATE_COOKIE = 'cs_oauth';
 export const MFA_COOKIE = 'cs_mfa';
+export const STEPUP_COOKIE = 'cs_su';
 const STATE_TTL = 600;
 export const MFA_TTL = 300;
+const STEPUP_TTL = 60 * 60 * 24 * 30;
+
+export type StepUpProof = { sub: string; sid: string };
 
 export type OAuthMode = 'web' | 'desktop' | 'link-web' | 'link-desktop';
 
@@ -124,6 +129,35 @@ export function sealMfaToken(tokens: AuthTokens): string {
 
 export function unsealMfaToken(token: string | undefined): AuthTokens | null {
   return token ? unseal<AuthTokens>(token) : null;
+}
+
+/** Proof that this session passed a security code. Bound to the GoTrue session id. */
+export function sealStepUp(sub: string, sid: string): string {
+  return seal({ sub, sid } satisfies StepUpProof, STEPUP_TTL);
+}
+
+export function readStepUp(token: string | undefined): StepUpProof | null {
+  if (!token) return null;
+  const proof = unseal<StepUpProof>(token);
+  if (!proof || typeof proof.sub !== 'string' || typeof proof.sid !== 'string')
+    return null;
+  return proof;
+}
+
+/** A recovery-code login cannot mint an aal2 JWT, so the sealed proof stands in for it. */
+export function elevateClaims(
+  claims: AccessClaims,
+  token: string | undefined,
+): AccessClaims {
+  if (claims.aal === 'aal2' || !claims.session_id) return claims;
+  const proof = readStepUp(token);
+  if (!proof || proof.sub !== claims.sub || proof.sid !== claims.session_id)
+    return claims;
+  return { ...claims, aal: 'aal2' };
+}
+
+export function setStepUpCookie(res: NextResponse, token: string): void {
+  res.cookies.set(STEPUP_COOKIE, token, cookieOptions(STEPUP_TTL));
 }
 
 export function hasVerifiedFactor(tokens: AuthTokens): boolean {

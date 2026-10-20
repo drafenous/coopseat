@@ -34,9 +34,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'4a5168d4a2cbf9a383b65d8bb6a664f12f8dd74348cec3b571d247b6975b56d1'>;
+  StorageHashBase<'801aea61a645f68a114948ec6d1482b5b02adb80acd24b20351f8b3017e08263'>;
 export type ExecutionHash =
-  ExecutionHashBase<'c943bb841ab8bfe8fe45ffaa85846ccbc1921fe9af2f924d3a8e3a31b0a75ae1'>;
+  ExecutionHashBase<'16212b2a108edf1cbe98d9f03d5e864cbec4a88abc22f9ce1eb15d63c410a8c7'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -410,6 +410,13 @@ export type FieldOutputTypes = {
       readonly profileId: CodecTypes['pg/uuid@1']['output'];
       readonly reason: CodecTypes['pg/text@1']['output'] | null;
     };
+    readonly SecurityCode: {
+      readonly codeHash: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly usedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    };
   };
 };
 export type FieldInputTypes = {
@@ -573,6 +580,13 @@ export type FieldInputTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly profileId: CodecTypes['pg/uuid@1']['input'];
       readonly reason: CodecTypes['pg/text@1']['input'] | null;
+    };
+    readonly SecurityCode: {
+      readonly codeHash: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly usedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
   };
 };
@@ -738,6 +752,13 @@ export type StorageColumnTypes = {
       readonly profileId: CodecTypes['pg/uuid@1']['output'];
       readonly reason: CodecTypes['pg/text@1']['output'] | null;
     };
+    readonly security_codes: {
+      readonly codeHash: CodecTypes['pg/text@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+      readonly id: CodecTypes['pg/uuid@1']['output'];
+      readonly profileId: CodecTypes['pg/uuid@1']['output'];
+      readonly usedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    };
   };
 };
 export type StorageColumnInputTypes = {
@@ -901,6 +922,13 @@ export type StorageColumnInputTypes = {
       readonly expiresAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
       readonly profileId: CodecTypes['pg/uuid@1']['input'];
       readonly reason: CodecTypes['pg/text@1']['input'] | null;
+    };
+    readonly security_codes: {
+      readonly codeHash: CodecTypes['pg/text@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
+      readonly id: CodecTypes['pg/uuid@1']['input'];
+      readonly profileId: CodecTypes['pg/uuid@1']['input'];
+      readonly usedAt: CodecTypes['pg/timestamptz-string@1']['input'] | null;
     };
   };
 };
@@ -1098,6 +1126,15 @@ export namespace Models {
     profile: public_Profile;
     readonly [RelationKeys]?: 'profile';
   };
+  export type public_SecurityCode = {
+    codeHash: CodecTypes['pg/text@1']['output'];
+    createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    id: CodecTypes['pg/uuid@1']['output'];
+    profileId: CodecTypes['pg/uuid@1']['output'];
+    usedAt: CodecTypes['pg/timestamptz-string@1']['output'] | null;
+    profile: public_Profile;
+    readonly [RelationKeys]?: 'profile';
+  };
 }
 
 export declare const models: {
@@ -1119,6 +1156,7 @@ export declare const models: {
     RelayPolicy: Models.public_RelayPolicy;
     RelayUsage: Models.public_RelayUsage;
     RelayUserOverride: Models.public_RelayUserOverride;
+    SecurityCode: Models.public_SecurityCode;
   };
 };
 
@@ -2384,6 +2422,61 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly security_codes: {
+              columns: {
+                readonly codeHash: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly id: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                };
+                readonly profileId: {
+                  readonly nativeType: 'uuid';
+                  readonly codecId: 'pg/uuid@1';
+                  readonly nullable: false;
+                  readonly typeRef: 'AuthUserId';
+                };
+                readonly usedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: true;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['profileId', 'codeHash'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'security_codes_profileId_idx_d9cdfcaf';
+                  readonly prefix: 'security_codes_profileId_idx';
+                  readonly columns: readonly ['profileId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'security_codes';
+                    readonly columns: readonly ['profileId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'profiles';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
           };
           readonly valueSet: {
             readonly age_status: {
@@ -2481,6 +2574,10 @@ type ContractBase = Omit<
     readonly relay_user_overrides: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'RelayUserOverride';
+    };
+    readonly security_codes: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'SecurityCode';
     };
   };
   readonly domain: {
@@ -3591,6 +3688,61 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly SecurityCode: {
+            readonly fields: {
+              readonly codeHash: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly profileId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/uuid@1' };
+              };
+              readonly usedAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly profile: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Profile';
+                };
+                readonly cardinality: 'N:1';
+                readonly nullable: false;
+                readonly on: {
+                  readonly localFields: readonly ['profileId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'security_codes';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly codeHash: { readonly column: 'codeHash' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly id: { readonly column: 'id' };
+                readonly profileId: { readonly column: 'profileId' };
+                readonly usedAt: { readonly column: 'usedAt' };
+              };
+            };
+          };
         };
         readonly enum: {
           readonly age_status: {
@@ -3768,6 +3920,14 @@ type ContractBase = Omit<
           readonly ref: {
             readonly entry: 'relay_policy';
             readonly field: 'updatedAt';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'uuidv4'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'security_codes';
+            readonly field: 'id';
             readonly namespace: 'public';
           };
         },

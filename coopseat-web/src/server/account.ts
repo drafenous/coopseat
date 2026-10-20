@@ -3,6 +3,7 @@ import type { AuthUser } from './gotrue';
 import { ensureProfile } from './profiles';
 import { permissionsFor } from '@/lib/gates';
 import { activeSanctions } from './party/sanctions';
+import { securityCodesRemaining } from './security-codes';
 
 /** Watch/host gates from an auth user and their profile. Shared with party admission. */
 export function accountPermissions(
@@ -36,6 +37,9 @@ export async function accountSummary(user: AuthUser, claims: AccessClaims) {
     (f) => f.status === 'verified',
   );
   const emailConfirmed = Boolean(user.email && user.email_confirmed_at);
+  const securityCodesLeft = verifiedFactors.length
+    ? await securityCodesRemaining(user.id)
+    : 0;
 
   return {
     id: user.id,
@@ -62,6 +66,7 @@ export async function accountSummary(user: AuthUser, claims: AccessClaims) {
         name: f.friendly_name ?? 'Autenticador',
       })),
       level: claims.aal ?? 'aal1',
+      securityCodesRemaining: securityCodesLeft,
     },
     permissions: accountPermissions(user, claims, profile),
   };

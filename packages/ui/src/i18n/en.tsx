@@ -165,6 +165,11 @@ export const en = {
   authModal: {
     mfaTitle: 'Two-step verification',
     mfaBody: 'Enter the 6-digit code from your authenticator app.',
+    useSecurityCode: 'Use a security code',
+    useApp: 'Use the authenticator app',
+    securityCode: 'Security code',
+    securityHint:
+      'Enter one of the security codes you saved when you turned on two-step verification.',
     code: 'Code',
     title: 'Sign in to CoopSeat',
     pitch: 'Your account unlocks chat in sessions and lets you create rooms.',

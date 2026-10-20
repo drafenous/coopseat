@@ -85,6 +85,20 @@ namespace public {
     @@rls
   }
 
+  model SecurityCode {
+    id        Uuid              @id @default(uuid())
+    profileId AuthUserId
+    profile   Profile           @relation(fields: [profileId], references: [id], onDelete: Cascade)
+    codeHash  String
+    usedAt    TimestamptzString?
+    createdAt TimestamptzString @default(now())
+
+    @@unique([profileId, codeHash])
+    @@index([profileId])
+    @@map("security_codes")
+    @@rls
+  }
+
   model RateLimitHit {
     id        Uuid              @id @default(uuid())
     key       String

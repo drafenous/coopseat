@@ -133,6 +133,7 @@ export function createFakeDb() {
     PartySessionParticipant: [] as Row[],
     PartyModerationEvent: [] as Row[],
     PlatformSanction: [] as Row[],
+    SecurityCode: [] as Row[],
   };
   const orm = {
     public: {
@@ -308,6 +309,20 @@ export function createFakeDb() {
           createdAt: now(),
           revokedAt: null,
         }));
+      },
+      get SecurityCode() {
+        return table(
+          data.SecurityCode,
+          () => ({
+            id: randomUUID(),
+            usedAt: null,
+            createdAt: now(),
+          }),
+          (rows) => {
+            const keys = rows.map((row) => `${row.profileId}:${row.codeHash}`);
+            return new Set(keys).size === keys.length;
+          },
+        );
       },
     },
   };

@@ -16,7 +16,7 @@ export default async function MfaPage({
     typeof params['next'] === 'string' ? params['next'] : null,
   );
   return (
-    <Card title={t.mfa.title} subtitle={t.mfa.subtitle}>
+    <Card title={t.mfa.title}>
       <MfaForm next={next} />
     </Card>
   );

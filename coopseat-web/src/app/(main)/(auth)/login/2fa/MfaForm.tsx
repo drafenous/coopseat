@@ -11,10 +11,11 @@ export function MfaForm({ next }: { next: string }) {
   const router = useRouter();
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
+  const [recovery, setRecovery] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const code = String(new FormData(e.currentTarget).get('code') ?? '');
+    const code = String(new FormData(e.currentTarget).get('code') ?? '').trim();
     setPending(true);
     setError(undefined);
     try {
@@ -35,19 +36,30 @@ export function MfaForm({ next }: { next: string }) {
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       {error ? <Alert>{error}</Alert> : null}
+      <p className="text-sm text-muted">
+        {recovery ? t.mfa.securityHint : t.mfa.subtitle}
+      </p>
       <Field
-        label={t.common.code}
+        label={recovery ? t.mfa.securityCode : t.common.code}
         name="code"
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        pattern="\d{6}"
-        maxLength={6}
+        inputMode={recovery ? 'text' : 'numeric'}
+        autoComplete={recovery ? 'off' : 'one-time-code'}
+        pattern={recovery ? undefined : '\\d{6}'}
+        maxLength={recovery ? 40 : 6}
         required
         autoFocus
+        key={recovery ? 'security' : 'totp'}
       />
       <Button type="submit" disabled={pending}>
         {pending ? t.mfa.pending : t.mfa.submit}
       </Button>
+      <button
+        type="button"
+        className="text-sm text-accent hover:underline"
+        onClick={() => setRecovery((value) => !value)}
+      >
+        {recovery ? t.mfa.useApp : t.mfa.useSecurityCode}
+      </button>
     </form>
   );
 }
