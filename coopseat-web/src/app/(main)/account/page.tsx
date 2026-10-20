@@ -3,7 +3,8 @@ import { redirect } from 'next/navigation';
 import { Play, Tv } from 'lucide-react';
 import { Brand, buttonClass } from '@coopseat/ui/design';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { getDictionary } from '@/i18n/server';
+import { localeHref } from '@/i18n/config';
+import { getDictionary, getLocale } from '@/i18n/server';
 import { getPageAccount } from '@/server/page-session';
 import { AccountPanel } from './AccountPanel';
 
@@ -17,18 +18,20 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function AccountPage({
   searchParams,
 }: PageProps<'/account'>) {
-  const account = await getPageAccount();
-  if (!account) redirect('/login?next=/account');
+  const [account, locale] = await Promise.all([getPageAccount(), getLocale()]);
+  const href = (path: string) => localeHref(locale, path);
+  if (!account)
+    redirect(`${href('/login')}?next=${encodeURIComponent(href('/account'))}`);
   const [params, t] = await Promise.all([searchParams, getDictionary()]);
 
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
       <header className="mb-8 flex items-center justify-between gap-4">
-        <Brand href="/" version={null} />
+        <Brand href={href('/')} version={null} />
         <div className="flex items-center gap-3">
           {account.nickname && (
             <a
-              href={`/party/${encodeURIComponent(account.nickname)}`}
+              href={href(`/party/${encodeURIComponent(account.nickname)}`)}
               title={t.account.myRoomLink}
               className={buttonClass({ variant: 'secondary', compact: true })}
             >
@@ -37,7 +40,7 @@ export default async function AccountPage({
             </a>
           )}
           <a
-            href="/play"
+            href={href('/play')}
             className={buttonClass({ variant: 'secondary', compact: true })}
           >
             <Play size={14} />

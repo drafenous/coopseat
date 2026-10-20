@@ -1,5 +1,6 @@
-import { cookies, headers } from 'next/headers';
+import { headers } from 'next/headers';
 import {
+  DEFAULT_LOCALE,
   LOCALE_COOKIE,
   LOCALE_HEADER,
   isLocale,
@@ -8,15 +9,13 @@ import {
 } from './config';
 import { dictionaries } from './dictionaries';
 
-/** Locale for Server Components and Server Actions: URL prefix, then cookie, then Accept-Language. */
+/**
+ * Locale for pages. The URL is the only signal: `/pt-BR/...` via the proxy header, otherwise
+ * English. A cookie or Accept-Language must not change the HTML of an unprefixed URL.
+ */
 export async function getLocale(): Promise<Locale> {
-  const [cookieStore, headerList] = await Promise.all([cookies(), headers()]);
-  const fromPath = headerList.get(LOCALE_HEADER);
-  if (isLocale(fromPath)) return fromPath;
-  return resolveLocale(
-    cookieStore.get(LOCALE_COOKIE)?.value,
-    headerList.get('accept-language'),
-  );
+  const fromPath = (await headers()).get(LOCALE_HEADER);
+  return isLocale(fromPath) ? fromPath : DEFAULT_LOCALE;
 }
 
 export async function getDictionary() {

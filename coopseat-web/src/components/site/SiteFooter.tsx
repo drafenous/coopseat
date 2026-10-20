@@ -2,19 +2,25 @@ import Link from 'next/link';
 import { Brand } from '@coopseat/ui/design';
 import { CookiePreferencesButton } from '@/components/CookieConsent';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { getDictionary } from '@/i18n/server';
+import { localeHref } from '@/i18n/config';
+import { getDictionary, getLocale } from '@/i18n/server';
 import { DOWNLOAD_URL } from '@/lib/links';
 import { getPageSession } from '@/server/page-session';
 
 export async function SiteFooter() {
-  const [t, session] = await Promise.all([getDictionary(), getPageSession()]);
+  const [t, session, locale] = await Promise.all([
+    getDictionary(),
+    getPageSession(),
+    getLocale(),
+  ]);
   const h = t.home;
+  const href = (path: string) => localeHref(locale, path);
 
   return (
     <footer className="border-t border-line-soft">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
         <div>
-          <Brand href="/" version={null} />
+          <Brand href={href('/')} version={null} />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">
             {h.footer.tagline}
           </p>
@@ -25,24 +31,24 @@ export async function SiteFooter() {
           </p>
           <ul className="mt-4 space-y-2.5 text-sm text-muted">
             <li>
-              <a href={DOWNLOAD_URL} className="hover:text-strong">
+              <a href={href(DOWNLOAD_URL)} className="hover:text-strong">
                 {h.download}
               </a>
             </li>
             <li>
-              <a href="/play" className="hover:text-strong">
+              <a href={href('/play')} className="hover:text-strong">
                 {h.playInBrowser}
               </a>
             </li>
             {!session && (
               <li>
-                <Link href="/signup" className="hover:text-strong">
+                <Link href={href('/signup')} className="hover:text-strong">
                   {h.createAccount}
                 </Link>
               </li>
             )}
             <li>
-              <Link href="/account" className="hover:text-strong">
+              <Link href={href('/account')} className="hover:text-strong">
                 {h.footer.account}
               </Link>
             </li>
@@ -52,12 +58,12 @@ export async function SiteFooter() {
           <p className="text-sm font-semibold text-strong">{h.footer.legal}</p>
           <ul className="mt-4 space-y-2.5 text-sm text-muted">
             <li>
-              <Link href="/terms" className="hover:text-strong">
+              <Link href={href('/terms')} className="hover:text-strong">
                 {t.common.termsOfUse}
               </Link>
             </li>
             <li>
-              <Link href="/privacy" className="hover:text-strong">
+              <Link href={href('/privacy')} className="hover:text-strong">
                 {t.common.privacyPolicy}
               </Link>
             </li>

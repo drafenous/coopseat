@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { LegalPage } from '@/components/site/LegalPage';
+import { localeHref } from '@/i18n/config';
 import { getDictionary, getLocale } from '@/i18n/server';
 import { pageMetadata } from '@/lib/seo';
 
@@ -15,14 +16,17 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function PrivacyPage() {
-  const t = await getDictionary();
+  const [t, locale] = await Promise.all([getDictionary(), getLocale()]);
   return (
     <LegalPage
       t={t.legal}
       title={t.privacy.title}
       subtitle={t.privacy.compliance}
       sections={t.privacy.sections}
-      related={{ href: '/terms', label: t.common.termsOfUse }}
+      related={{
+        href: localeHref(locale, '/terms'),
+        label: t.common.termsOfUse,
+      }}
     />
   );
 }

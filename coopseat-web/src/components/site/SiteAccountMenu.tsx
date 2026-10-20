@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation';
 import { AccountMenu, type AccountMenuAccount } from '@coopseat/ui/design';
+import { localeHref } from '@/i18n/config';
+import { useLocale } from '@/i18n/client';
 import { api } from '@/lib/client/api';
 
 export function SiteAccountMenu({
@@ -17,22 +19,24 @@ export function SiteAccountMenu({
   };
 }) {
   const router = useRouter();
+  const locale = useLocale();
+  const href = (path: string) => localeHref(locale, path);
   const nickname = account.nickname;
   return (
     <AccountMenu
       account={account}
       labels={labels}
-      onMyAccount={() => router.push('/account')}
+      onMyAccount={() => router.push(href('/account'))}
       onMyRoom={
         nickname
-          ? () => router.push(`/party/${encodeURIComponent(nickname)}`)
+          ? () => router.push(href(`/party/${encodeURIComponent(nickname)}`))
           : undefined
       }
-      onPlay={() => router.push('/play')}
+      onPlay={() => router.push(href('/play'))}
       onSignOut={() => {
         void api('/api/auth/logout', { method: 'POST', body: {} })
           .then(() => {
-            window.location.assign('/');
+            window.location.assign(href('/'));
           })
           .catch(() => undefined);
       }}

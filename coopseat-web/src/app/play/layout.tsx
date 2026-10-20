@@ -34,8 +34,8 @@ export default async function PlayLayout({
 }) {
   const locale = await getLocale();
   return (
-    <html lang={locale}>
-      <body>
+    <html lang={locale} className="h-dvh">
+      <body className="flex h-dvh flex-col">
         <GoogleTag />
         {children}
         <CookieConsent locale={locale} />

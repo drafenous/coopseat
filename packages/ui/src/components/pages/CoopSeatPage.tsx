@@ -58,7 +58,7 @@ import {
 import { MainLayout, type PanelSide } from '../templates/MainLayout';
 
 /**
- * `locale` is set by hosts that already know the language (the site passes its cookie). `party` opens
+ * `locale` is set by hosts that already know the language (the site passes the URL locale). `party` opens
  * a Gaming-Party room (the site's /party/{nickname}); on desktop rooms open from deep links or "My room".
  */
 export function CoopSeatPage({

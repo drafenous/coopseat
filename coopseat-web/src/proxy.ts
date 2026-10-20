@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import {
+  DEFAULT_LOCALE,
   LOCALE_COOKIE,
   LOCALE_COOKIE_MAX_AGE,
   LOCALE_HEADER,
@@ -33,20 +34,27 @@ function expiresSoon(token: string | undefined): boolean {
   }
 }
 
-/** `/pt-BR/...` is served by the unprefixed route; the locale travels in a request header. */
+/**
+ * `/pt-BR/...` is served by the unprefixed route; the locale travels in a request header.
+ * The cookie mirrors that URL so the next API call speaks the same language, without
+ * changing what an unprefixed page renders.
+ */
 function forward(req: NextRequest): NextResponse {
   const localized = splitLocalePath(req.nextUrl.pathname);
+  const locale = localized?.locale ?? DEFAULT_LOCALE;
   const headers = new Headers(req.headers);
-  if (!localized) {
-    headers.delete(LOCALE_HEADER);
-    return NextResponse.next({ request: { headers } });
+  if (localized) headers.set(LOCALE_HEADER, locale);
+  else headers.delete(LOCALE_HEADER);
+  let res: NextResponse;
+  if (localized) {
+    const url = req.nextUrl.clone();
+    url.pathname = localized.path;
+    res = NextResponse.rewrite(url, { request: { headers } });
+  } else {
+    res = NextResponse.next({ request: { headers } });
   }
-  headers.set(LOCALE_HEADER, localized.locale);
-  const url = req.nextUrl.clone();
-  url.pathname = localized.path;
-  const res = NextResponse.rewrite(url, { request: { headers } });
-  if (req.cookies.get(LOCALE_COOKIE)?.value !== localized.locale) {
-    res.cookies.set(LOCALE_COOKIE, localized.locale, {
+  if (req.cookies.get(LOCALE_COOKIE)?.value !== locale) {
+    res.cookies.set(LOCALE_COOKIE, locale, {
       path: '/',
       maxAge: LOCALE_COOKIE_MAX_AGE,
       sameSite: 'lax',

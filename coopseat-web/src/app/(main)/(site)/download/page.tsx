@@ -13,6 +13,7 @@ import {
   Wifi,
 } from 'lucide-react';
 import { JsonLd } from '@/components/JsonLd';
+import { localeHref } from '@/i18n/config';
 import { getDictionary, getLocale } from '@/i18n/server';
 import { INSTALLER_URL, PORTABLE_URL } from '@/lib/links';
 import { pageMetadata, softwareApplication } from '@/lib/seo';
@@ -69,14 +70,14 @@ export default async function DownloadPage() {
     ? [
         {
           variant: 'installer' as const,
-          href: INSTALLER_URL,
+          href: localeHref(locale, INSTALLER_URL),
           Icon: HardDriveDownload,
           copy: d.installer,
           primary: true,
         },
         {
           variant: 'portable' as const,
-          href: PORTABLE_URL,
+          href: localeHref(locale, PORTABLE_URL),
           Icon: Usb,
           copy: d.portable,
           primary: false,
@@ -175,7 +176,10 @@ export default async function DownloadPage() {
               {d.unavailable}
             </p>
           )}
-          <a href="/play" className={`${secondaryCta} mt-8`}>
+          <a
+            href={localeHref(locale, '/play')}
+            className={`${secondaryCta} mt-8`}
+          >
             <Play size={17} />
             {t.home.playInBrowser}
           </a>

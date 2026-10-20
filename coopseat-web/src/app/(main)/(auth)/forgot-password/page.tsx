@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Card } from '@/components/ui';
-import { getDictionary } from '@/i18n/server';
+import { localeHref } from '@/i18n/config';
+import { getDictionary, getLocale } from '@/i18n/server';
 import { ForgotForm } from './ForgotForm';
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -12,14 +13,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ForgotPage() {
-  const t = await getDictionary();
+  const [t, locale] = await Promise.all([getDictionary(), getLocale()]);
   return (
     <Card
       title={t.forgot.title}
       subtitle={
         <>
           {t.forgot.remembered}{' '}
-          <Link href="/login" className="text-accent">
+          <Link href={localeHref(locale, '/login')} className="text-accent">
             {t.common.backToLogin}
           </Link>
         </>

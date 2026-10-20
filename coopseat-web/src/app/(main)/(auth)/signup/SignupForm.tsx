@@ -5,12 +5,14 @@ import { useState, type FormEvent } from 'react';
 import { NicknameField } from '@/components/NicknameField';
 import { Turnstile } from '@/components/Turnstile';
 import { Alert, Button, Field } from '@/components/ui';
-import { useT } from '@/i18n/client';
+import { localeHref } from '@/i18n/config';
+import { useLocale, useT } from '@/i18n/client';
 import { trackEvent } from '@/lib/analytics';
 import { api, ApiClientError } from '@/lib/client/api';
 
 export function SignupForm() {
   const t = useT();
+  const locale = useLocale();
   const [nickname, setNickname] = useState('');
   const [captcha, setCaptcha] = useState<string>();
   const [captchaReset, setCaptchaReset] = useState(0);
@@ -99,10 +101,18 @@ export function SignupForm() {
         <input type="checkbox" name="acceptTerms" className="mt-1" required />
         <span>
           {t.signup.acceptTerms(
-            <Link href="/terms" className="text-accent" target="_blank">
+            <Link
+              href={localeHref(locale, '/terms')}
+              className="text-accent"
+              target="_blank"
+            >
               {t.common.termsOfUse}
             </Link>,
-            <Link href="/privacy" className="text-accent" target="_blank">
+            <Link
+              href={localeHref(locale, '/privacy')}
+              className="text-accent"
+              target="_blank"
+            >
               {t.common.privacyPolicy}
             </Link>,
           )}

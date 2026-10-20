@@ -1,3 +1,10 @@
 @import 'tailwindcss';
 @import '@coopseat/ui/theme.css';
 @import '@coopseat/ui/base.css';
+
+/* The player fills the space under the server-rendered intro, instead of forcing another viewport. */
+.play-app > div {
+  min-height: 0 !important;
+  height: 100%;
+  flex: 1;
+}

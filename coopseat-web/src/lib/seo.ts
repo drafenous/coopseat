@@ -16,7 +16,6 @@ export const INDEXABLE_PATHS = [
   '/',
   '/download',
   '/play',
-  '/signup',
   '/privacy',
   '/terms',
 ] as const;

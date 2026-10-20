@@ -22,6 +22,7 @@ import { JsonLd } from '@/components/JsonLd';
 import { HeroMock } from '@/components/landing/HeroMock';
 import { PartyMock } from '@/components/landing/PartyMock';
 import { getDictionary, getLocale } from '@/i18n/server';
+import { localeHref } from '@/i18n/config';
 import {
   ORGANIZATION_ID,
   SITE_NAME,
@@ -93,6 +94,7 @@ function IconTile({ children }: { children: ReactNode }) {
 export default async function Home() {
   const [t, locale] = await Promise.all([getDictionary(), getLocale()]);
   const h = t.home;
+  const href = (path: string) => localeHref(locale, path);
   const structuredData = {
     '@context': 'https://schema.org',
     '@graph': [
@@ -151,11 +153,11 @@ export default async function Home() {
               {h.pitch}
             </p>
             <div className="mt-9 flex flex-wrap gap-3">
-              <Link href="/signup" className={primaryCta}>
+              <Link href={href('/signup')} className={primaryCta}>
                 <Users size={18} />
                 {h.openRoom}
               </Link>
-              <a href="/play" className={secondaryCta}>
+              <a href={href('/play')} className={secondaryCta}>
                 <Play size={17} />
                 {h.playLocal}
               </a>
@@ -176,9 +178,7 @@ export default async function Home() {
               <dd className="flex items-baseline gap-2 text-3xl font-bold tracking-[-0.03em] whitespace-nowrap text-strong">
                 <span>{s.value}</span>
                 {'unit' in s && s.unit && (
-                  <span className="tracking-normal">
-                    {s.unit}
-                  </span>
+                  <span className="tracking-normal">{s.unit}</span>
                 )}
               </dd>
               <dd className="mt-1.5 text-sm leading-snug text-muted">
@@ -294,7 +294,7 @@ export default async function Home() {
                   );
                 })}
               </ul>
-              <a href="/play" className={`${primaryCta} mt-10`}>
+              <a href={href('/play')} className={`${primaryCta} mt-10`}>
                 <Play size={17} />
                 {h.playInBrowser}
               </a>
@@ -371,11 +371,11 @@ export default async function Home() {
             {h.ctaBody}
           </p>
           <div className="relative mt-9 flex flex-wrap justify-center gap-3">
-            <Link href="/signup" className={primaryCta}>
+            <Link href={href('/signup')} className={primaryCta}>
               <Users size={18} />
               {h.openRoom}
             </Link>
-            <a href="/play" className={secondaryCta}>
+            <a href={href('/play')} className={secondaryCta}>
               <Play size={17} />
               {h.playLocal}
             </a>

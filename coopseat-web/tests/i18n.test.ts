@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  localeHref,
   localePath,
   matchLocale,
   resolveLocale,
@@ -56,6 +57,17 @@ describe('locale paths', () => {
     expect(localePath('en', '/download')).toBe('/download');
     expect(localePath('pt-BR', '/')).toBe('/pt-BR');
     expect(localePath('pt-BR', '/download')).toBe('/pt-BR/download');
+  });
+
+  it('keeps query and hash when prefixing a link', () => {
+    expect(localeHref('en', '/#features')).toBe('/#features');
+    expect(localeHref('pt-BR', '/#features')).toBe('/pt-BR#features');
+    expect(localeHref('pt-BR', '/account?welcome=1')).toBe(
+      '/pt-BR/account?welcome=1',
+    );
+    expect(localeHref('pt-BR', 'https://example.com')).toBe(
+      'https://example.com',
+    );
   });
 
   it('splits only an exact prefix segment', () => {

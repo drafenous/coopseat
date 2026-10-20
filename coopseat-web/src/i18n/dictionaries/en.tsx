@@ -2,9 +2,9 @@ import type { ReactNode } from 'react';
 
 export const en = {
   meta: {
-    title: 'CoopSeat · Stream your game to your room',
+    title: 'Stream your game to friends, up to 720p · CoopSeat',
     description:
-      'Open a public or private room and stream your game to friends, free up to 720p. Or play on your PC with a capture card, without streaming and with no resolution or frame-rate limit.',
+      'Stream your game to friends in a public or private room, free up to 720p. Nothing is recorded. Download for Windows, or play locally with a capture card.',
     login: 'Sign in',
     loginDescription:
       'Sign in to CoopSeat with Google or e-mail to manage your account and its security.',
@@ -31,6 +31,13 @@ export const en = {
     download: 'Download for Windows',
     downloadDescription:
       'Download CoopSeat for free for Windows 10 and 11: installer or portable version, setup in three steps and capture card requirements.',
+  },
+  playPage: {
+    title: 'Play your console in the browser',
+    body: 'CoopSeat shows a capture card in Chrome or Edge, with nothing to install. The picture stays on your computer, and nobody else is watching.',
+    requirements:
+      'You need a capture card, an HDMI cable, and Chrome or Edge. Any resolution and frame rate the card can deliver.',
+    download: 'Download for Windows',
   },
   common: {
     language: 'Language',
@@ -65,10 +72,10 @@ export const en = {
     openRoom: 'Open a room',
     playLocal: 'Play without streaming',
     badge: 'Beta · Free up to 720p',
-    headlineLead: 'Stream the session.',
+    headlineLead: 'Stream your game to friends.',
     headlineAccent: 'Play together in one room.',
     pitch:
-      'Open a public or private room and invite friends to watch and chat while you play. Stream your console through a capture card or a window from your own PC, free up to 720p. If you only want to play on your PC with a capture card, without streaming, the player has no limits on use, resolution or frame rate.',
+      'Stream your game to friends in a public or private room, and invite them to watch and chat while you play. The picture comes from a capture card or a window on your own PC, free up to 720p. If you only want to play on your PC with a capture card, without streaming, the player has no limits on use, resolution or frame rate.',
     heroNote:
       'Public or private rooms · Nothing is recorded · 18+ to watch and chat',
     mock: {

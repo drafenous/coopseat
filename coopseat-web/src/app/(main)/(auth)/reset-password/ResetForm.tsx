@@ -3,11 +3,13 @@
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { Alert, Button, Field } from '@/components/ui';
-import { useT } from '@/i18n/client';
+import { localeHref } from '@/i18n/config';
+import { useLocale, useT } from '@/i18n/client';
 import { api, ApiClientError } from '@/lib/client/api';
 
 export function ResetForm() {
   const t = useT();
+  const locale = useLocale();
   const [error, setError] = useState<string>();
   const [done, setDone] = useState(false);
   const [pending, setPending] = useState(false);
@@ -37,7 +39,7 @@ export function ResetForm() {
     return (
       <Alert tone="success">
         {t.reset.done((label) => (
-          <Link href="/account" className="underline">
+          <Link href={localeHref(locale, '/account')} className="underline">
             {label}
           </Link>
         ))}

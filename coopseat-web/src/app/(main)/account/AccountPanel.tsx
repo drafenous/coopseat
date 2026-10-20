@@ -6,6 +6,7 @@ import { CircleCheck, Download, Lock, Play } from 'lucide-react';
 import { NicknameField } from '@/components/NicknameField';
 import { Alert, Button, Field, buttonClass } from '@/components/ui';
 import { DOWNLOAD_URL } from '@/lib/links';
+import { localeHref } from '@/i18n/config';
 import { useLocale, useT } from '@/i18n/client';
 import type { Dictionary } from '@/i18n/dictionaries';
 import { trackEvent } from '@/lib/analytics';
@@ -47,6 +48,7 @@ function Section({
 
 function PlayHero({ account }: { account: AccountSummary }) {
   const t = useT();
+  const locale = useLocale();
   const initial = (account.nickname ?? account.email ?? '?')
     .charAt(0)
     .toUpperCase();
@@ -85,12 +87,15 @@ function PlayHero({ account }: { account: AccountSummary }) {
       </div>
       <p className="relative mt-5 text-sm text-muted">{t.account.playBody}</p>
       <div className="relative mt-4 flex flex-wrap gap-3">
-        <a href="/play" className={buttonClass({ inline: true })}>
+        <a
+          href={localeHref(locale, '/play')}
+          className={buttonClass({ inline: true })}
+        >
           <Play size={16} />
           {t.account.playCta}
         </a>
         <a
-          href={DOWNLOAD_URL}
+          href={localeHref(locale, DOWNLOAD_URL)}
           className={buttonClass({ variant: 'secondary' })}
         >
           <Download size={16} />
@@ -183,6 +188,7 @@ export function AccountPanel({
   initialTab?: Tab;
 }) {
   const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const [account, setAccount] = useState(initial);
   const [flash, setFlash] = useState<
@@ -198,7 +204,9 @@ export function AccountPanel({
       await fn();
     } catch (err) {
       if (err instanceof ApiClientError && err.code === 'mfa_required') {
-        router.push('/login/2fa?next=/account');
+        router.push(
+          `${localeHref(locale, '/login/2fa')}?next=${encodeURIComponent(localeHref(locale, '/account'))}`,
+        );
         return;
       }
       setFlash({ tone: 'error', text: message(err, t) });
@@ -381,6 +389,7 @@ function AccountSection({
   run,
 }: Omit<SectionProps, 'setFlash'>) {
   const t = useT();
+  const locale = useLocale();
   return (
     <>
       <Section title={t.account.sessionTitle}>
@@ -390,7 +399,7 @@ function AccountSection({
           onClick={() =>
             run('logout', async () => {
               await api('/api/auth/logout', { method: 'POST', body: {} });
-              window.location.assign('/');
+              window.location.assign(localeHref(locale, '/'));
             })
           }
         >
@@ -421,6 +430,7 @@ function NicknameSetup({
   onDone: (a: AccountSummary) => void;
 }) {
   const t = useT();
+  const locale = useLocale();
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -460,10 +470,18 @@ function NicknameSetup({
             <input type="checkbox" name="acceptTerms" className="mt-1" />
             <span>
               {t.account.acceptTerms(
-                <a href="/terms" target="_blank" className="text-accent">
+                <a
+                  href={localeHref(locale, '/terms')}
+                  target="_blank"
+                  className="text-accent"
+                >
                   {t.account.terms}
                 </a>,
-                <a href="/privacy" target="_blank" className="text-accent">
+                <a
+                  href={localeHref(locale, '/privacy')}
+                  target="_blank"
+                  className="text-accent"
+                >
                   {t.common.privacyPolicy}
                 </a>,
               )}
@@ -692,6 +710,7 @@ function SecuritySection({
 }
 
 function DeleteAccount({ account, run, busy }: Omit<SectionProps, 'setFlash'>) {
+  const locale = useLocale();
   const t = useT();
   const [open, setOpen] = useState(false);
   const [confirm, setConfirm] = useState('');
@@ -719,7 +738,7 @@ function DeleteAccount({ account, run, busy }: Omit<SectionProps, 'setFlash'>) {
           run('delete', async () => {
             await api('/api/me', { method: 'DELETE', body: { confirm } });
             trackEvent({ name: 'account_delete' });
-            window.location.assign('/');
+            window.location.assign(localeHref(locale, '/'));
           })
         }
       >

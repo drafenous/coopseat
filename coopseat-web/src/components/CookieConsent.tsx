@@ -5,9 +5,14 @@ import Clarity from '@microsoft/clarity';
 import * as CC from 'vanilla-cookieconsent';
 import 'vanilla-cookieconsent/dist/cookieconsent.css';
 import './cookie-consent.css';
-import { LOCALES, type Locale } from '@/i18n/config';
+import { LOCALES, localeHref, type Locale } from '@/i18n/config';
 import { dictionaries, type Dictionary } from '@/i18n/dictionaries';
-import { CLARITY_ID, GA_ID, GTAG_SRC, hasOptionalAnalytics } from '@/lib/analytics';
+import {
+  CLARITY_ID,
+  GA_ID,
+  GTAG_SRC,
+  hasOptionalAnalytics,
+} from '@/lib/analytics';
 
 const clarityConsent = (granted: boolean) =>
   ({
@@ -30,9 +35,9 @@ function syncClarity(granted: boolean) {
   Clarity.consentV2(clarityConsent(true));
 }
 
-function translation(t: Dictionary): CC.Translation {
+function translation(locale: Locale, t: Dictionary): CC.Translation {
   const c = t.cookies;
-  const privacyLink = `<a href="/privacy">${t.common.privacyPolicy}</a>`;
+  const privacyLink = `<a href="${localeHref(locale, '/privacy')}">${t.common.privacyPolicy}</a>`;
   return {
     consentModal: {
       title: c.consent.title,
@@ -101,7 +106,7 @@ export function CookieConsent({ locale }: { locale: Locale }) {
       language: {
         default: locale,
         translations: Object.fromEntries(
-          LOCALES.map((l) => [l, translation(dictionaries[l])]),
+          LOCALES.map((l) => [l, translation(l, dictionaries[l])]),
         ),
       },
     });

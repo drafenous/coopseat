@@ -16,6 +16,7 @@ export const LOCALE_HEADER = 'x-coopseat-locale';
 /**
  * Crawlers send no cookie and usually no Accept-Language, so each non-default locale also gets
  * its own URL prefix; that is what makes the Portuguese pages indexable.
+ * An unprefixed URL is always English. The cookie only mirrors the URL for the next request.
  */
 const LOCALE_PREFIXES: Record<Locale, string> = { en: '', 'pt-BR': '/pt-BR' };
 
@@ -23,6 +24,19 @@ export function localePath(locale: Locale, path: string): string {
   const prefix = LOCALE_PREFIXES[locale];
   if (!prefix) return path;
   return path === '/' ? prefix : `${prefix}${path}`;
+}
+
+/** Prefixes an in-site href, keeping its query and hash. Off-site and hash-only links stay as they are. */
+export function localeHref(locale: Locale, href: string): string {
+  if (!href.startsWith('/') || href.startsWith('//')) return href;
+  const hashAt = href.indexOf('#');
+  const hash = hashAt >= 0 ? href.slice(hashAt) : '';
+  const beforeHash = hashAt >= 0 ? href.slice(0, hashAt) : href;
+  const queryAt = beforeHash.indexOf('?');
+  const query = queryAt >= 0 ? beforeHash.slice(queryAt) : '';
+  const path =
+    (queryAt >= 0 ? beforeHash.slice(0, queryAt) : beforeHash) || '/';
+  return `${localePath(locale, path)}${query}${hash}`;
 }
 
 /** Splits `/pt-BR/download` into the locale and the unprefixed path; null when there is no prefix. */

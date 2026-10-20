@@ -2,9 +2,9 @@ import type { Dictionary } from './en';
 
 export const ptBR: Dictionary = {
   meta: {
-    title: 'CoopSeat · Transmita a jogatina para a sua sala',
+    title: 'Transmita a jogatina para os amigos, até 720p · CoopSeat',
     description:
-      'Abra uma sala pública ou privada e transmita a jogatina para os amigos, grátis até 720p. Ou jogue no PC com placa de captura, sem transmitir e sem limite de resolução ou FPS.',
+      'Transmita a jogatina para os amigos numa sala pública ou privada, grátis até 720p. Nada é gravado. Baixe para Windows ou jogue no PC com placa de captura.',
     login: 'Entrar',
     loginDescription:
       'Entre no CoopSeat com Google ou e-mail para gerenciar sua conta e a segurança dela.',
@@ -30,6 +30,13 @@ export const ptBR: Dictionary = {
     download: 'Baixar para Windows',
     downloadDescription:
       'Baixe o CoopSeat grátis para Windows 10 e 11: instalador ou versão portátil, instalação em três passos e requisitos da placa de captura.',
+  },
+  playPage: {
+    title: 'Jogue o videogame no navegador',
+    body: 'O CoopSeat mostra a placa de captura no Chrome ou no Edge, sem instalar nada. A imagem fica no seu computador e ninguém mais está assistindo.',
+    requirements:
+      'Você precisa de uma placa de captura, um cabo HDMI e do Chrome ou do Edge. Qualquer resolução e FPS que a placa entregar.',
+    download: 'Baixar para Windows',
   },
   common: {
     language: 'Idioma',
@@ -64,10 +71,10 @@ export const ptBR: Dictionary = {
     openRoom: 'Abrir uma sala',
     playLocal: 'Jogar sem transmitir',
     badge: 'Beta · Grátis até 720p',
-    headlineLead: 'Transmita a jogatina.',
+    headlineLead: 'Transmita a jogatina para os amigos.',
     headlineAccent: 'Jogue junto na mesma sala.',
     pitch:
-      'Abra uma sala pública ou privada e chame os amigos para assistir e conversar enquanto você joga. Transmita o videogame pela placa de captura ou uma janela do próprio PC, grátis até 720p. Se quiser só jogar no PC com a placa de captura, sem transmitir, o player não tem limite de uso, resolução ou FPS.',
+      'Transmita a jogatina para os amigos numa sala pública ou privada, e chame todo mundo para assistir e conversar enquanto você joga. A imagem vem da placa de captura ou de uma janela do próprio PC, grátis até 720p. Se quiser só jogar no PC com a placa de captura, sem transmitir, o player não tem limite de uso, resolução ou FPS.',
     heroNote:
       'Salas públicas ou privadas · Nada é gravado · Maiores de 18 para assistir',
     mock: {

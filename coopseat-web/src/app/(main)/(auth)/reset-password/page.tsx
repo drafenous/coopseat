@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Alert, Card } from '@/components/ui';
-import { getDictionary } from '@/i18n/server';
+import { localeHref } from '@/i18n/config';
+import { getDictionary, getLocale } from '@/i18n/server';
 import { getPageSession } from '@/server/page-session';
 import { ResetForm } from './ResetForm';
 
@@ -13,7 +14,11 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ResetPage() {
-  const [session, t] = await Promise.all([getPageSession(), getDictionary()]);
+  const [session, t, locale] = await Promise.all([
+    getPageSession(),
+    getDictionary(),
+    getLocale(),
+  ]);
   return (
     <Card title={t.reset.title}>
       {session ? (
@@ -21,7 +26,10 @@ export default async function ResetPage() {
       ) : (
         <Alert>
           {t.reset.expired((label) => (
-            <Link href="/forgot-password" className="underline">
+            <Link
+              href={localeHref(locale, '/forgot-password')}
+              className="underline"
+            >
               {label}
             </Link>
           ))}

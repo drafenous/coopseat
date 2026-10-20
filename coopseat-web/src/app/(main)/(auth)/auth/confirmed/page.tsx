@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { Alert, Card, buttonClass } from '@/components/ui';
-import { getDictionary } from '@/i18n/server';
+import { localeHref } from '@/i18n/config';
+import { getDictionary, getLocale } from '@/i18n/server';
 
 export async function generateMetadata(): Promise<Metadata> {
   return {
@@ -13,12 +14,20 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ConfirmedPage({
   searchParams,
 }: PageProps<'/auth/confirmed'>) {
-  const [params, t] = await Promise.all([searchParams, getDictionary()]);
+  const [params, t, locale] = await Promise.all([
+    searchParams,
+    getDictionary(),
+    getLocale(),
+  ]);
+  const href = (path: string) => localeHref(locale, path);
   if (params['error']) {
     return (
       <Card title={t.confirmed.invalidTitle}>
         <Alert>{t.confirmed.invalidBody}</Alert>
-        <Link href="/login" className="block text-center text-sm text-accent">
+        <Link
+          href={href('/login')}
+          className="block text-center text-sm text-accent"
+        >
           {t.common.goToLogin}
         </Link>
       </Card>
@@ -40,7 +49,7 @@ export default async function ConfirmedPage({
         {t.common.openApp}
       </a>
       <Link
-        href="/account"
+        href={href('/account')}
         className="block text-center text-sm text-muted hover:text-foreground"
       >
         {t.confirmed.continueInBrowser}
