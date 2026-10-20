@@ -7,7 +7,7 @@ import { en } from '@/i18n/dictionaries/en';
 import { ptBR } from '@/i18n/dictionaries/pt-BR';
 import { gotrue, type AuthTokens } from '@/server/gotrue';
 import { verifyAccessToken } from '@/server/jwt';
-import { sealMfaToken } from '@/server/oauth-state';
+import { sealMfaToken, unsealMfaToken } from '@/server/oauth-state';
 import {
   consumeSecurityCode,
   generateSecurityCode,
@@ -118,6 +118,33 @@ describe('security codes', () => {
       /^data:image\/svg\+xml/,
     );
     expect(qrImageSrc('data:image/svg+xml,ok')).toBe('data:image/svg+xml,ok');
+  });
+});
+
+describe('pending MFA session', () => {
+  it('stays inside a browser cookie even when the grant carries a large user', () => {
+    const fat = tokens();
+    fat.access_token = 'a'.repeat(2200);
+    fat.refresh_token = 'r'.repeat(128);
+    fat.user = {
+      ...fat.user,
+      email: 'person@example.com',
+      identities: [
+        {
+          id: 'identity-1',
+          provider: 'google',
+          identity_data: { email: 'person@example.com', name: 'n'.repeat(800) },
+        },
+      ],
+    };
+    const sealed = sealMfaToken(fat);
+    expect(sealed.length).toBeLessThan(3800);
+    const pending = unsealMfaToken(sealed);
+    expect(pending?.access_token).toBe(fat.access_token);
+    expect(pending?.refresh_token).toBe(fat.refresh_token);
+    expect(pending?.user.id).toBe(USER);
+    expect(pending?.user.factors?.[0]?.id).toBe(FACTOR);
+    expect(pending?.user.email).toBeUndefined();
   });
 });
 

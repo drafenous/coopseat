@@ -119,12 +119,40 @@ export function clearOAuthState(res: NextResponse): NextResponse {
   return res;
 }
 
+/**
+ * A browser drops any cookie over 4096 bytes. The password grant includes the
+ * whole user (identities, metadata), and sealing that with the tokens crosses
+ * the limit, so the second step never sees the session and sends the person
+ * back to login. Keep only what the challenge needs.
+ */
+function mfaPending(tokens: AuthTokens): AuthTokens {
+  return {
+    access_token: tokens.access_token,
+    refresh_token: tokens.refresh_token,
+    expires_in: tokens.expires_in,
+    ...(tokens.expires_at === undefined ? {} : { expires_at: tokens.expires_at }),
+    user: {
+      id: tokens.user.id,
+      factors: tokens.user.factors?.map((factor) => ({
+        id: factor.id,
+        factor_type: factor.factor_type,
+        status: factor.status,
+        friendly_name: factor.friendly_name,
+      })),
+    },
+  };
+}
+
 export function setMfaCookie(res: NextResponse, tokens: AuthTokens): void {
-  res.cookies.set(MFA_COOKIE, seal(tokens, MFA_TTL), cookieOptions(MFA_TTL));
+  res.cookies.set(
+    MFA_COOKIE,
+    seal(mfaPending(tokens), MFA_TTL),
+    cookieOptions(MFA_TTL),
+  );
 }
 
 export function sealMfaToken(tokens: AuthTokens): string {
-  return seal(tokens, MFA_TTL);
+  return seal(mfaPending(tokens), MFA_TTL);
 }
 
 export function unsealMfaToken(token: string | undefined): AuthTokens | null {
