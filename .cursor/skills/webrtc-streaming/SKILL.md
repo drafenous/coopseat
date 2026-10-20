@@ -12,7 +12,7 @@ description: Architecture, cost model and abuse controls of CoopSeat's Gaming-Pa
 - **Room tokens**: the BFF (`coopseat-web/src/server/party/`) decides access (`decideAccess`) and signs an Ed25519 JWT (10 min, refreshed every 8 min via `/api/party/<nick>/token`); the Worker verifies it offline. Room limits are frozen into the token `cfg`. Wire types and HMAC helpers: `packages/ui/src/party/protocol.ts` (`@coopseat/ui/party-protocol`).
 - **BFF ↔ Worker**: HMAC-signed HTTP both ways (`PARTY_SIGNAL_SECRET`, 60 s skew, nonce): BFF → `/internal/sessions/<sid>` (end/remove/approve/deny/refresh), Worker → `/api/party/internal/events`.
 - ICE servers come from `POST /api/turn` with `{ roomToken }`: Cloudflare STUN always, TURN only when the relay policy allows and the token is admitted to a live session.
-- Clients: `packages/ui/src/lib/webrtc/` (`@coopseat/ui/webrtc`) and `packages/ui/src/hooks/` (`useParty`, `usePeerMesh`, `useSignal`). Desktop screen capture goes through `desktopCapturer` + `setDisplayMediaRequestHandler` in `coopseat/electron/main.cjs`.
+- Clients: `packages/ui/src/lib/webrtc/` (`@coopseat/ui/webrtc`) and `packages/ui/src/hooks/` (`useParty`, `usePeerMesh`, `useSignal`). Desktop screen capture goes through `desktopCapturer` + `setDisplayMediaRequestHandler` in `coopseat-desktop/electron/main.cjs`.
 
 ## Cost model (drives every decision)
 

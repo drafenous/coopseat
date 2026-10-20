@@ -9,10 +9,10 @@ import { join } from 'node:path';
 
 const PACKAGES = {
   desktop: {
-    dir: 'coopseat',
-    name: 'coopseat',
+    dir: 'coopseat-desktop',
+    name: 'coopseat-desktop',
     tagPrefix: 'desktop-v',
-    paths: ['coopseat', 'packages/ui'],
+    paths: ['coopseat-desktop', 'packages/ui'],
   },
   web: {
     dir: 'coopseat-web',
@@ -27,7 +27,7 @@ const PACKAGES = {
     paths: ['packages/ui'],
   },
 };
-const UI_DEPENDENTS = ['coopseat', 'coopseat-web', 'coopseat-signal'];
+const UI_DEPENDENTS = ['coopseat-desktop', 'coopseat-web', 'coopseat-signal'];
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)$/;
 
 const run = (cmd) =>

@@ -6,7 +6,7 @@ O navegador e o app desktop falam **só** com `/api`. O BFF valida tudo com Zod,
 
 ## Rodar localmente
 
-Este site faz parte de um monorepo (npm workspaces) com o app desktop (`../coopseat`) e a interface compartilhada (`../packages/ui`). Instale as dependências na raiz:
+Este site faz parte de um monorepo (npm workspaces) com o app desktop (`../coopseat-desktop`) e a interface compartilhada (`../packages/ui`). Instale as dependências na raiz:
 
 ```bash
 npm ci                       # na raiz do repositório

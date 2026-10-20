@@ -9,7 +9,7 @@ Three packages, each versioned and tagged independently:
 
 | Key       | Directory       | Tag              | What the tag triggers                                                             |
 | --------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
-| `desktop` | `coopseat/`     | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installer and creates a GitHub Release |
+| `desktop` | `coopseat-desktop/` | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installer and creates a GitHub Release |
 | `web`     | `coopseat-web/` | `web-vX.Y.Z`     | Nothing; marks what is deployed from `main`                                       |
 | `ui`      | `packages/ui/`  | `ui-vX.Y.Z`      | Nothing; `@coopseat/ui` is private and consumed through npm workspaces            |
 
@@ -20,7 +20,7 @@ node .cursor/skills/semver-release/scripts/release.mjs status
 node .cursor/skills/semver-release/scripts/release.mjs bump <desktop|web|ui> <major|minor|patch|x.y.z>
 ```
 
-`bump` edits `package.json`, updates the exact `@coopseat/ui` pin in `coopseat/`, `coopseat-web/` and `coopseat-signal/` when bumping `ui`, and runs `npm install` so `package-lock.json` stays valid for `npm ci`.
+`bump` edits `package.json`, updates the exact `@coopseat/ui` pin in `coopseat-desktop/`, `coopseat-web/` and `coopseat-signal/` when bumping `ui`, and runs `npm install` so `package-lock.json` stays valid for `npm ci`.
 
 ## Workflow
 
@@ -45,7 +45,7 @@ If a package has no tag yet, its first release is the current version as-is (`bu
 
 1. Run `bump`.
 2. Update `<dir>/CHANGELOG.md` (format below).
-3. Run `npm test -w <name>` and `npm run typecheck -w <name>` (names: `coopseat`, `coopseat-web`, `@coopseat/ui`; `ui` has no tests). Stop on failure.
+3. Run `npm test -w <name>` and `npm run typecheck -w <name>` (names: `coopseat-desktop`, `coopseat-web`, `@coopseat/ui`; `ui` has no tests). Stop on failure.
 
 **5. Commit and tag.** One commit for the whole batch, then one annotated tag per package:
 

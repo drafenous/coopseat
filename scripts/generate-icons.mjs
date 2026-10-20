@@ -76,5 +76,5 @@ write('coopseat-web/src/app/apple-icon.png', await png(square, 180));
 write('coopseat-web/public/icon-192.png', await png(tile, 192));
 write('coopseat-web/public/icon-512.png', await png(tile, 512));
 write('coopseat-web/public/icon-maskable-512.png', await png(maskable, 512));
-write('coopseat/build/icon.ico', await ico([16, 24, 32, 48, 64, 128, 256]));
-write('coopseat/public/icon.png', await png(tile, 256));
+write('coopseat-desktop/build/icon.ico', await ico([16, 24, 32, 48, 64, 128, 256]));
+write('coopseat-desktop/public/icon.png', await png(tile, 256));

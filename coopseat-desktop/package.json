@@ -1,5 +1,5 @@
 {
-  "name": "coopseat",
+  "name": "coopseat-desktop",
   "version": "0.3.0",
   "private": true,
   "description": "CoopSeat: jogue o console numa janela do Windows pela placa de captura USB",

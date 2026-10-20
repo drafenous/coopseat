@@ -5,7 +5,7 @@ on:
     tags: ['desktop-v*']
     paths:
       [
-        'coopseat/**',
+        'coopseat-desktop/**',
         'packages/**',
         'package.json',
         'package-lock.json',
@@ -14,7 +14,7 @@ on:
   pull_request:
     paths:
       [
-        'coopseat/**',
+        'coopseat-desktop/**',
         'packages/**',
         'package.json',
         'package-lock.json',
@@ -32,20 +32,20 @@ jobs:
       contents: write
     defaults:
       run:
-        working-directory: coopseat
+        working-directory: coopseat-desktop
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - name: Tag matches coopseat/package.json version
+      - name: Tag matches coopseat-desktop/package.json version
         if: startsWith(github.ref, 'refs/tags/desktop-v')
         shell: pwsh
         run: |
           $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
           if ("desktop-v$version" -ne "${{ github.ref_name }}") {
-            Write-Error "Tag ${{ github.ref_name }} does not match coopseat/package.json version $version"
+            Write-Error "Tag ${{ github.ref_name }} does not match coopseat-desktop/package.json version $version"
             exit 1
           }
       - run: npm ci
@@ -65,8 +65,8 @@ jobs:
         with:
           name: CoopSeat-Windows-x64
           path: |
-            coopseat/release/*-Setup.exe
-            coopseat/release/*-Portable.exe
+            coopseat-desktop/release/*-Setup.exe
+            coopseat-desktop/release/*-Portable.exe
           if-no-files-found: error
           retention-days: 1
       - name: Extract changelog section
@@ -86,7 +86,7 @@ jobs:
           name: CoopSeat ${{ env.VERSION }}
           body_path: notes.md
           files: |
-            coopseat/release/*-Setup.exe
-            coopseat/release/*-Portable.exe
+            coopseat-desktop/release/*-Setup.exe
+            coopseat-desktop/release/*-Portable.exe
           generate_release_notes: true
           fail_on_unmatched_files: true

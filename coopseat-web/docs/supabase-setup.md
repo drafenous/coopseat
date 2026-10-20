@@ -92,7 +92,7 @@ With `KYC_PROVIDER=mock` on a dev/preview deployment:
    e-mail must arrive.
 5. Link and unlink Google and Discord in `/account`; unlinking the last login method must be refused. Each
    change sends a security e-mail.
-6. Desktop (`COOPSEAT_BFF_URL=<preview url> npm run dev` in `coopseat/`): _Continue with Google_ opens the
+6. Desktop (`COOPSEAT_BFF_URL=<preview url> npm run dev` in `coopseat-desktop/`): _Continue with Google_ opens the
    browser and returns via `coopseat://auth/callback`; email login, 2FA and _My account_ work in the app.
 7. Switch the language (footer on the site, the language icon in the app header) and repeat a step: pages, API errors
    and the app follow the choice. The old Portuguese paths (`/entrar`, `/conta`, ...) redirect permanently.

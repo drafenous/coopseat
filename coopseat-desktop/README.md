@@ -73,7 +73,7 @@ Instale Node.js 22 LTS ou superior. Este app faz parte de um monorepo (npm works
 
 ```powershell
 npm ci          # na raiz
-cd coopseat
+cd coopseat-desktop
 npm run build
 npm start
 ```
@@ -120,7 +120,7 @@ Para lançar uma versão, peça ao agente do Cursor para fazer o release (skill 
 
 ```powershell
 node .cursor/skills/semver-release/scripts/release.mjs bump desktop minor
-# edite coopseat/CHANGELOG.md, faça o commit, depois:
+# edite coopseat-desktop/CHANGELOG.md, faça o commit, depois:
 git tag -a desktop-v0.2.0 -m "desktop 0.2.0"
 git push origin main desktop-v0.2.0
 ```
