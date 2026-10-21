@@ -163,7 +163,8 @@ export async function getActiveBan(roomId: string, profileId: string) {
 
 /**
  * A kick of someone who is still a moderator or still on the allow list lasts for this
- * session. Only the owner may clear it. A kicked stranger stays on the normal approval path.
+ * session. Only the owner may clear it, including while the removal row is still missing.
+ * A kicked stranger stays on the normal approval path.
  */
 export async function assertCanLiftKick(
   actor: Actor,
@@ -181,7 +182,11 @@ export async function assertCanLiftKick(
     getModerator(roomId, profileId),
     db.orm.public.PartyRoomWhitelist.where({ roomId, profileId }).first(),
   ]);
-  if (row?.removal === 'kick' && (moderator || listed))
+  if (!(moderator || listed)) return;
+  if (row?.removal === 'kick') throw new ApiError(403, 'party_forbidden');
+  // The row can still be null while the room is already holding the kick.
+  // An unknown answer blocks the lift: a missed check must not reopen it.
+  if (await signalKickHeld(sessionId, profileId, 'closed'))
     throw new ApiError(403, 'party_forbidden');
 }
 
@@ -349,17 +354,19 @@ export async function decideAccess(input: {
 
   const privileged = Boolean(moderator || listed);
   // The removal row can still be null while the room already tombstoned the kick.
+  // That hold applies to everyone still listed as present. Clearing it here would
+  // undo the kick before it is stored.
   const kickHeld =
     (privileged || returning) && participant?.removal == null
       ? await signalKickHeld(session.id, viewer.profileId)
       : false;
-  if (privileged && kickHeld) return { state: 'kicked' };
+  if (kickHeld) return { state: 'kicked' };
 
   if (privileged || returning) {
     // A row already open for this session does not need another read/write on every token refresh.
     if (!returning || returning.leftAt !== null)
       await admitParticipant(session.id, viewer.profileId);
-    return result('admitted', claims, kickHeld);
+    return result('admitted', claims);
   }
 
   if (room.passwordHash) {

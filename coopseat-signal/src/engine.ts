@@ -59,12 +59,13 @@ export type Member = {
 
 /**
  * A ban or sanction rejects tokens issued at or before `at`. A kick rejects every
- * token until `open` is set, so a newer `iat` alone is not a re-admission.
+ * token until `open` is set to a second after `at`, and still rejects tokens
+ * issued at or before the kick. A newer `iat` alone is not a re-admission.
  */
 export type RemovalRecord = {
   at: number;
   reason: 'kick' | 'ban' | 'sanction';
-  /** Earliest token `iat` that may pass a kick. Absent until the backend clears it. */
+  /** Earliest token `iat` that may pass a kick. Absent until a clearance after `at`. */
   open?: number;
 };
 
@@ -345,17 +346,24 @@ export class RoomEngine {
       return (
         cutoff.open === undefined ||
         typeof iat !== 'number' ||
+        iat <= cutoff.at ||
         iat < cutoff.open
       );
     return typeof iat !== 'number' || iat <= cutoff.at;
   }
 
-  /** Lets a later token past a kick. The first clearance wins, so a replay cannot lower it. */
+  /**
+   * Lets a token issued after this kick back in. A clearance from the kick
+   * second or earlier is ignored. The first accepted one wins, so a replay
+   * cannot lower it.
+   */
   private reopen(id: string, open: number) {
     const row = this.state.removed?.[id];
     if (!row || row.reason !== 'kick' || row.open !== undefined) return;
     if (!Number.isFinite(open)) return;
-    row.open = Math.floor(open);
+    const at = Math.floor(open);
+    if (at <= row.at) return;
+    row.open = at;
   }
 
   /** Removes a member for good (kick, ban, sanction, denial). */

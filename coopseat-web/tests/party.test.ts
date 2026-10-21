@@ -387,6 +387,61 @@ describe('decideAccess', () => {
     expect(fake.current.data.PartySessionParticipant[0]!.removal).toBeNull();
   });
 
+  it('keeps a returning member out while the kick exists only in the room', async () => {
+    const session = await liveRoom({
+      requireApproval: false,
+      whitelistEnabled: false,
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'u1',
+    });
+    fetchSpy.mockImplementation(async () => Response.json({ closed: true }));
+    const decided = await access(viewer('u1'));
+    expect(decided).toEqual({ state: 'kicked' });
+    expect(fake.current.data.PartySessionParticipant[0]!.removal).toBeNull();
+
+    const payload = await accessPayload(decided, OWNER);
+    expect(payload.state).toBe('kicked');
+    const sent = fetchSpy.mock.calls.map((call) =>
+      JSON.parse(String((call[1] as RequestInit).body)),
+    );
+    expect(sent.every((body) => body.action !== 'clear')).toBe(true);
+  });
+
+  it('blocks a moderator from lifting a privileged kick that is still only in the room', async () => {
+    const session = await liveRoom();
+    await tables().PartyRoomModerator.create({
+      roomId: OWNER.id,
+      profileId: 'mod',
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'mod',
+    });
+    const moderator = { role: 'moderator' as const, perms: OWNER_PERMS };
+    fetchSpy.mockImplementation(async () => Response.json({ closed: true }));
+    await expect(
+      assertCanLiftKick(moderator, OWNER.id, session.id as string, 'mod'),
+    ).rejects.toMatchObject({ status: 403, code: 'party_forbidden' });
+    await assertCanLiftKick(
+      { role: 'owner', perms: OWNER_PERMS },
+      OWNER.id,
+      session.id as string,
+      'mod',
+    );
+
+    fetchSpy.mockImplementation(async () => {
+      throw new Error('signal down');
+    });
+    await expect(
+      assertCanLiftKick(moderator, OWNER.id, session.id as string, 'mod'),
+    ).rejects.toMatchObject({ status: 403, code: 'party_forbidden' });
+
+    fetchSpy.mockImplementation(async () => Response.json({ closed: false }));
+    await assertCanLiftKick(moderator, OWNER.id, session.id as string, 'mod');
+  });
+
   it('marks a non-privileged rejoin so the room can accept the new token', async () => {
     const session = await liveRoom({
       requireApproval: false,

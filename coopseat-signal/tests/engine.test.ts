@@ -417,6 +417,43 @@ describe('RoomEngine', () => {
     ).toEqual([{ t: 'removed', reason: 'kick' }]);
   });
 
+  it('ignores a clearance that is not after the kick', () => {
+    const e = room();
+    const issued = Math.floor(T0 / 1000);
+    e.join(claims('ana', { iat: issued }), T0);
+    e.message('owner', msg({ t: 'kick', to: 'ana' }), T0);
+
+    e.internal({ action: 'clear', profileId: 'ana', iat: issued }, T0);
+    e.internal({ action: 'approve', profileId: 'ana' }, T0);
+    expect(e.closedKick('ana')).toBe(true);
+    expect(e.state.removed?.['ana']?.open).toBeUndefined();
+
+    e.state.removed!['ana']!.open = issued;
+    expect(
+      sent(e.join(claims('ana', { iat: issued }), T0 + 500), 'ana'),
+    ).toEqual([{ t: 'removed', reason: 'kick' }]);
+
+    const later = issued + 2;
+    e.state.removed!['ana'] = { at: later, reason: 'kick' };
+    e.internal({ action: 'clear', profileId: 'ana', iat: issued }, T0 + 3000);
+    expect(e.closedKick('ana')).toBe(true);
+    expect(
+      sent(e.join(claims('ana', { iat: later + 1 }), T0 + 3000), 'ana'),
+    ).toEqual([{ t: 'removed', reason: 'kick' }]);
+
+    e.internal(
+      { action: 'clear', profileId: 'ana', iat: later + 1 },
+      T0 + 4000,
+    );
+    expect(e.closedKick('ana')).toBe(false);
+    expect(
+      types(e.join(claims('ana', { iat: later + 1 }), T0 + 4000), 'ana'),
+    ).toContain('welcome');
+    expect(
+      sent(e.join(claims('ana', { iat: issued }), T0 + 5000), 'ana'),
+    ).toEqual([{ t: 'removed', reason: 'kick' }]);
+  });
+
   it('opens a kick when the owner approves, even after the member is gone', () => {
     const e = room();
     const issued = Math.floor(T0 / 1000);
