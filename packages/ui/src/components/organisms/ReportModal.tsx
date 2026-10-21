@@ -58,21 +58,21 @@ export function ReportModal({
   );
 
   function removeImage(index: number) {
-    setImages((current) => {
-      const image = current[index];
-      if (image) URL.revokeObjectURL(image.preview);
-      return current.filter((_, i) => i !== index);
-    });
+    const image = imagesRef.current[index];
+    if (!image) return;
+    URL.revokeObjectURL(image.preview);
+    const next = imagesRef.current.filter((_, i) => i !== index);
+    imagesRef.current = next;
+    setImages(next);
   }
 
   async function addFiles(list: FileList | null) {
     const files = list ? [...list] : [];
     if (!files.length) return;
     setImageError(undefined);
-    const next = [...images];
     let problem: string | undefined;
     for (const file of files) {
-      if (next.length >= MAX_IMAGES) {
+      if (imagesRef.current.length >= MAX_IMAGES) {
         problem = t.imageLimit;
         break;
       }
@@ -81,9 +81,15 @@ export function ReportModal({
         problem = read === 'size' ? t.imageSize : t.imageType;
         continue;
       }
-      next.push(read);
+      if (imagesRef.current.length >= MAX_IMAGES) {
+        URL.revokeObjectURL(read.preview);
+        problem = t.imageLimit;
+        break;
+      }
+      const next = [...imagesRef.current, read];
+      imagesRef.current = next;
+      setImages(next);
     }
-    setImages(next);
     if (problem) setImageError(problem);
   }
 
