@@ -16,7 +16,7 @@ import type { AuthContext } from '../session';
 import { verifyRoomPassword } from './password';
 import { getPartyPolicy, roomCapacity, type PartyPolicy } from './policy';
 import { activeSanctions, isBlocked, type SanctionScope } from './sanctions';
-import { signalCommand } from './signal';
+import { signalCommand, signalKickHeld } from './signal';
 import type { RoomTokenInput } from './tokens';
 
 export type Viewer = {
@@ -227,6 +227,8 @@ export type AccessResult =
       claims: RoomTokenInput;
       sessionId: string;
       endsAt: number;
+      /** The signal room is still holding a kick that this token is allowed to pass. */
+      releaseKick?: boolean;
     }
   | { state: 'offline'; isOwner: boolean; canOpen: boolean }
   | { state: 'password_required' }
@@ -304,11 +306,13 @@ export async function decideAccess(input: {
     state: 'admitted' | 'pending',
     claims: Pick<RoomTokenInput, 'role' | 'canStream' | 'mod'> &
       Partial<Pick<RoomTokenInput, 'streamBlocked'>>,
+    releaseKick = false,
   ): AccessResult => ({
     state,
     sessionId: session.id,
     endsAt,
     claims: { ...base, ...claims, status: state },
+    ...(releaseKick ? { releaseKick: true } : {}),
   });
 
   if (isOwner) {
@@ -343,11 +347,19 @@ export async function decideAccess(input: {
   if (participant?.removal === 'kick' && (moderator || listed))
     return { state: 'kicked' };
 
-  if (moderator || listed || returning) {
+  const privileged = Boolean(moderator || listed);
+  // The removal row can still be null while the room already tombstoned the kick.
+  const kickHeld =
+    (privileged || returning) && participant?.removal == null
+      ? await signalKickHeld(session.id, viewer.profileId)
+      : false;
+  if (privileged && kickHeld) return { state: 'kicked' };
+
+  if (privileged || returning) {
     // A row already open for this session does not need another read/write on every token refresh.
     if (!returning || returning.leftAt !== null)
       await admitParticipant(session.id, viewer.profileId);
-    return result('admitted', claims);
+    return result('admitted', claims, kickHeld);
   }
 
   if (room.passwordHash) {
@@ -358,11 +370,14 @@ export async function decideAccess(input: {
   }
 
   // Protected → pending; Private → not invited; Public → admit.
-  if (room.requireApproval) return result('pending', claims);
+  // A recorded kick of someone without privilege is allowed back by those rules,
+  // and the room needs an explicit clearance or the new token is still rejected.
+  const recordedKick = participant?.removal === 'kick';
+  if (room.requireApproval) return result('pending', claims, recordedKick);
   if (room.whitelistEnabled) return { state: 'not_invited' };
 
   await admitParticipant(session.id, viewer.profileId);
-  return result('admitted', claims);
+  return result('admitted', claims, recordedKick);
 }
 
 /**

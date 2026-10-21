@@ -57,10 +57,15 @@ export type Member = {
   msgHits: number[];
 };
 
-/** A room token is admitted only when its `iat` is strictly newer than `at`. */
+/**
+ * A ban or sanction rejects tokens issued at or before `at`. A kick rejects every
+ * token until `open` is set, so a newer `iat` alone is not a re-admission.
+ */
 export type RemovalRecord = {
   at: number;
   reason: 'kick' | 'ban' | 'sanction';
+  /** Earliest token `iat` that may pass a kick. Absent until the backend clears it. */
+  open?: number;
 };
 
 export type State = {
@@ -73,8 +78,8 @@ export type State = {
   /** streamerId -> viewerId -> quality */
   subs: Record<string, Record<string, Quality>>;
   /**
-   * Removals that invalidate room tokens issued at or before `at`.
-   * Absent on Durable Objects persisted before this field existed.
+   * Removals that invalidate room tokens. Absent on Durable Objects persisted
+   * before this field existed.
    */
   removed?: Record<string, RemovalRecord>;
   ended: EndReason | null;
@@ -195,7 +200,7 @@ export class RoomEngine {
     }
     if (claims.sid !== s.sid) return this.reject(claims.sub, 'invalid');
     const cutoff = s.removed?.[claims.sub];
-    if (cutoff && (typeof claims.iat !== 'number' || claims.iat <= cutoff.at))
+    if (cutoff && this.tokenBlocked(cutoff, claims.iat))
       return this.reject(claims.sub, cutoff.reason);
     if (claims.role === 'owner') {
       s.ownerId = claims.sub;
@@ -315,7 +320,8 @@ export class RoomEngine {
   /**
    * Remembers a kick, ban or sanction so a room token issued at or before this
    * moment cannot rejoin. Denial and token expiry stay out: a refreshed token
-   * can be older than the expiry drop and must still be accepted.
+   * can be older than the expiry drop and must still be accepted. A new kick
+   * drops any previous clearance.
    */
   private tombstone(id: string, reason: RemovalReason, now: number) {
     if (reason !== 'kick' && reason !== 'ban' && reason !== 'sanction') return;
@@ -323,6 +329,33 @@ export class RoomEngine {
     const at = Math.floor(now / 1000);
     const prev = removed[id];
     if (!prev || at >= prev.at) removed[id] = { at, reason };
+  }
+
+  /** True while a kick rejects every token, including ones issued after it. */
+  closedKick(profileId: string): boolean {
+    const row = this.state.removed?.[profileId];
+    return row?.reason === 'kick' && row.open === undefined;
+  }
+
+  private tokenBlocked(
+    cutoff: RemovalRecord,
+    iat: number | undefined,
+  ): boolean {
+    if (cutoff.reason === 'kick')
+      return (
+        cutoff.open === undefined ||
+        typeof iat !== 'number' ||
+        iat < cutoff.open
+      );
+    return typeof iat !== 'number' || iat <= cutoff.at;
+  }
+
+  /** Lets a later token past a kick. The first clearance wins, so a replay cannot lower it. */
+  private reopen(id: string, open: number) {
+    const row = this.state.removed?.[id];
+    if (!row || row.reason !== 'kick' || row.open !== undefined) return;
+    if (!Number.isFinite(open)) return;
+    row.open = Math.floor(open);
   }
 
   /** Removes a member for good (kick, ban, sanction, denial). */
@@ -447,6 +480,15 @@ export class RoomEngine {
       if (target) this.remove(target, cmd.reason, now);
       return this.flush();
     }
+    if (cmd.action === 'clear') {
+      this.reopen(cmd.profileId, cmd.iat);
+      return this.flush();
+    }
+    if (cmd.action === 'removed') return this.flush();
+    // The member is already gone after a kick. Opening the cutoff still has to
+    // happen, or the owner's re-admission can never produce a token the room accepts.
+    if (cmd.action === 'approve')
+      this.reopen(cmd.profileId, Math.floor(now / 1000));
     const m = this.state.members[cmd.profileId];
     if (!m) return this.flush();
     switch (cmd.action) {

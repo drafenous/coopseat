@@ -380,7 +380,7 @@ describe('RoomEngine', () => {
     });
   });
 
-  it('rejects a room token issued at or before a kick, and keeps that cutoff', () => {
+  it('rejects a room token issued at or before a kick, and a later one until cleared', () => {
     const e = room();
     const issued = Math.floor(T0 / 1000);
     e.join(claims('ana', { iat: issued }), T0);
@@ -393,15 +393,44 @@ describe('RoomEngine', () => {
     ]);
     expect(e.state.members['ana']).toBeUndefined();
 
-    const again = e.join(claims('ana', { iat: issued + 1 }), T0 + 2000);
-    expect(types(again, 'ana')).toContain('welcome');
+    const gap = issued + 5;
+    expect(sent(e.join(claims('ana', { iat: gap }), T0 + 5000), 'ana')).toEqual(
+      [{ t: 'removed', reason: 'kick' }],
+    );
+    expect(e.closedKick('ana')).toBe(true);
+
+    e.internal({ action: 'clear', profileId: 'ana', iat: gap + 1 }, T0 + 6000);
+    expect(e.closedKick('ana')).toBe(false);
+    expect(sent(e.join(claims('ana', { iat: gap }), T0 + 7000), 'ana')).toEqual(
+      [{ t: 'removed', reason: 'kick' }],
+    );
+    expect(
+      types(e.join(claims('ana', { iat: gap + 1 }), T0 + 7000), 'ana'),
+    ).toContain('welcome');
     expect(e.state.removed?.['ana']).toMatchObject({
       at: issued,
       reason: 'kick',
+      open: gap + 1,
     });
     expect(
-      sent(e.join(claims('ana', { iat: issued }), T0 + 3000), 'ana'),
+      sent(e.join(claims('ana', { iat: issued }), T0 + 8000), 'ana'),
     ).toEqual([{ t: 'removed', reason: 'kick' }]);
+  });
+
+  it('opens a kick when the owner approves, even after the member is gone', () => {
+    const e = room();
+    const issued = Math.floor(T0 / 1000);
+    e.join(claims('ana', { iat: issued }), T0);
+    e.message('owner', msg({ t: 'kick', to: 'ana' }), T0);
+    const at = T0 + 4000;
+    e.internal({ action: 'approve', profileId: 'ana' }, at);
+    const open = Math.floor(at / 1000);
+    expect(sent(e.join(claims('ana', { iat: open - 1 }), at), 'ana')).toEqual([
+      { t: 'removed', reason: 'kick' },
+    ]);
+    expect(types(e.join(claims('ana', { iat: open }), at), 'ana')).toContain(
+      'welcome',
+    );
   });
 
   it('records a ban after the member has already left', () => {
@@ -421,6 +450,16 @@ describe('RoomEngine', () => {
         'ana',
       ),
     ).toEqual([{ t: 'removed', reason: 'ban' }]);
+    const bannedAt = Math.floor((T0 + RECONNECT_GRACE_MS) / 1000);
+    expect(
+      types(
+        e.join(
+          claims('ana', { iat: bannedAt + 1 }),
+          T0 + RECONNECT_GRACE_MS + 2000,
+        ),
+        'ana',
+      ),
+    ).toContain('welcome');
   });
 
   it('still accepts a refreshed token after the previous one expires', () => {

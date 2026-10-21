@@ -18,6 +18,7 @@ import {
   type AccessResult,
   type Viewer,
 } from '@/server/party/access';
+import { accessPayload } from '@/server/party/join';
 import { hashRoomPassword, verifyRoomPassword } from '@/server/party/password';
 import { activeSanctions, isBlocked } from '@/server/party/sanctions';
 import {
@@ -369,6 +370,50 @@ describe('decideAccess', () => {
     await admitParticipant(session.id as string, 'u1');
     expect(row.removal).toBeNull();
     expect(admitted(await access(viewer('u1'))).state).toBe('admitted');
+  });
+
+  it('keeps a privileged member out while the kick exists only in the room', async () => {
+    const session = await liveRoom();
+    await tables().PartyRoomWhitelist.create({
+      roomId: OWNER.id,
+      profileId: 'u1',
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'u1',
+    });
+    fetchSpy.mockImplementation(async () => Response.json({ closed: true }));
+    expect(await access(viewer('u1'))).toEqual({ state: 'kicked' });
+    expect(fake.current.data.PartySessionParticipant[0]!.removal).toBeNull();
+  });
+
+  it('marks a non-privileged rejoin so the room can accept the new token', async () => {
+    const session = await liveRoom({
+      requireApproval: false,
+      whitelistEnabled: false,
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'u1',
+      removal: 'kick',
+    });
+    const decided = await access(viewer('u1'));
+    expect(decided.state).toBe('admitted');
+    if (decided.state !== 'admitted') return;
+    expect(decided.releaseKick).toBe(true);
+
+    const payload = await accessPayload(decided, OWNER);
+    expect(payload.state).toBe('admitted');
+    if (payload.state !== 'admitted' || !payload.token) return;
+    const claims = await verifyRoomToken(payload.token);
+    const sent = fetchSpy.mock.calls.map((call) =>
+      JSON.parse(String((call[1] as RequestInit).body)),
+    );
+    expect(sent).toContainEqual({
+      action: 'clear',
+      profileId: 'u1',
+      iat: claims?.iat,
+    });
   });
 
   it('keeps a kick of a moderator, and still lets a moderator approve a kicked stranger', async () => {

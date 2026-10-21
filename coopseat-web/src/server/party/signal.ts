@@ -60,6 +60,36 @@ export async function signalCommand(
   }
 }
 
+/**
+ * True when the room is holding a kick that no token can pass yet. A missed answer
+ * does not block admission: the room still rejects the socket. TURN is the call
+ * that must treat `true` as a refusal.
+ */
+export async function signalKickHeld(
+  sessionId: string,
+  profileId: string,
+): Promise<boolean> {
+  if (!env.partySignalUrl) return false;
+  const command: InternalCommand = { action: 'removed', profileId };
+  const body = JSON.stringify(command);
+  try {
+    const res = await fetch(
+      `${env.partySignalUrl}/internal/sessions/${sessionId}`,
+      {
+        method: 'POST',
+        headers: await internalHeaders(env.partySignalSecret, body),
+        body,
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      },
+    );
+    if (!res.ok) return false;
+    const data = (await res.json()) as { closed?: unknown };
+    return data.closed === true;
+  } catch {
+    return false;
+  }
+}
+
 /** Verifies an HMAC-signed call from coopseat-signal and burns its nonce (replay protection). */
 export async function verifySignalRequest(
   req: NextRequest,

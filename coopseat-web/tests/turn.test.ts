@@ -183,6 +183,20 @@ describe('POST /api/turn', () => {
     expect((await res.json()).relay).toBe(true);
   });
 
+  it('refuses credentials while the room is still holding a kick', async () => {
+    fetchSpy.mockImplementation(async (url: string) =>
+      String(url).includes('/internal/sessions/')
+        ? Response.json({ closed: true })
+        : Response.json({ iceServers }, { status: 201 }),
+    );
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
+    expect(
+      fetchSpy.mock.calls.some((call) =>
+        String(call[0]).includes('generate-ice-servers'),
+      ),
+    ).toBe(false);
+  });
+
   it('refuses credentials while a join sanction is active', async () => {
     await fake.current.db.orm.public.PlatformSanction.create({
       profileId: 'user-1',
@@ -205,10 +219,9 @@ describe('POST /api/turn', () => {
       relay: true,
       maxRelayBitrateKbps: 4000,
     });
-    const [url, init] = fetchSpy.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
+    const [url, init] = fetchSpy.mock.calls.find((call) =>
+      String(call[0]).includes('generate-ice-servers'),
+    ) as unknown as [string, RequestInit];
     expect(url).toContain('/turn/keys/key-id/credentials/generate-ice-servers');
     expect((init.headers as Record<string, string>).Authorization).toBe(
       'Bearer api-token',
@@ -231,7 +244,9 @@ describe('POST /api/turn', () => {
     expect(body.maxRelayBitrateKbps).toBe(2500);
     expect(body.expiresAt - before).toBeGreaterThanOrEqual(3600);
     expect(body.expiresAt - before).toBeLessThanOrEqual(3601);
-    const [, init] = fetchSpy.mock.calls[0] as unknown as [string, RequestInit];
+    const [, init] = fetchSpy.mock.calls.find((call) =>
+      String(call[0]).includes('generate-ice-servers'),
+    ) as unknown as [string, RequestInit];
     expect(JSON.parse(init.body as string)).toEqual({ ttl: 3600 });
   });
 

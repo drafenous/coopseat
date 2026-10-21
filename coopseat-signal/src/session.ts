@@ -178,6 +178,8 @@ export class PartySession extends DurableObject<Env> {
 
     if (url.pathname === '/internal' && req.method === 'POST') {
       const cmd = (await req.json()) as InternalCommand;
+      if (cmd.action === 'removed')
+        return Response.json({ closed: engine.closedKick(cmd.profileId) });
       await this.apply(engine.internal(cmd, Date.now()));
       return Response.json({ ok: true });
     }

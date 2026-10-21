@@ -10,6 +10,7 @@ import { turnSchema } from '@/lib/validation/party';
 import { ApiError, readJson, route } from '@/server/http';
 import { getActiveBan } from '@/server/party/access';
 import { activeSanctions, isBlocked } from '@/server/party/sanctions';
+import { signalKickHeld } from '@/server/party/signal';
 import { verifyRoomToken } from '@/server/party/tokens';
 import { rateLimit } from '@/server/rate-limit';
 import { evaluateRelay, type RelayDenyReason } from '@/server/relay-policy';
@@ -47,7 +48,7 @@ function appVersion(req: NextRequest): string | null {
 async function assertAdmitted(
   roomToken: string,
   profileId: string,
-): Promise<void> {
+): Promise<string> {
   const claims = await verifyRoomToken(roomToken);
   if (!claims || claims.sub !== profileId || claims.status !== 'admitted')
     throw new ApiError(403, 'party_token_invalid');
@@ -67,6 +68,7 @@ async function assertAdmitted(
     throw new ApiError(403, 'party_token_invalid');
   if (isBlocked(await activeSanctions(profileId), 'party_join'))
     throw new ApiError(403, 'party_token_invalid');
+  return claims.sid;
 }
 
 /**
@@ -79,7 +81,7 @@ export const POST = route(async (req) => {
   const profileId = session.claims.sub;
   await rateLimit('turn', profileId);
   const { roomToken } = await readJson(req, turnSchema);
-  await assertAdmitted(roomToken, profileId);
+  const sessionId = await assertAdmitted(roomToken, profileId);
 
   const version = appVersion(req);
   const decision = await evaluateRelay({
@@ -96,6 +98,12 @@ export const POST = route(async (req) => {
       { headers: NO_STORE },
     );
   }
+
+  // After the relay decision, so a policy denial does not depend on the signal
+  // server. A kick already tombstoned in the room must not mint credentials
+  // while the removal row is still missing.
+  if (await signalKickHeld(sessionId, profileId))
+    throw new ApiError(403, 'party_token_invalid');
 
   const ttl = decision.policy.credentialTtlSeconds;
   const iceServers = await createIceServers(ttl);
