@@ -49,6 +49,12 @@ export type DesktopBridge = {
   }): Promise<void>;
   window(action: string): Promise<boolean | void>;
   donate(): Promise<void>;
+  /** Present on desktop builds that check the published release. Absent on the web. */
+  update?: {
+    current(): Promise<{ version: string } | null>;
+    onAvailable(callback: (offer: { version: string }) => void): () => void;
+    openDownload(): Promise<void>;
+  };
   watchPointer(on: boolean): Promise<void>;
   onPointer(callback: () => void): () => void;
   onNative(callback: (event: NativeEvent) => void): () => void;

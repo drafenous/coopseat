@@ -12,6 +12,7 @@ export { StreamStage } from './StreamStage';
 export { AppFooter } from './AppFooter';
 export { AccountMenu, type AccountMenuAccount } from './AccountMenu';
 export { AppHeader } from './AppHeader';
+export { UpdateNotice } from './UpdateNotice';
 export { AuthModal } from './AuthModal';
 export { NicknameStep } from './NicknameStep';
 export { CaptureViewer } from './CaptureViewer';

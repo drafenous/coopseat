@@ -96,6 +96,11 @@ export const en = {
     signIn: 'Sign in',
     signOut: 'Sign out',
   },
+  update: {
+    available: (version: string) => `Version ${version} is available.`,
+    download: 'Download',
+    later: 'Later',
+  },
   accountCta: {
     title: 'Play together on CoopSeat',
     body: 'Create a free account to chat, talk and create rooms in sessions.',

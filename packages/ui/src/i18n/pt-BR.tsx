@@ -88,6 +88,11 @@ export const ptBR: UiDictionary = {
     signIn: 'Entrar',
     signOut: 'Sair',
   },
+  update: {
+    available: (version) => `A versão ${version} está disponível.`,
+    download: 'Baixar',
+    later: 'Depois',
+  },
   accountCta: {
     title: 'Jogue junto no CoopSeat',
     body: 'Crie uma conta grátis para conversar, falar e criar salas nas sessões.',

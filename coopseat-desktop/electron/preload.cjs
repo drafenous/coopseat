@@ -17,6 +17,15 @@ contextBridge.exposeInMainWorld('input', {
   bounds: (rect) => ipcRenderer.invoke('native:bounds', rect),
   window: (action) => ipcRenderer.invoke('window', action),
   donate: () => ipcRenderer.invoke('donate'),
+  update: {
+    current: () => ipcRenderer.invoke('update:current'),
+    openDownload: () => ipcRenderer.invoke('update:open'),
+    onAvailable: (callback) => {
+      const fn = (_, offer) => callback(offer);
+      ipcRenderer.on('update:available', fn);
+      return () => ipcRenderer.removeListener('update:available', fn);
+    },
+  },
   screen: {
     sources: () => ipcRenderer.invoke('screen:sources'),
     pick: (id, audio) => ipcRenderer.invoke('screen:pick', { id, audio }),

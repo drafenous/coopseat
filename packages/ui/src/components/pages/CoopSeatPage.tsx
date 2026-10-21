@@ -11,6 +11,7 @@ import { usePresets } from '../../hooks/usePresets';
 import { useSettings } from '../../hooks/useSettings';
 import { useStreamPicker } from '../../hooks/useStreamPicker';
 import { useToasts } from '../../hooks/useToasts';
+import { useUpdateNotice } from '../../hooks/useUpdateNotice';
 import { openDonation } from '../../lib/donate';
 import { errorText } from '../../lib/errors';
 import type { BanEntry } from '../../lib/party/api';
@@ -53,6 +54,7 @@ import {
   ToastStack,
   TransportBar,
   TroubleshootModal,
+  UpdateNotice,
   ViewerEmptyState,
 } from '../organisms';
 import { MainLayout, type PanelSide } from '../templates/MainLayout';
@@ -74,6 +76,7 @@ export function CoopSeatPage({
 
 function CoopSeat({ initialParty }: { initialParty: string | null }) {
   const t = useT();
+  const update = useUpdateNotice();
   const { settings: s, setSettings, change } = useSettings();
   const { error, setError, notice, setNotice } = useToasts();
   const [top, setTop] = useState(false);
@@ -473,16 +476,25 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
       panelCollapsed={panelCollapsed}
       roomCollapsed={roomCollapsed}
       header={
-        <AppHeader
-          auth={auth}
-          onHelp={() => setHelp(true)}
-          onTroubleshoot={() => setTroubleshoot(true)}
-          onPreferences={() => setPreferences(true)}
-          onLogin={login}
-          onMyAccount={myAccount}
-          onMyRoom={myRoom}
-          onSignOut={signOut}
-        />
+        <>
+          <AppHeader
+            auth={auth}
+            onHelp={() => setHelp(true)}
+            onTroubleshoot={() => setTroubleshoot(true)}
+            onPreferences={() => setPreferences(true)}
+            onLogin={login}
+            onMyAccount={myAccount}
+            onMyRoom={myRoom}
+            onSignOut={signOut}
+          />
+          {update.version ? (
+            <UpdateNotice
+              version={update.version}
+              onDownload={update.download}
+              onDismiss={update.dismiss}
+            />
+          ) : null}
+        </>
       }
       viewer={
         partyMode ? (

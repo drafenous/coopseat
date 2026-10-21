@@ -39,6 +39,7 @@ ipcMain.on('native:media:ack', (event) => {
   pump.arm();
 });
 const { readMediaPrivacy } = require('./privacy.cjs');
+const { isNewer, parseReleaseVersion } = require('./updates.cjs');
 const { createFrameParser } = require('./media-frames.cjs');
 let win,
   core = null,
@@ -78,6 +79,44 @@ if (process.defaultApp) {
 } else app.setAsDefaultProtocolClient(PROTOCOL);
 let pendingLink = findDeepLink(process.argv) ?? null,
   rendererReady = false;
+const UPDATE_OK_MS = 4 * 60 * 60 * 1000;
+const UPDATE_RETRY_MS = 15 * 60 * 1000;
+let availableUpdate = null;
+let updateCheckAt = 0;
+let updateChecking = false;
+function publishUpdate() {
+  if (!availableUpdate || !win || win.isDestroyed() || !rendererReady) return;
+  win.webContents.send('update:available', availableUpdate);
+}
+async function checkForUpdate() {
+  if (updateChecking || Date.now() < updateCheckAt) return;
+  updateChecking = true;
+  updateCheckAt = Date.now() + UPDATE_RETRY_MS;
+  try {
+    const res = await fetch(`${bffUrl}/api/desktop/release`, {
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': 'CoopSeat',
+        'X-CoopSeat-Client': 'desktop',
+        'X-CoopSeat-Version': app.getVersion(),
+      },
+    });
+    if (!res.ok) return;
+    const version = parseReleaseVersion(await res.json());
+    updateCheckAt = Date.now() + UPDATE_OK_MS;
+    if (!version || !isNewer(app.getVersion(), version)) {
+      availableUpdate = null;
+      return;
+    }
+    if (availableUpdate?.version === version) return;
+    availableUpdate = { version };
+    publishUpdate();
+  } catch {
+    /* the next focus retries */
+  } finally {
+    updateChecking = false;
+  }
+}
 function deliverLink(raw) {
   const link = parseDeepLink(raw);
   if (!link) return;
@@ -410,10 +449,15 @@ app.whenReady().then(() => {
   );
   handle('auth:pending', () => {
     rendererReady = true;
+    publishUpdate();
     const raw = pendingLink;
     pendingLink = null;
     return raw ? parseDeepLink(raw) : null;
   });
+  handle('update:current', () => availableUpdate);
+  handle('update:open', () =>
+    shell.openExternal(validateExternalUrl(`${bffUrl}/download`, bffOrigins)),
+  );
   handle('secure:get', (key) => secureGet(validateSecureKey(key)));
   handle('secure:set', (key, value) =>
     secureSet(validateSecureKey(key), validateSecureValue(value)),
@@ -646,6 +690,12 @@ app.whenReady().then(() => {
       `Ambiente: ${process.env.COOPSEAT_BFF_URL ? 'COOPSEAT_BFF_URL' : process.env.COOPSEAT_ENV || 'development'} | BFF: ${bffUrl}`,
     );
   win.loadURL(entry);
+  win.on('focus', () => {
+    void checkForUpdate();
+  });
+  win.webContents.on('did-finish-load', () => {
+    void checkForUpdate();
+  });
   win.on('closed', () => {
     watchPointer(false);
     stopAudio();
