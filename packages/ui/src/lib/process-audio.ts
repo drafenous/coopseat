@@ -15,13 +15,14 @@ type GeneratorCtor = new (init: { kind: 'audio' }) => TrackGenerator;
 export type ProcessAudio = { track: MediaStreamTrack; stop(): void };
 
 /**
- * A track carrying only a program's audio (a window's process, or everything but CoopSeat for a
- * screen), fed by the native core. Null when unavailable (no generator, old Windows, no native core),
- * so the caller can fall back to the system mix.
+ * A track of one program's audio, or of every program except CoopSeat, fed by the native core.
+ * Null when unavailable (no generator, old Windows, no native core), so the caller can fall back
+ * to the system mix.
  */
 export async function processAudio(
   b: DesktopBridge,
   sourceId: string,
+  mode: 'system' | 'window',
 ): Promise<ProcessAudio | null> {
   const Generator = (
     globalThis as { MediaStreamTrackGenerator?: GeneratorCtor }
@@ -30,7 +31,7 @@ export async function processAudio(
   if (!Generator || !audio || !audioStop || !onAudio) return null;
   let session: number;
   try {
-    session = await audio(sourceId);
+    session = await audio(sourceId, mode);
   } catch {
     return null;
   }

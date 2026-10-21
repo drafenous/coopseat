@@ -21,7 +21,7 @@ contextBridge.exposeInMainWorld('input', {
     sources: () => ipcRenderer.invoke('screen:sources'),
     pick: (id, audio) => ipcRenderer.invoke('screen:pick', { id, audio }),
     protect: (on) => ipcRenderer.invoke('screen:protect', on),
-    audio: (id) => ipcRenderer.invoke('screen:audio', id),
+    audio: (id, mode) => ipcRenderer.invoke('screen:audio', id, mode),
     audioStop: (session) => ipcRenderer.invoke('screen:audioStop', session),
     onAudio: (callback) => {
       const fn = (_, session, pcm) => callback(session, pcm);

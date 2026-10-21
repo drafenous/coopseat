@@ -107,14 +107,18 @@ function validatePick(o) {
     throw Error('Fonte inválida.');
   return { id: o.id, audio: o.audio };
 }
-/** Process audio for a source: a window's own process, or everything but this app for a screen. */
-function validateAudioSource(id) {
+/** Process audio: `system` is everything but this app; `window` is that window's own process. */
+function validateAudioSource(id, mode) {
   if (typeof id !== 'string' || !SOURCE_ID.test(id))
     throw Error('Fonte inválida.');
+  if (mode !== 'system' && mode !== 'window')
+    throw Error('Modo de áudio inválido.');
   const [kind, handle] = id.split(':');
-  return kind === 'window'
-    ? { cmd: 'loopback', window: handle }
-    : { cmd: 'loopback', exclude: process.pid };
+  if (mode === 'window') {
+    if (kind !== 'window') throw Error('Fonte inválida.');
+    return { cmd: 'loopback', window: handle };
+  }
+  return { cmd: 'loopback', exclude: process.pid };
 }
 function findDeepLink(argv) {
   return Array.isArray(argv)

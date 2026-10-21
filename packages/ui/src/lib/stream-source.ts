@@ -82,10 +82,9 @@ export function cardSource(
 }
 
 /**
- * Screen or window. On desktop the source comes from our own picker (`sourceId`) and the audio is the
- * window's own program, or everything but CoopSeat for a screen (falling back to the whole system mix
- * where Windows can't isolate processes); on the web the browser shows its picker and tab/system audio
- * when offered.
+ * Screen or window. On desktop the source comes from our own picker (`sourceId`). `system` audio is
+ * every program except CoopSeat; `window` audio is that window's own program. On the web the browser
+ * shows its picker and its own audio switch.
  */
 export async function displaySource({
   kind,
@@ -96,13 +95,17 @@ export async function displaySource({
   kind: 'screen' | 'window';
   sourceId?: string;
   label?: string;
-  audio: boolean;
+  /** Desktop: which process loopback to add. Web: whether to ask the browser for audio. */
+  audio: boolean | 'system' | 'window';
 }): Promise<StreamSource> {
   const b = bridge();
+  const desktopMode = audio === 'system' || audio === 'window' ? audio : null;
   if (b) {
     if (!sourceId) throw Error('source_required');
-    const own = audio ? await processAudio(b, sourceId) : null;
-    const systemAudio = audio && !own;
+    const own = desktopMode
+      ? await processAudio(b, sourceId, desktopMode)
+      : null;
+    const systemAudio = Boolean(desktopMode) && !own;
     let stream: MediaStream;
     try {
       await b.screen.pick(sourceId, systemAudio);

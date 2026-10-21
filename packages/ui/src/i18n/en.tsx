@@ -102,11 +102,6 @@ export const en = {
     signUp: 'Create account',
     signIn: 'I already have an account',
   },
-  status: {
-    idle: 'Ready to connect',
-    busy: 'Connecting…',
-    live: 'Capture active',
-  },
   captureButton: {
     stop: 'Stop capture',
     cancel: 'Cancel',
@@ -121,11 +116,7 @@ export const en = {
   },
   advanced: {
     title: 'Advanced',
-    backend: 'Capture mode',
-    native: (available: boolean) =>
-      `Native · lowest latency${available ? '' : ' (not available)'}`,
-    compat: 'Compatibility · works on any PC',
-    videoFormat: 'Video format',
+    format: 'Format',
     noModes: 'No modes available',
     resolution: 'Resolution',
     vsyncNative: 'Prevents tearing in the image',
@@ -241,7 +232,7 @@ export const en = {
     tips: [
       "If the card doesn't open, close OBS, Camera and other apps that may be using it.",
       "HDCP-protected content (some video apps) doesn't show up on capture cards.",
-      "Native mode has less latency. If it isn't available, use Compatibility under Advanced.",
+      'The Windows app captures in Native mode, with less latency. The browser uses Compatibility mode.',
       "You don't need an account to play. Accounts are for people 18 or older: with a confirmed e-mail, a nickname and a verified age, they unlock chat in sessions and let you create rooms.",
     ],
     gotIt: 'Got it',
@@ -320,8 +311,6 @@ export const en = {
     noAudio: 'No audio',
     output: 'Play sound on',
     systemDefault: 'Windows default',
-    autoConnect: 'Capture on open',
-    autoConnectHint: 'Starts the capture as soon as the app opens',
     local: 'The capture stays on your PC. Nothing is recorded.',
   },
   cinemaMenu: {
@@ -465,17 +454,14 @@ export const en = {
       window: 'Window Capture',
       pick: 'Click the source you want to stream',
       pickInPanel: 'Choose the screen or window in the input panel.',
-      audio: 'Include system audio',
-      audioHint:
-        'Other streams playing here may be picked up too; use headphones.',
       desktopAudio: {
-        window: {
-          label: "Include the program's audio",
-          hint: "Only the sound of this window's program. On older Windows, system audio is used.",
+        system: {
+          label: 'Include system audio',
+          hint: "All of the computer's sound except CoopSeat's (chat and other streams). On older Windows, the whole system mix is used.",
         },
-        screen: {
-          label: 'Include PC audio',
-          hint: "All of the computer's sound except CoopSeat's (chat and other streams).",
+        window: {
+          label: 'Include window audio',
+          hint: "Only this window's program. Turns off while system audio is on, so the sound is not sent twice.",
         },
       },
       refresh: 'Refresh',
@@ -541,7 +527,8 @@ export const en = {
     requests: { title: 'Asking to stream', grant: 'Allow', deny: 'Ignore' },
     settings: {
       access: 'Access',
-      accessHint: 'Optional. Anyone who joins still needs the password when it is set.',
+      accessHint:
+        'Optional. Anyone who joins still needs the password when it is set.',
       password: 'Password',
       passwordSet: 'A password is set',
       passwordNone: 'No password',
@@ -801,17 +788,14 @@ export const en = {
           id: 'lag',
           title: 'Latency, stutters or low FPS',
           steps: [
-            desktop ? (
-              <>
-                Use <strong>Native</strong> mode under Advanced: it has much
-                less latency than Compatibility mode.
-              </>
-            ) : (
-              <>
-                The CoopSeat app for Windows has Native mode, with much less
-                latency than the browser.
-              </>
-            ),
+            ...(desktop
+              ? []
+              : [
+                  <>
+                    The CoopSeat app for Windows captures in Native mode, with
+                    much less latency than the browser.
+                  </>,
+                ]),
             <>
               Plug the card into a USB 3 port. On USB 2, 1080p60 only works
               compressed (MJPG) and may stutter.
@@ -841,7 +825,8 @@ export const en = {
             </>,
             <>Reinstall CoopSeat with the latest installer.</>,
             <>
-              Meanwhile, <strong>Compatibility</strong> mode works on any PC.
+              If the native core can't start, the app uses{' '}
+              <strong>Compatibility</strong> mode on its own.
             </>,
           ],
         },

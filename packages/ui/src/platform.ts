@@ -75,11 +75,11 @@ export type DesktopBridge = {
     pick(id: string, audio: boolean): Promise<boolean>;
     protect(on: boolean): Promise<boolean>;
     /**
-     * Process audio for a source (Windows 10 2004+): a window's own program, or everything but this
-     * app for a screen. Resolves with a session number once capturing; PCM (48 kHz, stereo, s16le)
-     * for that session arrives on `onAudio`.
+     * Process audio (Windows 10 2004+). `system` is every program except CoopSeat;
+     * `window` is the shared window's own program. PCM (48 kHz, stereo, s16le) for that
+     * session arrives on `onAudio`.
      */
-    audio?(id: string): Promise<number>;
+    audio?(id: string, mode: 'system' | 'window'): Promise<number>;
     audioStop?(session: number): Promise<void>;
     onAudio?(
       callback: (session: number, pcm: Uint8Array<ArrayBuffer>) => void,

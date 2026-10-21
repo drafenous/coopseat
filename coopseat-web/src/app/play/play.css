@@ -2,7 +2,7 @@
 @import '@coopseat/ui/theme.css';
 @import '@coopseat/ui/base.css';
 
-/* The player fills the space under the server-rendered intro, instead of forcing another viewport. */
+/* The player fills the viewport. The intro is off-screen and must not add a second one. */
 .play-app > div {
   min-height: 0 !important;
   height: 100%;

@@ -88,7 +88,6 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
     settings: s,
     setSettings,
     native: capture.native,
-    resetDevices: capture.resetDevices,
     setError,
     setNotice,
   });
@@ -375,7 +374,6 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
       change={change}
       devices={devices}
       modes={modes}
-      native={capture.native}
       running={running}
       busy={busy}
       canStart={canStart}
@@ -385,7 +383,11 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
           presets={presets.presets}
           selected={presets.selectedPreset}
           defaultPreset={presets.defaultPreset}
-          locked={running || busy}
+          locked={
+            running ||
+            busy ||
+            (partyMode && (Boolean(party.source) || party.busy))
+          }
           menuOpen={presetMenu}
           onMenuOpenChange={setPresetMenu}
           onApply={presets.applyPreset}
@@ -396,13 +398,17 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         />
       }
       sourcePicker={
-        partyMode ? <StreamSourceSettings picker={streamPicker} /> : undefined
+        partyMode ? (
+          <StreamSourceSettings
+            picker={streamPicker}
+            locked={running || busy || Boolean(party.source) || party.busy}
+          />
+        ) : undefined
       }
       devicesHidden={partyMode && streamPicker.kind !== 'card'}
       onRefresh={() => void capture.refresh()}
       onPermit={permit}
       onSelectDevice={capture.selectDevice}
-      onBackendChange={capture.changeBackend}
       onStart={start}
       onStop={stop}
       transmit={
@@ -468,7 +474,6 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
       roomCollapsed={roomCollapsed}
       header={
         <AppHeader
-          status={running ? 'live' : busy ? 'busy' : 'idle'}
           auth={auth}
           onHelp={() => setHelp(true)}
           onTroubleshoot={() => setTroubleshoot(true)}
@@ -557,18 +562,18 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         )
       }
       panel={
-        !partyMode || streamer
-          ? panelCollapsed
-            ? (
-                <PanelRail
-                  label={t.settings.title}
-                  expandLabel={t.settings.expand}
-                  side={settingsSide}
-                  onExpand={() => setPanelCollapsed(false)}
-                />
-              )
-            : settingsPanel
-          : undefined
+        !partyMode || streamer ? (
+          panelCollapsed ? (
+            <PanelRail
+              label={t.settings.title}
+              expandLabel={t.settings.expand}
+              side={settingsSide}
+              onExpand={() => setPanelCollapsed(false)}
+            />
+          ) : (
+            settingsPanel
+          )
+        ) : undefined
       }
       roomPanel={
         partyMode && signedIn ? (

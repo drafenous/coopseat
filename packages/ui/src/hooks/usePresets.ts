@@ -8,7 +8,6 @@ type Options = {
   settings: Settings;
   setSettings: Dispatch<SetStateAction<Settings>>;
   native: boolean;
-  resetDevices: () => void;
   setError: (message: string) => void;
   setNotice: (message: string) => void;
 };
@@ -17,7 +16,6 @@ export function usePresets({
   settings: s,
   setSettings: setS,
   native,
-  resetDevices,
   setError,
   setNotice,
 }: Options) {
@@ -52,8 +50,19 @@ export function usePresets({
     setSelectedPreset(name);
     const p = presets.find((x) => x.name === name);
     if (!p) return;
-    if (p.settings.backend !== s.backend) resetDevices();
-    setS({ ...p.settings, backend: native ? p.settings.backend : 'compat' });
+    const backend = native ? 'native' : 'compat';
+    setS((current) => ({
+      ...p.settings,
+      backend,
+      ...(p.settings.backend === backend
+        ? {}
+        : {
+            video: current.video,
+            audio: current.audio,
+            output: current.output,
+            mode: current.mode,
+          }),
+    }));
     setError('');
     setNotice(t.presets.applied(name));
   };

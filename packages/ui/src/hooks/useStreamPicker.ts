@@ -56,7 +56,10 @@ export function useStreamPicker({
   const [kind, setKindState] = useState<StreamSourceKind>(savedKind);
   const [sources, setSources] = useState<ScreenSource[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [audio, setAudio] = useState(true);
+  // System audio is the screen default. A window starts with its own program instead, so the two
+  // tracks are never both on (the system mix already contains that program).
+  const [systemAudio, setSystemAudioState] = useState(savedKind() !== 'window');
+  const [windowAudio, setWindowAudioState] = useState(savedKind() === 'window');
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -78,7 +81,24 @@ export function useStreamPicker({
   const live = Boolean(party.source && party.streaming);
   const visible = sources.filter((s) => s.kind === kind);
 
-  const use = async (k: StreamSourceKind, id: string | null) => {
+  const audioChoice = (
+    k: StreamSourceKind,
+    system: boolean,
+    program: boolean,
+  ): boolean | 'system' | 'window' =>
+    !desktop
+      ? true
+      : system
+        ? 'system'
+        : k === 'window' && program
+          ? 'window'
+          : false;
+
+  const use = async (
+    k: StreamSourceKind,
+    id: string | null,
+    mode = audioChoice(k, systemAudio, windowAudio),
+  ) => {
     try {
       let source: StreamSource | null = null;
       if (k === 'card') {
@@ -92,7 +112,7 @@ export function useStreamPicker({
           kind: k,
           sourceId: src?.id,
           label: src?.name,
-          audio,
+          audio: mode,
         });
       }
       if (!source) return;
@@ -106,12 +126,29 @@ export function useStreamPicker({
     }
   };
 
+  const setSystemAudio = (on: boolean) => {
+    setSystemAudioState(on);
+    const program = on ? false : windowAudio;
+    if (on) setWindowAudioState(false);
+    if (live && kind !== 'card')
+      void use(kind, selected, audioChoice(kind, on, program));
+  };
+  const setWindowAudio = (on: boolean) => {
+    if (systemAudio) return;
+    setWindowAudioState(on);
+    if (live && kind === 'window')
+      void use(kind, selected, on ? 'window' : false);
+  };
+
   const setKind = (k: StreamSourceKind) => {
+    const program = k === 'screen' && systemAudio ? false : windowAudio;
+    if (program !== windowAudio) setWindowAudioState(program);
     setKindState(k);
     setSelected(null);
     localStorage.setItem(PARTY_SOURCE_KEY, k);
     // Screens/windows on desktop wait for a thumbnail; the browser asks right away.
-    if (live && (k === 'card' ? cardReady : !desktop)) void use(k, null);
+    if (live && (k === 'card' ? cardReady : !desktop))
+      void use(k, null, audioChoice(k, systemAudio, program));
   };
   const select = (id: string) => {
     setSelected(id);
@@ -132,8 +169,11 @@ export function useStreamPicker({
     sources: visible,
     selected,
     select,
-    audio,
-    setAudio,
+    systemAudio,
+    setSystemAudio,
+    windowAudio: systemAudio ? false : windowAudio,
+    windowAudioDisabled: systemAudio,
+    setWindowAudio,
     loading,
     refresh,
     live,

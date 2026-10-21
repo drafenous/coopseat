@@ -1,29 +1,34 @@
+import { cookies } from 'next/headers';
 import { localeHref } from '@/i18n/config';
 import { getDictionary, getLocale } from '@/i18n/server';
+import { DesktopBanner } from '@/components/DesktopBanner';
+import { DESKTOP_BANNER_COOKIE } from '@/components/desktop-banner';
 import { PlayClient } from './PlayClient';
 
 export default async function PlayPage() {
-  const [t, locale] = await Promise.all([getDictionary(), getLocale()]);
+  const [t, locale, jar] = await Promise.all([
+    getDictionary(),
+    getLocale(),
+    cookies(),
+  ]);
   const page = t.playPage;
+  const showBanner = jar.get(DESKTOP_BANNER_COOKIE)?.value !== 'hidden';
   return (
     <>
-      <section className="shrink-0 border-b border-white/10 px-6 py-4">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div className="max-w-3xl">
-            <h1 className="text-lg font-semibold text-[#eef3f7]">
-              {page.title}
-            </h1>
-            <p className="mt-1 text-sm leading-relaxed">{page.body}</p>
-            <p className="mt-1 text-sm leading-relaxed">{page.requirements}</p>
-          </div>
-          <a
-            href={localeHref(locale, '/download')}
-            className="shrink-0 text-sm font-semibold text-[#8bf5ca] underline-offset-4 hover:underline"
-          >
-            {page.download}
-          </a>
-        </div>
+      <section className="sr-only">
+        <h1>{page.title}</h1>
+        <p>{page.body}</p>
+        <p>{page.requirements}</p>
+        <a href={localeHref(locale, '/download')}>{page.download}</a>
       </section>
+      {showBanner && (
+        <DesktopBanner
+          message={page.desktopBanner}
+          downloadHref={localeHref(locale, '/download')}
+          downloadLabel={page.download}
+          closeLabel={t.cookies.close}
+        />
+      )}
       <div className="play-app flex min-h-0 flex-1 flex-col">
         <PlayClient locale={locale} />
       </div>

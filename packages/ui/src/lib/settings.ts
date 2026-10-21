@@ -33,7 +33,6 @@ export type Settings = {
   vsync: boolean;
   smoothing: Smoothing;
   effect: Effect;
-  auto: boolean;
   autoFull: boolean;
   cinemaDelay: number;
 };
@@ -55,7 +54,6 @@ export const defaults: Settings = {
   vsync: false,
   smoothing: 'off',
   effect: 'none',
-  auto: false,
   autoFull: true,
   cinemaDelay: 5,
 };

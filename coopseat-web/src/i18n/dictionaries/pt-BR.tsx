@@ -37,6 +37,8 @@ export const ptBR: Dictionary = {
     requirements:
       'Você precisa de uma placa de captura, um cabo HDMI e do Chrome ou do Edge. Qualquer resolução e FPS que a placa entregar.',
     download: 'Baixar para Windows',
+    desktopBanner:
+      'Com a versão desktop, a captura de tela fica com o menor input lag possível e a transmissão de áudio é exclusiva da janela.',
   },
   common: {
     language: 'Idioma',

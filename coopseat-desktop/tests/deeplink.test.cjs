@@ -62,16 +62,22 @@ test('accepts only desktopCapturer source ids when picking a screen', () => {
     assert.throws(() => validatePick(o));
 });
 test('maps a shared source to the process audio the native core captures', () => {
-  assert.deepEqual(validateAudioSource('window:132456:0'), {
+  assert.deepEqual(validateAudioSource('window:132456:0', 'window'), {
     cmd: 'loopback',
     window: '132456',
   });
-  assert.deepEqual(validateAudioSource('screen:0:0'), {
+  assert.deepEqual(validateAudioSource('window:132456:0', 'system'), {
+    cmd: 'loopback',
+    exclude: process.pid,
+  });
+  assert.deepEqual(validateAudioSource('screen:0:0', 'system'), {
     cmd: 'loopback',
     exclude: process.pid,
   });
   for (const id of [null, 1, 'tab:1:0', 'window:1:0;rm', 'window::0'])
-    assert.throws(() => validateAudioSource(id));
+    assert.throws(() => validateAudioSource(id, 'system'));
+  assert.throws(() => validateAudioSource('screen:0:0', 'window'));
+  assert.throws(() => validateAudioSource('window:132456:0', 'mix'));
 });
 test('ignores unknown routes, bad tickets and other schemes', () => {
   for (const raw of [

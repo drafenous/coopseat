@@ -9,13 +9,21 @@ import { useT } from '../../i18n';
 const KINDS: StreamSourceKind[] = ['card', 'screen', 'window'];
 
 /** Capture type for the party plus, for screens and windows, the sources to pick from. */
-export function StreamSourceSettings({ picker: p }: { picker: StreamPicker }) {
+export function StreamSourceSettings({
+  picker: p,
+  locked = false,
+}: {
+  picker: StreamPicker;
+  /** While a capture or stream is running, the choice stays put until it stops. */
+  locked?: boolean;
+}) {
   const t = useT().party.source;
   return (
     <>
       <SelectField
         label={t.kind}
         value={p.kind}
+        disabled={locked}
         onChange={(v) => p.setKind(v as StreamSourceKind)}
         options={KINDS.map((k) => ({ value: k, label: t[k] }))}
       />
@@ -28,7 +36,7 @@ export function StreamSourceSettings({ picker: p }: { picker: StreamPicker }) {
                 <IconButton
                   size="sm"
                   label={t.refresh}
-                  disabled={p.loading}
+                  disabled={locked || p.loading}
                   onClick={() => void p.refresh()}
                 >
                   <RefreshCw size={15} />
@@ -50,12 +58,14 @@ export function StreamSourceSettings({ picker: p }: { picker: StreamPicker }) {
                     type="button"
                     role="option"
                     aria-selected={p.selected === s.id}
+                    disabled={locked}
                     onClick={() => p.select(s.id)}
                     className={cx(
                       'flex min-w-0 flex-col gap-1.5 rounded-lg border p-1.5 text-left',
                       p.selected === s.id
                         ? 'border-accent-border bg-[#a8f0cb12]'
-                        : 'border-line-soft hover:bg-[#ffffff08]',
+                        : 'border-line-soft not-disabled:hover:bg-[#ffffff08]',
+                      locked && 'cursor-default',
                     )}
                   >
                     {s.thumbnail ? (
@@ -77,12 +87,26 @@ export function StreamSourceSettings({ picker: p }: { picker: StreamPicker }) {
           ) : (
             <p className="mb-3 text-[13px] text-[#a5b2c3]">{t.browserPicker}</p>
           )}
-          <ToggleField
-            label={p.desktop ? t.desktopAudio[p.kind].label : t.audio}
-            hint={p.desktop ? t.desktopAudio[p.kind].hint : t.audioHint}
-            checked={p.audio}
-            onChange={p.setAudio}
-          />
+          {p.desktop && (
+            <>
+              <ToggleField
+                label={t.desktopAudio.system.label}
+                hint={t.desktopAudio.system.hint}
+                checked={p.systemAudio}
+                disabled={locked}
+                onChange={p.setSystemAudio}
+              />
+              {p.kind === 'window' && (
+                <ToggleField
+                  label={t.desktopAudio.window.label}
+                  hint={t.desktopAudio.window.hint}
+                  checked={p.windowAudio}
+                  disabled={locked || p.windowAudioDisabled}
+                  onChange={p.setWindowAudio}
+                />
+              )}
+            </>
+          )}
         </>
       )}
     </>

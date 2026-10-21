@@ -1,6 +1,5 @@
 export { Button } from './Button';
 export { Divider } from './Divider';
-export { Dot } from './Dot';
 export { FieldHint } from './FieldHint';
 export { IconButton } from './IconButton';
 export { Kbd } from './Kbd';

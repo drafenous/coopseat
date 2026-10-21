@@ -4,6 +4,18 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-20
+
+### Changed
+
+- **Breaking:** Capture mode and "Capture on open" are gone. The app uses Native when the capture core starts, and Compatibility on its own when it cannot.
+- A shared screen or window can include system audio except CoopSeat. A window can instead include only that program. Turning on system audio turns window audio off, so the sound is not sent twice.
+- Input & output and Advanced cannot be changed while you are capturing or streaming. Stop, change them, and start again.
+
+### Removed
+
+- The header status badge.
+
 ## [0.3.0] - 2026-10-18
 
 ### Added

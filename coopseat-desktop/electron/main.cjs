@@ -212,8 +212,8 @@ function stopAudio(session) {
   p.once('exit', () => clearTimeout(timer));
   p.stdin.end(JSON.stringify({ cmd: 'stop' }) + '\n');
 }
-function startAudio(id) {
-  const request = validateAudioSource(id);
+function startAudio(id, mode) {
+  const request = validateAudioSource(id, mode);
   if (!listedSources.has(id))
     throw Error('Fonte indisponível. Atualize a lista.');
   if (!available()) throw Error('Núcleo nativo indisponível.');
@@ -593,7 +593,7 @@ app.whenReady().then(() => {
   handle('donate', () => shell.openExternal(DONATE_URL));
   handle('screen:sources', () => listSources());
   handle('screen:pick', (o) => pickSource(o));
-  handle('screen:audio', (id) => startAudio(id));
+  handle('screen:audio', (id, mode) => startAudio(id, mode));
   handle('screen:audioStop', (session) => {
     if (!Number.isInteger(session)) throw Error('Sessão inválida.');
     stopAudio(session);

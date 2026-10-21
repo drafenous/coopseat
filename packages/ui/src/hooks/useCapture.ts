@@ -20,7 +20,6 @@ import {
   effectIndex,
   emptyDevices,
   smoothingLevel,
-  type Backend,
   type Settings,
 } from '../lib/settings';
 import { getT, useT } from '../i18n';
@@ -109,7 +108,6 @@ export function useCapture({
     nativeFeed = useRef<NativeFeed | null>(null),
     relayHolds = useRef(0),
     generation = useRef(0),
-    autoDone = useRef(false),
     current = useRef(s),
     runningRef = useRef(false);
   current.current = s;
@@ -193,7 +191,7 @@ export function useCapture({
       .then((info) => {
         if (!alive) return;
         setNative(info.native);
-        if (!info.native) setS((x) => ({ ...x, backend: 'compat' }));
+        setS((x) => ({ ...x, backend: info.native ? 'native' : 'compat' }));
         setLoaded(true);
       })
       .catch((e) => {
@@ -519,18 +517,6 @@ export function useCapture({
       return false;
     }
   }, [armWait, cancelWait, finishWait, release, stop, top]);
-  useEffect(() => {
-    if (
-      loaded &&
-      s.auto &&
-      s.video &&
-      !autoDone.current &&
-      (s.backend === 'compat' || modes.length)
-    ) {
-      autoDone.current = true;
-      void start();
-    }
-  }, [loaded, s.auto, s.video, s.backend, modes, start]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = s.volume;
@@ -586,7 +572,6 @@ export function useCapture({
       setError(e instanceof Error ? e.message : niceError(e));
     }
   };
-  const resetDevices = useCallback(() => setDevices(emptyDevices), []);
   const pairedAudio = (x: Settings, video: string) => {
     const match = matchingAudio(
       devices.video.find((v) => v.id === video),
@@ -608,10 +593,6 @@ export function useCapture({
       [key]: value,
       ...(key === 'video' ? { mode: -1, audio: pairedAudio(x, value) } : {}),
     }));
-  const changeBackend = (backend: Backend) => {
-    setDevices(emptyDevices);
-    setS((x) => ({ ...x, video: '', audio: '', output: '', backend }));
-  };
 
   /** Live card tracks. Native and compatibility both come from the capture that is already running. */
   const mediaStream = useCallback(async () => {
@@ -655,9 +636,7 @@ export function useCapture({
     stop,
     refresh,
     permit,
-    resetDevices,
     selectDevice,
-    changeBackend,
     mediaStream,
     releaseStream,
   };

@@ -12,14 +12,13 @@ import {
 } from 'lucide-react';
 import type { Devices, Mode } from '../../types';
 import type { DeviceKey } from '../../hooks/useCapture';
-import type { Backend, Settings } from '../../lib/settings';
+import type { Settings } from '../../lib/settings';
 import { IconButton, SectionLabel, TextButton } from '../atoms';
 import {
   CaptureButton,
   Collapsible,
   DeviceSelect,
   StreamButton,
-  ToggleField,
 } from '../molecules';
 import type { PanelSide } from '../templates/MainLayout';
 import { AdvancedSettings } from './AdvancedSettings';
@@ -33,7 +32,6 @@ type Props = {
   change<K extends keyof Settings>(key: K, value: Settings[K]): void;
   devices: Devices;
   modes: Mode[];
-  native: boolean;
   running: boolean;
   busy: boolean;
   canStart: boolean;
@@ -41,12 +39,11 @@ type Props = {
   presetPicker: ReactNode;
   /** Party only: the capture type select (and its sources), shown first in "Input & output". */
   sourcePicker?: ReactNode;
-  /** With a screen or window chosen, the capture device fields don't apply. */
+  /** With a screen or window chosen, the capture device fields and the advanced video mode don't apply. */
   devicesHidden?: boolean;
   onRefresh(): void;
   onPermit(): void;
   onSelectDevice(key: DeviceKey, value: string): void;
-  onBackendChange(backend: Backend): void;
   onStart(): void;
   onStop(): void;
   /**
@@ -70,7 +67,6 @@ export function SettingsPanel({
   change,
   devices,
   modes,
-  native,
   running,
   busy,
   canStart,
@@ -81,12 +77,12 @@ export function SettingsPanel({
   onRefresh,
   onPermit,
   onSelectDevice,
-  onBackendChange,
   onStart,
   onStop,
   transmit,
 }: Props) {
-  const locked = running || busy;
+  const locked =
+    running || busy || Boolean(transmit?.streaming || transmit?.busy);
   const t = useT().settings;
   return (
     <aside className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#121921] immersive:hidden max-[750px]:overflow-visible">
@@ -114,7 +110,12 @@ export function SettingsPanel({
         </div>
         <SectionLabel icon={<Bookmark size={14} />}>{t.preset}</SectionLabel>
         {presetPicker}
-        <Collapsible icon={<Cable size={14} />} title={t.io} defaultOpen>
+        <Collapsible
+          icon={<Cable size={14} />}
+          title={t.io}
+          defaultOpen
+          disabled={locked}
+        >
           {sourcePicker}
           {!devicesHidden && (
             <>
@@ -153,26 +154,18 @@ export function SettingsPanel({
             </>
           )}
         </Collapsible>
-        <EffectSettings settings={s} change={change} />{' '}
-        <AdvancedSettings
-          settings={s}
-          change={change}
-          modes={modes}
-          native={native}
-          locked={locked}
-          onBackendChange={onBackendChange}
-        />
+        <EffectSettings settings={s} change={change} />
+        {!devicesHidden && (
+          <AdvancedSettings
+            settings={s}
+            change={change}
+            modes={modes}
+            locked={locked}
+          />
+        )}
       </div>
       {(!devicesHidden || running || busy || transmit) && (
         <div className="flex-none border-t border-line-soft bg-[#121921] px-5 py-3.5 min-[1800px]:px-6 min-[1800px]:py-4">
-          {(!devicesHidden || running || busy) && (
-            <ToggleField
-              label={t.autoConnect}
-              hint={t.autoConnectHint}
-              checked={s.auto}
-              onChange={(v) => change('auto', v)}
-            />
-          )}
           {transmit ? (
             <StreamButton
               block

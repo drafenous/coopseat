@@ -4,6 +4,14 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-20
+
+### Changed
+
+- The browser player picks Compatibility on its own. Capture mode, capture on open, and the header status badge are gone.
+- Screen and window sharing in the browser no longer has a separate sound toggle. The browser's own share dialog asks about audio.
+- Play and party pages show a closable banner for the Windows app instead of the intro above the player.
+
 ## [0.4.0] - 2026-10-18
 
 ### Added

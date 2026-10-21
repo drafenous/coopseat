@@ -94,11 +94,6 @@ export const ptBR: UiDictionary = {
     signUp: 'Criar conta',
     signIn: 'Já tenho conta',
   },
-  status: {
-    idle: 'Pronto para conectar',
-    busy: 'Conectando…',
-    live: 'Captura ativa',
-  },
   captureButton: {
     stop: 'Parar captura',
     cancel: 'Cancelar',
@@ -116,11 +111,7 @@ export const ptBR: UiDictionary = {
   },
   advanced: {
     title: 'Avançado',
-    backend: 'Modo de captura',
-    native: (available) =>
-      `Nativo · menor atraso${available ? '' : ' (não disponível)'}`,
-    compat: 'Compatibilidade · funciona em qualquer PC',
-    videoFormat: 'Formato de vídeo',
+    format: 'Formato',
     noModes: 'Nenhum modo disponível',
     resolution: 'Resolução',
     vsyncNative: 'Evita cortes na imagem',
@@ -235,7 +226,7 @@ export const ptBR: UiDictionary = {
     tips: [
       'Se a placa não abrir, feche OBS, Câmera e outros apps que possam estar usando ela.',
       'Conteúdo protegido por HDCP (alguns apps de vídeo) não aparece em placas de captura.',
-      'O modo Nativo tem menos atraso. Se não estiver disponível, use Compatibilidade em Avançado.',
+      'O app para Windows captura no modo Nativo, com menos atraso. O navegador usa o modo Compatibilidade.',
       'Para jogar você não precisa de conta. Ela é para maiores de 18 anos: com e-mail confirmado, apelido e idade verificada, libera o chat nas sessões e permite criar salas.',
     ],
     gotIt: 'Entendi',
@@ -314,8 +305,6 @@ export const ptBR: UiDictionary = {
     noAudio: 'Sem áudio',
     output: 'Tocar o som em',
     systemDefault: 'Padrão do Windows',
-    autoConnect: 'Capturar ao abrir',
-    autoConnectHint: 'Inicia a captura assim que o app abre',
     local: 'A captura fica no seu PC. Nada é gravado.',
   },
   cinemaMenu: {
@@ -457,17 +446,14 @@ export const ptBR: UiDictionary = {
       window: 'Captura de Janela',
       pick: 'Clique na fonte que você quer transmitir',
       pickInPanel: 'Escolha a tela ou janela no painel de entrada.',
-      audio: 'Incluir áudio do sistema',
-      audioHint:
-        'Outras transmissões tocando aqui também podem entrar; use fones.',
       desktopAudio: {
-        window: {
-          label: 'Incluir áudio do programa',
-          hint: 'Só o som do programa desta janela. Em Windows antigos, entra o áudio do sistema.',
+        system: {
+          label: 'Incluir áudio do sistema',
+          hint: 'Todo o som do computador, menos o do CoopSeat (chat e outras transmissões). Em Windows antigos, entra o áudio do sistema inteiro.',
         },
-        screen: {
-          label: 'Incluir áudio do PC',
-          hint: 'Todo o som do computador, menos o do CoopSeat (chat e outras transmissões).',
+        window: {
+          label: 'Incluir áudio da janela',
+          hint: 'Só o som do programa desta janela. Desliga sozinho com o áudio do sistema, para o som não sair duas vezes.',
         },
       },
       refresh: 'Atualizar',
@@ -814,17 +800,14 @@ export const ptBR: UiDictionary = {
           id: 'lag',
           title: 'Atraso, travadas ou FPS baixo',
           steps: [
-            desktop ? (
-              <>
-                Use o modo <strong>Nativo</strong> em Avançado: ele tem bem
-                menos atraso que o modo Compatibilidade.
-              </>
-            ) : (
-              <>
-                O app CoopSeat para Windows tem o modo Nativo, com bem menos
-                atraso que o navegador.
-              </>
-            ),
+            ...(desktop
+              ? []
+              : [
+                  <>
+                    O app CoopSeat para Windows captura no modo Nativo, com bem
+                    menos atraso que o navegador.
+                  </>,
+                ]),
             <>
               Ligue a placa numa porta USB 3. Em USB 2, 1080p60 só funciona
               comprimido (MJPG) e pode travar.
@@ -854,8 +837,8 @@ export const ptBR: UiDictionary = {
             </>,
             <>Reinstale o CoopSeat pelo instalador mais recente.</>,
             <>
-              Enquanto isso, o modo <strong>Compatibilidade</strong> funciona em
-              qualquer PC.
+              Se o núcleo nativo não iniciar, o app usa o modo{' '}
+              <strong>Compatibilidade</strong> sozinho.
             </>,
           ],
         },

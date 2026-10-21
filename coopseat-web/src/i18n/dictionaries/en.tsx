@@ -38,6 +38,8 @@ export const en = {
     requirements:
       'You need a capture card, an HDMI cable, and Chrome or Edge. Any resolution and frame rate the card can deliver.',
     download: 'Download for Windows',
+    desktopBanner:
+      'With the desktop app, screen capture has the lowest input lag, and the audio you stream is only that window.',
   },
   common: {
     language: 'Language',

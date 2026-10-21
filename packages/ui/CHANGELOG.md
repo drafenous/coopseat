@@ -4,6 +4,22 @@ All notable changes to `@coopseat/ui` are documented here. The format is based o
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-20
+
+### Changed
+
+- Capture mode is automatic: Compatibility in the browser, and Native on the desktop app when the capture core is available.
+- On a capture device, resolution, frame rate, and pixel format are separate choices. Each one snaps to the closest mode the card offers.
+- Advanced video settings show only for a capture device.
+- Desktop screen and window capture can include system audio except CoopSeat. A window can instead include only that program's audio, and the two never play together.
+- Input & output and Advanced stay locked while a capture or a stream is running. Effects and filters can still be changed.
+
+### Removed
+
+- The capture mode selector and "Capture on open".
+- The header status badge.
+- The browser toggle that asked to send sound with the picture. The browser's own share dialog still controls that audio.
+
 ## [0.3.0] - 2026-10-18
 
 ### Added

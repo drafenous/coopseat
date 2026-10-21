@@ -6,11 +6,14 @@ export function Collapsible({
   icon,
   title,
   defaultOpen = false,
+  disabled = false,
   children,
 }: {
   icon: ReactNode;
   title: string;
   defaultOpen?: boolean;
+  /** Form controls inside stay visible, but cannot be changed. */
+  disabled?: boolean;
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen);
@@ -31,7 +34,14 @@ export function Collapsible({
           )}
         />
       </button>
-      {open && <div className="pt-1.5">{children}</div>}
+      {open && (
+        <fieldset
+          disabled={disabled}
+          className="m-0 min-w-0 border-0 p-0 pt-1.5 [min-inline-size:0] disabled:opacity-60"
+        >
+          {children}
+        </fieldset>
+      )}
     </>
   );
 }
