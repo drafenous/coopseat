@@ -45,6 +45,7 @@ import {
   PartyGate,
   PreferencesModal,
   PresetPicker,
+  ReportModal,
   RoomPanel,
   SavePresetModal,
   SettingsPanel,
@@ -99,7 +100,8 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
     [presetMenu, setPresetMenu] = useState(false),
     [cinemaMenu, setCinemaMenu] = useState(false),
     [troubleshoot, setTroubleshoot] = useState(false),
-    [preferences, setPreferences] = useState(false);
+    [preferences, setPreferences] = useState(false),
+    [reportOpen, setReportOpen] = useState(false);
   const [showStats, setShowStats] = useState(
     () => localStorage.getItem(STATS_KEY) === '1',
   );
@@ -171,6 +173,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
     help ||
     troubleshoot ||
     preferences ||
+    reportOpen ||
     saving ||
     authOpen ||
     askNickname ||
@@ -466,6 +469,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
       onAutoCinema={(v) => change('autoFull', v)}
       onCinemaDelay={(v) => change('cinemaDelay', v)}
       onFullscreen={() => void cinema.fullscreen()}
+      onReport={() => setReportOpen(true)}
     />
   );
 
@@ -645,6 +649,14 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
             />
           )}
           {preferences && <PreferencesModal onClose={closePreferences} />}
+          {reportOpen && (
+            <ReportModal
+              email={auth.account?.email ?? ''}
+              room={partyNick}
+              surface={bridge() ? 'desktop' : partyNick ? 'party' : 'play'}
+              onClose={() => setReportOpen(false)}
+            />
+          )}
           {saving && (
             <SavePresetModal
               existingNames={presets.presets.map((p) => p.name)}

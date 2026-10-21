@@ -35,6 +35,38 @@ describe('sendEmail', () => {
       to: 'a@b.com',
       subject: 'Hi',
     });
+    expect(JSON.parse(init.body as string)).not.toHaveProperty('attachments');
+  });
+
+  it('forwards attachments only when there are some', async () => {
+    const fetchSpy = vi.fn(async () => Response.json({ id: 'email-2' }));
+    vi.stubGlobal('fetch', fetchSpy);
+    await sendEmail({
+      to: 'help@coopseat.com',
+      subject: 'Report',
+      html: '<p>x</p>',
+      attachments: [
+        {
+          filename: 'evidence-1.png',
+          content: 'aGVsbG8=',
+          contentType: 'image/png',
+        },
+      ],
+    });
+    expect(
+      JSON.parse(
+        (fetchSpy.mock.calls[0] as unknown as [string, RequestInit])[1]
+          .body as string,
+      ),
+    ).toMatchObject({
+      attachments: [
+        {
+          filename: 'evidence-1.png',
+          content: 'aGVsbG8=',
+          content_type: 'image/png',
+        },
+      ],
+    });
   });
 
   it('hides upstream failures', async () => {

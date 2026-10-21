@@ -30,6 +30,9 @@ export const ptBR: Dictionary = {
     download: 'Baixar para Windows',
     downloadDescription:
       'Baixe o CoopSeat grátis para Windows 10 e 11: instalador ou versão portátil, instalação em três passos e requisitos da placa de captura.',
+    contact: 'Contato',
+    contactDescription:
+      'Envie uma mensagem para o CoopSeat sobre o site, o app ou a sua conta.',
   },
   playPage: {
     title: 'Jogue o videogame no navegador',
@@ -62,6 +65,7 @@ export const ptBR: Dictionary = {
       how: 'Como funciona',
       local: 'Player local',
       faq: 'Dúvidas',
+      contact: 'Contato',
     },
     signIn: 'Entrar',
     myAccount: 'Minha conta',
@@ -220,6 +224,7 @@ export const ptBR: Dictionary = {
       product: 'Produto',
       legal: 'Legal',
       account: 'Minha conta',
+      contact: 'Contato',
       rights: (year: number) => `© ${year} CoopSeat`,
     },
   },
@@ -736,6 +741,18 @@ export const ptBR: Dictionary = {
       },
     ],
   },
+  contact: {
+    kicker: 'Contato',
+    title: 'Fale com a gente',
+    subtitle:
+      'Dúvidas sobre o site, o app ou a sua conta. A gente lê todas as mensagens.',
+    name: 'Nome',
+    email: 'E-mail',
+    message: 'Mensagem',
+    submit: 'Enviar mensagem',
+    pending: 'Enviando…',
+    failed: 'Não foi possível enviar sua mensagem. Tente novamente.',
+  },
   cookies: {
     preferences: 'Preferências de cookies',
     acceptAll: 'Aceitar todos',
@@ -774,6 +791,9 @@ export const ptBR: Dictionary = {
       'Se existir uma conta com esse e-mail, enviamos um link para redefinir a senha.',
     resendSent:
       'Se houver um cadastro pendente para esse e-mail, reenviamos o link.',
+    contactSent:
+      'Mensagem enviada. Vamos responder no e-mail que você informou.',
+    reportSent: 'Report enviado. Vamos responder no e-mail que você informou.',
   },
   errors: {
     generic: 'Algo deu errado. Tente novamente.',
@@ -849,6 +869,13 @@ export const ptBR: Dictionary = {
     email_required: 'Informe um e-mail.',
     email_too_long: 'E-mail muito longo.',
     email_invalid: 'E-mail inválido.',
+    name_required: 'Informe seu nome.',
+    name_too_long: 'Nome muito longo.',
+    message_required: 'Escreva uma mensagem.',
+    message_too_long: 'Mensagem muito longa.',
+    image_invalid: 'O arquivo não é uma imagem JPEG, PNG ou WebP.',
+    image_too_large: 'Cada imagem pode ter no máximo 1 MB.',
+    too_many_images: 'Dá para anexar no máximo 3 imagens.',
     email_disposable: 'Email inválido.',
     email_undeliverable: 'Email inválido.',
     password_required: 'Informe uma senha.',

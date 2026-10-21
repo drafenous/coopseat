@@ -31,6 +31,9 @@ export const en = {
     download: 'Download for Windows',
     downloadDescription:
       'Download CoopSeat for free for Windows 10 and 11: installer or portable version, setup in three steps and capture card requirements.',
+    contact: 'Contact',
+    contactDescription:
+      'Send a message to CoopSeat about the site, the app or your account.',
   },
   playPage: {
     title: 'Play your console in the browser',
@@ -63,6 +66,7 @@ export const en = {
       how: 'How it works',
       local: 'Local player',
       faq: 'FAQ',
+      contact: 'Contact',
     },
     signIn: 'Sign in',
     myAccount: 'My account',
@@ -221,6 +225,7 @@ export const en = {
       product: 'Product',
       legal: 'Legal',
       account: 'My account',
+      contact: 'Contact',
       rights: (year: number) => `© ${year} CoopSeat`,
     },
   },
@@ -727,6 +732,18 @@ export const en = {
       },
     ],
   },
+  contact: {
+    kicker: 'Contact',
+    title: 'Talk to us',
+    subtitle:
+      'Questions about the site, the app or your account. We read every message.',
+    name: 'Name',
+    email: 'E-mail',
+    message: 'Message',
+    submit: 'Send message',
+    pending: 'Sending…',
+    failed: "Couldn't send your message. Please try again.",
+  },
   cookies: {
     preferences: 'Cookie preferences',
     acceptAll: 'Accept all',
@@ -765,6 +782,8 @@ export const en = {
       'If an account exists with that e-mail, we sent a link to reset the password.',
     resendSent:
       'If there is a pending sign-up for that e-mail, we sent the link again.',
+    contactSent: 'Message sent. We will reply to the e-mail you entered.',
+    reportSent: 'Report sent. We will reply to the e-mail you entered.',
   },
   errors: {
     generic: 'Something went wrong. Please try again.',
@@ -837,6 +856,13 @@ export const en = {
     email_required: 'Enter an e-mail.',
     email_too_long: 'E-mail too long.',
     email_invalid: 'Invalid e-mail.',
+    name_required: 'Enter your name.',
+    name_too_long: 'Name is too long.',
+    message_required: 'Enter a message.',
+    message_too_long: 'Message is too long.',
+    image_invalid: 'That file is not a JPEG, PNG or WebP image.',
+    image_too_large: 'Each image must be 1 MB or smaller.',
+    too_many_images: 'You can attach up to 3 images.',
     email_disposable: 'Invalid email.',
     email_undeliverable: 'Invalid email.',
     password_required: 'Enter a password.',

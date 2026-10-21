@@ -18,6 +18,7 @@ export const INDEXABLE_PATHS = [
   '/play',
   '/privacy',
   '/terms',
+  '/contact',
 ] as const;
 
 export function absoluteUrl(path: string): string {
