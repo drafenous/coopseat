@@ -9,6 +9,7 @@ const fake = vi.hoisted(() => ({ current: null as unknown as FakeDb }));
 vi.mock('@/prisma/db', () => ({
   adminDb: async () => fake.current.db,
   getDb: async () => fake.current.db,
+  tryLockedRateLimit: async () => 'unsupported' as const,
 }));
 vi.mock('@/server/jwt', () => ({
   verifyAccessToken: async (token: string) =>
@@ -151,6 +152,60 @@ describe('POST /api/turn', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
+  it('refuses credentials after a kick or ban, and allows an expired ban', async () => {
+    const sid = fake.current.data.PartySession[0]!.id as string;
+    await fake.current.db.orm.public.PartySessionParticipant.create({
+      sessionId: sid,
+      profileId: 'user-1',
+      removal: 'kick',
+      removedBy: 'owner-1',
+    });
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
+
+    fake.current.data.PartySessionParticipant[0]!.removal = 'ban';
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    fake.current.data.PartySessionParticipant[0]!.removal = null;
+    await fake.current.db.orm.public.PartyRoomBan.create({
+      roomId: 'owner-1',
+      profileId: 'user-1',
+      bannedBy: 'owner-1',
+    });
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    fake.current.data.PartyRoomBan[0]!.expiresAt = new Date(
+      Date.now() - 1000,
+    ).toISOString();
+    const res = await turn(request('valid'), ctx);
+    expect(res.status).toBe(200);
+    expect((await res.json()).relay).toBe(true);
+  });
+
+  it('refuses credentials while the room is still holding a kick', async () => {
+    fetchSpy.mockImplementation(async (url: string) =>
+      String(url).includes('/internal/sessions/')
+        ? Response.json({ closed: true })
+        : Response.json({ iceServers }, { status: 201 }),
+    );
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
+    expect(
+      fetchSpy.mock.calls.some((call) =>
+        String(call[0]).includes('generate-ice-servers'),
+      ),
+    ).toBe(false);
+  });
+
+  it('refuses credentials while a join sanction is active', async () => {
+    await fake.current.db.orm.public.PlatformSanction.create({
+      profileId: 'user-1',
+      scope: 'party_join',
+    });
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
   it('returns Cloudflare ICE servers without caching and records the credential', async () => {
     const res = await turn(
       request('valid', { 'x-coopseat-version': '0.2.0' }),
@@ -164,10 +219,9 @@ describe('POST /api/turn', () => {
       relay: true,
       maxRelayBitrateKbps: 4000,
     });
-    const [url, init] = fetchSpy.mock.calls[0] as unknown as [
-      string,
-      RequestInit,
-    ];
+    const [url, init] = fetchSpy.mock.calls.find((call) =>
+      String(call[0]).includes('generate-ice-servers'),
+    ) as unknown as [string, RequestInit];
     expect(url).toContain('/turn/keys/key-id/credentials/generate-ice-servers');
     expect((init.headers as Record<string, string>).Authorization).toBe(
       'Bearer api-token',
@@ -190,7 +244,9 @@ describe('POST /api/turn', () => {
     expect(body.maxRelayBitrateKbps).toBe(2500);
     expect(body.expiresAt - before).toBeGreaterThanOrEqual(3600);
     expect(body.expiresAt - before).toBeLessThanOrEqual(3601);
-    const [, init] = fetchSpy.mock.calls[0] as unknown as [string, RequestInit];
+    const [, init] = fetchSpy.mock.calls.find((call) =>
+      String(call[0]).includes('generate-ice-servers'),
+    ) as unknown as [string, RequestInit];
     expect(JSON.parse(init.body as string)).toEqual({ ttl: 3600 });
   });
 

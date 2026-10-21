@@ -7,7 +7,15 @@ import { useT } from '@/i18n/client';
 import { trackEvent } from '@/lib/analytics';
 import { api, ApiClientError } from '@/lib/client/api';
 
-export function LoginForm({ next }: { next: string }) {
+export function LoginForm({
+  next,
+  desktopChallenge,
+  defaultEmail,
+}: {
+  next: string;
+  desktopChallenge?: string;
+  defaultEmail?: string;
+}) {
   const t = useT();
   const [captcha, setCaptcha] = useState<string>();
   const [captchaReset, setCaptchaReset] = useState(0);
@@ -20,14 +28,22 @@ export function LoginForm({ next }: { next: string }) {
     setPending(true);
     setError(undefined);
     try {
-      const res = await api<{ mfaRequired?: boolean }>('/api/auth/login', {
-        body: {
-          email: form.get('email'),
-          password: form.get('password'),
-          captchaToken: captcha,
+      const res = await api<{ mfaRequired?: boolean; openApp?: string }>(
+        '/api/auth/login',
+        {
+          body: {
+            email: form.get('email'),
+            password: form.get('password'),
+            captchaToken: captcha,
+            ...(desktopChallenge ? { desktopChallenge } : {}),
+          },
         },
-      });
+      );
       trackEvent({ name: 'login', method: 'email' });
+      if (res.openApp) {
+        window.location.assign(res.openApp);
+        return;
+      }
       // The session lives in cookies set by the route handler. A client
       // navigation plus refresh can leave the App Router transition pending,
       // so the dev indicator stays on "Rendering" and this page never swaps.
@@ -50,6 +66,7 @@ export function LoginForm({ next }: { next: string }) {
         type="email"
         autoComplete="email"
         required
+        defaultValue={defaultEmail}
       />
       <Field
         label={t.common.password}

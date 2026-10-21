@@ -10,12 +10,15 @@ import {
 } from '@coopseat/ui/party-protocol';
 import { permissionsFor, type GateInput } from '@/lib/gates';
 import {
+  admitParticipant,
+  assertCanLiftKick,
   assertCanTarget,
   decideAccess,
   openLiveSession,
   type AccessResult,
   type Viewer,
 } from '@/server/party/access';
+import { accessPayload } from '@/server/party/join';
 import { hashRoomPassword, verifyRoomPassword } from '@/server/party/password';
 import { activeSanctions, isBlocked } from '@/server/party/sanctions';
 import {
@@ -29,6 +32,7 @@ const fake = vi.hoisted(() => ({ current: null as unknown as FakeDb }));
 vi.mock('@/prisma/db', () => ({
   adminDb: async () => fake.current.db,
   getDb: async () => fake.current.db,
+  tryLockedRateLimit: async () => 'unsupported' as const,
 }));
 
 const OWNER = { id: 'owner-1', nickname: 'Host' };
@@ -153,8 +157,7 @@ describe('decideAccess', () => {
       owner: OWNER,
     });
     expect(opened.state).toBe('admitted');
-    if (opened.state === 'admitted')
-      expect(opened.claims.canStream).toBe(true);
+    if (opened.state === 'admitted') expect(opened.claims.canStream).toBe(true);
     expect(fake.current.data.PartySession).toHaveLength(1);
 
     await expect(
@@ -326,6 +329,179 @@ describe('decideAccess', () => {
 
     fake.current.data.PartySessionParticipant[0]!.removal = 'kick';
     expect(admitted(await access(viewer('u1'))).state).toBe('pending');
+    expect(fake.current.data.PartySessionParticipant[0]!.removal).toBe('kick');
+  });
+
+  it('keeps a kick of an allow-listed member until the owner clears it', async () => {
+    const session = await liveRoom();
+    await tables().PartyRoomWhitelist.create({
+      roomId: OWNER.id,
+      profileId: 'u1',
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'u1',
+      removal: 'kick',
+    });
+    const row = fake.current.data.PartySessionParticipant[0]!;
+    expect(await access(viewer('u1'))).toEqual({ state: 'kicked' });
+    expect(row.removal).toBe('kick');
+
+    fake.current.data.PartyRoomWhitelist.splice(0, 1);
+    expect(admitted(await access(viewer('u1'))).state).toBe('pending');
+    expect(row.removal).toBe('kick');
+
+    const moderator = { role: 'moderator' as const, perms: OWNER_PERMS };
+    fake.current.data.PartyRoomWhitelist.push({
+      roomId: OWNER.id,
+      profileId: 'u1',
+    });
+    await expect(
+      assertCanLiftKick(moderator, OWNER.id, session.id as string, 'u1'),
+    ).rejects.toMatchObject({ status: 403, code: 'party_forbidden' });
+    expect(row.removal).toBe('kick');
+
+    await assertCanLiftKick(
+      { role: 'owner', perms: OWNER_PERMS },
+      OWNER.id,
+      session.id as string,
+      'u1',
+    );
+    await admitParticipant(session.id as string, 'u1');
+    expect(row.removal).toBeNull();
+    expect(admitted(await access(viewer('u1'))).state).toBe('admitted');
+  });
+
+  it('keeps a privileged member out while the kick exists only in the room', async () => {
+    const session = await liveRoom();
+    await tables().PartyRoomWhitelist.create({
+      roomId: OWNER.id,
+      profileId: 'u1',
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'u1',
+    });
+    fetchSpy.mockImplementation(async () => Response.json({ closed: true }));
+    expect(await access(viewer('u1'))).toEqual({ state: 'kicked' });
+    expect(fake.current.data.PartySessionParticipant[0]!.removal).toBeNull();
+  });
+
+  it('keeps a returning member out while the kick exists only in the room', async () => {
+    const session = await liveRoom({
+      requireApproval: false,
+      whitelistEnabled: false,
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'u1',
+    });
+    fetchSpy.mockImplementation(async () => Response.json({ closed: true }));
+    const decided = await access(viewer('u1'));
+    expect(decided).toEqual({ state: 'kicked' });
+    expect(fake.current.data.PartySessionParticipant[0]!.removal).toBeNull();
+
+    const payload = await accessPayload(decided, OWNER);
+    expect(payload.state).toBe('kicked');
+    const sent = fetchSpy.mock.calls.map((call) =>
+      JSON.parse(String((call[1] as RequestInit).body)),
+    );
+    expect(sent.every((body) => body.action !== 'clear')).toBe(true);
+  });
+
+  it('blocks a moderator from lifting a privileged kick that is still only in the room', async () => {
+    const session = await liveRoom();
+    await tables().PartyRoomModerator.create({
+      roomId: OWNER.id,
+      profileId: 'mod',
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'mod',
+    });
+    const moderator = { role: 'moderator' as const, perms: OWNER_PERMS };
+    fetchSpy.mockImplementation(async () => Response.json({ closed: true }));
+    await expect(
+      assertCanLiftKick(moderator, OWNER.id, session.id as string, 'mod'),
+    ).rejects.toMatchObject({ status: 403, code: 'party_forbidden' });
+    await assertCanLiftKick(
+      { role: 'owner', perms: OWNER_PERMS },
+      OWNER.id,
+      session.id as string,
+      'mod',
+    );
+
+    fetchSpy.mockImplementation(async () => {
+      throw new Error('signal down');
+    });
+    await expect(
+      assertCanLiftKick(moderator, OWNER.id, session.id as string, 'mod'),
+    ).rejects.toMatchObject({ status: 403, code: 'party_forbidden' });
+
+    fetchSpy.mockImplementation(async () => Response.json({ closed: false }));
+    await assertCanLiftKick(moderator, OWNER.id, session.id as string, 'mod');
+  });
+
+  it('marks a non-privileged rejoin so the room can accept the new token', async () => {
+    const session = await liveRoom({
+      requireApproval: false,
+      whitelistEnabled: false,
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'u1',
+      removal: 'kick',
+    });
+    const decided = await access(viewer('u1'));
+    expect(decided.state).toBe('admitted');
+    if (decided.state !== 'admitted') return;
+    expect(decided.releaseKick).toBe(true);
+
+    const payload = await accessPayload(decided, OWNER);
+    expect(payload.state).toBe('admitted');
+    if (payload.state !== 'admitted' || !payload.token) return;
+    const claims = await verifyRoomToken(payload.token);
+    const sent = fetchSpy.mock.calls.map((call) =>
+      JSON.parse(String((call[1] as RequestInit).body)),
+    );
+    expect(sent).toContainEqual({
+      action: 'clear',
+      profileId: 'u1',
+      iat: claims?.iat,
+    });
+  });
+
+  it('keeps a kick of a moderator, and still lets a moderator approve a kicked stranger', async () => {
+    const session = await liveRoom();
+    await tables().PartyRoomModerator.create({
+      roomId: OWNER.id,
+      profileId: 'mod',
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'mod',
+      removal: 'kick',
+    });
+    await tables().PartySessionParticipant.create({
+      sessionId: session.id,
+      profileId: 'u1',
+      removal: 'kick',
+    });
+    const kickedMod = fake.current.data.PartySessionParticipant[0]!;
+    const stranger = fake.current.data.PartySessionParticipant[1]!;
+    expect(await access(viewer('mod'))).toEqual({ state: 'kicked' });
+    expect(kickedMod.removal).toBe('kick');
+
+    const moderator = { role: 'moderator' as const, perms: OWNER_PERMS };
+    await expect(
+      assertCanLiftKick(moderator, OWNER.id, session.id as string, 'mod'),
+    ).rejects.toMatchObject({ status: 403, code: 'party_forbidden' });
+    expect(kickedMod.removal).toBe('kick');
+
+    await assertCanLiftKick(moderator, OWNER.id, session.id as string, 'u1');
+    await admitParticipant(session.id as string, 'u1');
+    expect(stranger.removal).toBeNull();
+    expect(admitted(await access(viewer('u1'))).state).toBe('admitted');
   });
 
   it('admits moderators with their own permission set', async () => {

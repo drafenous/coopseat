@@ -218,6 +218,8 @@ export function PartyGate({
           body={t.notInvitedBody}
         />
       );
+    case 'kicked':
+      return <Panel icon={<Ban size={24} />} title={t.removed.kick} />;
     case 'banned':
       return <Panel icon={<Ban size={24} />} title={t.banned} />;
     case 'unavailable':

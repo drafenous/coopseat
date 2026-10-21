@@ -11,21 +11,22 @@ const ALG = 'EdDSA';
 let privateKey: Promise<CryptoKey> | undefined;
 let publicKey: Promise<CryptoKey> | undefined;
 
-export type RoomTokenInput = Omit<RoomTokenClaims, 'exp'>;
+export type RoomTokenInput = Omit<RoomTokenClaims, 'exp' | 'iat'>;
 
 /** Short-lived Ed25519 JWT the signal server verifies offline with the public key. */
 export async function signRoomToken(
   claims: RoomTokenInput,
+  iat = Math.floor(Date.now() / 1000),
 ): Promise<{ token: string; expiresAt: number }> {
   privateKey ??= importPKCS8(env.partyTokenPrivateKey, ALG);
-  const expiresAt = Math.floor(Date.now() / 1000) + ROOM_TOKEN_TTL_SECONDS;
+  const expiresAt = iat + ROOM_TOKEN_TTL_SECONDS;
   const { sub, ...rest } = claims;
   const token = await new SignJWT(rest)
     .setProtectedHeader({ alg: ALG, typ: 'JWT' })
     .setIssuer(ROOM_TOKEN_ISSUER)
     .setAudience(ROOM_TOKEN_AUDIENCE)
     .setSubject(sub)
-    .setIssuedAt()
+    .setIssuedAt(iat)
     .setExpirationTime(expiresAt)
     .sign(await privateKey);
   return { token, expiresAt };

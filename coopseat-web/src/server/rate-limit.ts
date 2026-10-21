@@ -1,4 +1,4 @@
-import { adminDb } from '@/prisma/db';
+import { adminDb, tryLockedRateLimit } from '@/prisma/db';
 import { ApiError } from './http';
 
 export type Limit = { max: number; windowSeconds: number };
@@ -29,6 +29,16 @@ export async function rateLimit(
   const { max, windowSeconds } = LIMITS[bucket];
   const key = `${bucket}:${subject}`;
   const since = new Date(Date.now() - windowSeconds * 1000).toISOString();
+
+  // The in-memory test database omits this lock and is already serial.
+  if (typeof tryLockedRateLimit === 'function') {
+    const locked = await tryLockedRateLimit(key, max, since);
+    if (locked === 'limited') {
+      throw new ApiError(429, 'rate_limited', { retryAfter: windowSeconds });
+    }
+    if (locked === 'ok') return;
+  }
+
   const db = await adminDb();
   const hits = db.orm.public.RateLimitHit;
 

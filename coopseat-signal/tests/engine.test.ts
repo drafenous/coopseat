@@ -366,10 +366,156 @@ describe('RoomEngine', () => {
     ).toEqual(['error']);
     const fx = e.message('m1', msg({ t: 'kick', to: 'ana' }), T0);
     expect(sent(fx, 'ana')).toEqual([{ t: 'removed', reason: 'kick' }]);
-    expect(fx).toContainEqual({
+    const eventAt = fx.findIndex(
+      (effect) => effect.k === 'event' && effect.event.type === 'kicked',
+    );
+    const closeAt = fx.findIndex(
+      (effect) => effect.k === 'close' && effect.to === 'ana',
+    );
+    expect(eventAt).toBeGreaterThanOrEqual(0);
+    expect(closeAt).toBeGreaterThan(eventAt);
+    expect(fx[eventAt]).toEqual({
       k: 'event',
       event: { type: 'kicked', sessionId: SID, profileId: 'ana', by: 'm1' },
     });
+  });
+
+  it('rejects a room token issued at or before a kick, and a later one until cleared', () => {
+    const e = room();
+    const issued = Math.floor(T0 / 1000);
+    e.join(claims('ana', { iat: issued }), T0);
+    e.message('owner', msg({ t: 'kick', to: 'ana' }), T0);
+    expect(
+      sent(e.join(claims('ana', { iat: issued }), T0 + 1000), 'ana'),
+    ).toEqual([{ t: 'removed', reason: 'kick' }]);
+    expect(sent(e.join(claims('ana'), T0 + 1000), 'ana')).toEqual([
+      { t: 'removed', reason: 'kick' },
+    ]);
+    expect(e.state.members['ana']).toBeUndefined();
+
+    const gap = issued + 5;
+    expect(sent(e.join(claims('ana', { iat: gap }), T0 + 5000), 'ana')).toEqual(
+      [{ t: 'removed', reason: 'kick' }],
+    );
+    expect(e.closedKick('ana')).toBe(true);
+
+    e.internal({ action: 'clear', profileId: 'ana', iat: gap + 1 }, T0 + 6000);
+    expect(e.closedKick('ana')).toBe(false);
+    expect(sent(e.join(claims('ana', { iat: gap }), T0 + 7000), 'ana')).toEqual(
+      [{ t: 'removed', reason: 'kick' }],
+    );
+    expect(
+      types(e.join(claims('ana', { iat: gap + 1 }), T0 + 7000), 'ana'),
+    ).toContain('welcome');
+    expect(e.state.removed?.['ana']).toMatchObject({
+      at: issued,
+      reason: 'kick',
+      open: gap + 1,
+    });
+    expect(
+      sent(e.join(claims('ana', { iat: issued }), T0 + 8000), 'ana'),
+    ).toEqual([{ t: 'removed', reason: 'kick' }]);
+  });
+
+  it('ignores a clearance that is not after the kick', () => {
+    const e = room();
+    const issued = Math.floor(T0 / 1000);
+    e.join(claims('ana', { iat: issued }), T0);
+    e.message('owner', msg({ t: 'kick', to: 'ana' }), T0);
+
+    e.internal({ action: 'clear', profileId: 'ana', iat: issued }, T0);
+    e.internal({ action: 'approve', profileId: 'ana' }, T0);
+    expect(e.closedKick('ana')).toBe(true);
+    expect(e.state.removed?.['ana']?.open).toBeUndefined();
+
+    e.state.removed!['ana']!.open = issued;
+    expect(
+      sent(e.join(claims('ana', { iat: issued }), T0 + 500), 'ana'),
+    ).toEqual([{ t: 'removed', reason: 'kick' }]);
+
+    const later = issued + 2;
+    e.state.removed!['ana'] = { at: later, reason: 'kick' };
+    e.internal({ action: 'clear', profileId: 'ana', iat: issued }, T0 + 3000);
+    expect(e.closedKick('ana')).toBe(true);
+    expect(
+      sent(e.join(claims('ana', { iat: later + 1 }), T0 + 3000), 'ana'),
+    ).toEqual([{ t: 'removed', reason: 'kick' }]);
+
+    e.internal(
+      { action: 'clear', profileId: 'ana', iat: later + 1 },
+      T0 + 4000,
+    );
+    expect(e.closedKick('ana')).toBe(false);
+    expect(
+      types(e.join(claims('ana', { iat: later + 1 }), T0 + 4000), 'ana'),
+    ).toContain('welcome');
+    expect(
+      sent(e.join(claims('ana', { iat: issued }), T0 + 5000), 'ana'),
+    ).toEqual([{ t: 'removed', reason: 'kick' }]);
+  });
+
+  it('opens a kick when the owner approves, even after the member is gone', () => {
+    const e = room();
+    const issued = Math.floor(T0 / 1000);
+    e.join(claims('ana', { iat: issued }), T0);
+    e.message('owner', msg({ t: 'kick', to: 'ana' }), T0);
+    const at = T0 + 4000;
+    e.internal({ action: 'approve', profileId: 'ana' }, at);
+    const open = Math.floor(at / 1000);
+    expect(sent(e.join(claims('ana', { iat: open - 1 }), at), 'ana')).toEqual([
+      { t: 'removed', reason: 'kick' },
+    ]);
+    expect(types(e.join(claims('ana', { iat: open }), at), 'ana')).toContain(
+      'welcome',
+    );
+  });
+
+  it('records a ban after the member has already left', () => {
+    const e = room();
+    const issued = Math.floor(T0 / 1000);
+    e.join(claims('ana', { iat: issued }), T0);
+    e.disconnect('ana', T0);
+    e.alarm(T0 + RECONNECT_GRACE_MS);
+    expect(e.state.members['ana']).toBeUndefined();
+    e.internal(
+      { action: 'remove', profileId: 'ana', reason: 'ban' },
+      T0 + RECONNECT_GRACE_MS,
+    );
+    expect(
+      sent(
+        e.join(claims('ana', { iat: issued }), T0 + RECONNECT_GRACE_MS + 1000),
+        'ana',
+      ),
+    ).toEqual([{ t: 'removed', reason: 'ban' }]);
+    const bannedAt = Math.floor((T0 + RECONNECT_GRACE_MS) / 1000);
+    expect(
+      types(
+        e.join(
+          claims('ana', { iat: bannedAt + 1 }),
+          T0 + RECONNECT_GRACE_MS + 2000,
+        ),
+        'ana',
+      ),
+    ).toContain('welcome');
+  });
+
+  it('still accepts a refreshed token after the previous one expires', () => {
+    const e = room();
+    const issued = Math.floor(T0 / 1000) - 100;
+    e.join(claims('ana', { exp: T0 / 1000, iat: issued }), T0);
+    e.message('ana', msg({ t: 'ping' }), T0 + 200_000);
+    expect(e.state.members['ana']).toBeUndefined();
+    expect(e.state.removed?.['ana']).toBeUndefined();
+    expect(
+      types(e.join(claims('ana', { iat: issued }), T0 + 201_000), 'ana'),
+    ).toContain('welcome');
+  });
+
+  it('accepts joins when a persisted room has no removal map', () => {
+    const state = initialState(SID);
+    delete state.removed;
+    const e = new RoomEngine(state);
+    expect(types(e.join(claims('ana'), T0), 'ana')).toContain('welcome');
   });
 
   it('survives short drops: reconnecting within the grace keeps live status', () => {
@@ -423,9 +569,9 @@ describe('RoomEngine', () => {
     e.message('ana', msg({ t: 'chat', text: 'oi' }), T0);
     e.disconnect('owner', T0);
     e.disconnect('ana', T0);
-    expect(e.alarm(T0 + RECONNECT_GRACE_MS - 1).some((f) => f.k === 'event')).toBe(
-      false,
-    );
+    expect(
+      e.alarm(T0 + RECONNECT_GRACE_MS - 1).some((f) => f.k === 'event'),
+    ).toBe(false);
     expect(e.state.ended).toBeNull();
     const fx = e.alarm(T0 + RECONNECT_GRACE_MS);
     expect(e.state.ended).toBe('empty');

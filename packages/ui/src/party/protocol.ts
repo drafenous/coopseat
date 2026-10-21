@@ -54,6 +54,8 @@ export type RoomTokenClaims = {
   mod: ModPerms | null;
   cfg: RoomConfig;
   exp: number;
+  /** Unix seconds set by the issuer. A removal rejects any token whose `iat` is not newer. */
+  iat?: number;
 };
 
 /** Key env vars may hold a PEM (real or `\n`-escaped newlines) or just its base64 body on one line. */
@@ -203,7 +205,11 @@ export type InternalCommand =
   | { action: 'remove'; profileId: string; reason: RemovalReason }
   | { action: 'approve'; profileId: string }
   | { action: 'deny'; profileId: string }
-  | { action: 'refresh'; profileId: string };
+  | { action: 'refresh'; profileId: string }
+  /** Opens a kick cutoff so a token with this `iat` (or a newer one) may rejoin. */
+  | { action: 'clear'; profileId: string; iat: number }
+  /** Read-only: is a kick still blocking every token for this profile? */
+  | { action: 'removed'; profileId: string };
 
 /** Signal server → backend (HMAC-signed). */
 export type SignalEvent =

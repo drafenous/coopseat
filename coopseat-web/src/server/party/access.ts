@@ -16,7 +16,7 @@ import type { AuthContext } from '../session';
 import { verifyRoomPassword } from './password';
 import { getPartyPolicy, roomCapacity, type PartyPolicy } from './policy';
 import { activeSanctions, isBlocked, type SanctionScope } from './sanctions';
-import { signalCommand } from './signal';
+import { signalCommand, signalKickHeld } from './signal';
 import type { RoomTokenInput } from './tokens';
 
 export type Viewer = {
@@ -161,16 +161,36 @@ export async function getActiveBan(roomId: string, profileId: string) {
     : null;
 }
 
-async function admittedParticipant(sessionId: string, profileId: string) {
+/**
+ * A kick of someone who is still a moderator or still on the allow list lasts for this
+ * session. Only the owner may clear it, including while the removal row is still missing.
+ * A kicked stranger stays on the normal approval path.
+ */
+export async function assertCanLiftKick(
+  actor: Actor,
+  roomId: string,
+  sessionId: string,
+  profileId: string,
+): Promise<void> {
+  if (actor.role === 'owner') return;
   const db = await adminDb();
-  const row = await db.orm.public.PartySessionParticipant.where({
-    sessionId,
-    profileId,
-  }).first();
-  return row && row.removal === null ? row : null;
+  const [row, moderator, listed] = await Promise.all([
+    db.orm.public.PartySessionParticipant.where({
+      sessionId,
+      profileId,
+    }).first(),
+    getModerator(roomId, profileId),
+    db.orm.public.PartyRoomWhitelist.where({ roomId, profileId }).first(),
+  ]);
+  if (!(moderator || listed)) return;
+  if (row?.removal === 'kick') throw new ApiError(403, 'party_forbidden');
+  // The row can still be null while the room is already holding the kick.
+  // An unknown answer blocks the lift: a missed check must not reopen it.
+  if (await signalKickHeld(sessionId, profileId, 'closed'))
+    throw new ApiError(403, 'party_forbidden');
 }
 
-/** One row per (session, profile); re-admission after a kick clears the removal. */
+/** One row per (session, profile); an explicit re-admission after a kick clears the removal. */
 export async function admitParticipant(
   sessionId: string,
   profileId: string,
@@ -212,10 +232,13 @@ export type AccessResult =
       claims: RoomTokenInput;
       sessionId: string;
       endsAt: number;
+      /** The signal room is still holding a kick that this token is allowed to pass. */
+      releaseKick?: boolean;
     }
   | { state: 'offline'; isOwner: boolean; canOpen: boolean }
   | { state: 'password_required' }
   | { state: 'not_invited' }
+  | { state: 'kicked' }
   | { state: 'banned' }
   | { state: 'unavailable' }
   | { state: 'disabled' }
@@ -242,9 +265,7 @@ export async function decideAccess(input: {
   const policyPromise = input.policy ?? getPartyPolicy();
   const [policy, sanctions, ban, room, session] = await Promise.all([
     policyPromise,
-    input.sanctions ??
-      viewer.sanctions ??
-      activeSanctions(viewer.profileId),
+    input.sanctions ?? viewer.sanctions ?? activeSanctions(viewer.profileId),
     isOwner ? null : getActiveBan(owner.id, viewer.profileId),
     input.room ?? getRoom(owner.id),
     getActiveSession(owner.id, policyPromise),
@@ -262,8 +283,7 @@ export async function decideAccess(input: {
     return {
       state: 'offline',
       isOwner,
-      canOpen:
-        isOwner || (await durableCanStream(room, viewer, sanctions)),
+      canOpen: isOwner || (await durableCanStream(room, viewer, sanctions)),
     };
   }
 
@@ -291,11 +311,13 @@ export async function decideAccess(input: {
     state: 'admitted' | 'pending',
     claims: Pick<RoomTokenInput, 'role' | 'canStream' | 'mod'> &
       Partial<Pick<RoomTokenInput, 'streamBlocked'>>,
+    releaseKick = false,
   ): AccessResult => ({
     state,
     sessionId: session.id,
     endsAt,
     claims: { ...base, ...claims, status: state },
+    ...(releaseKick ? { releaseKick: true } : {}),
   });
 
   if (isOwner) {
@@ -308,14 +330,18 @@ export async function decideAccess(input: {
   }
 
   const db = await adminDb();
-  const [moderator, listed, returning] = await Promise.all([
+  const [moderator, listed, participant] = await Promise.all([
     getModerator(room.ownerId, viewer.profileId),
     db.orm.public.PartyRoomWhitelist.where({
       roomId: room.ownerId,
       profileId: viewer.profileId,
     }).first(),
-    admittedParticipant(session.id, viewer.profileId),
+    db.orm.public.PartySessionParticipant.where({
+      sessionId: session.id,
+      profileId: viewer.profileId,
+    }).first(),
   ]);
+  const returning = participant?.removal === null ? participant : null;
   const role = moderator ? ('moderator' as const) : ('member' as const);
   const claims = {
     role,
@@ -323,7 +349,20 @@ export async function decideAccess(input: {
     mod: moderator ? modPerms(moderator) : null,
   };
 
-  if (moderator || listed || returning) {
+  if (participant?.removal === 'kick' && (moderator || listed))
+    return { state: 'kicked' };
+
+  const privileged = Boolean(moderator || listed);
+  // The removal row can still be null while the room already tombstoned the kick.
+  // That hold applies to everyone still listed as present. Clearing it here would
+  // undo the kick before it is stored.
+  const kickHeld =
+    (privileged || returning) && participant?.removal == null
+      ? await signalKickHeld(session.id, viewer.profileId)
+      : false;
+  if (kickHeld) return { state: 'kicked' };
+
+  if (privileged || returning) {
     // A row already open for this session does not need another read/write on every token refresh.
     if (!returning || returning.leftAt !== null)
       await admitParticipant(session.id, viewer.profileId);
@@ -338,11 +377,14 @@ export async function decideAccess(input: {
   }
 
   // Protected → pending; Private → not invited; Public → admit.
-  if (room.requireApproval) return result('pending', claims);
+  // A recorded kick of someone without privilege is allowed back by those rules,
+  // and the room needs an explicit clearance or the new token is still rejected.
+  const recordedKick = participant?.removal === 'kick';
+  if (room.requireApproval) return result('pending', claims, recordedKick);
   if (room.whitelistEnabled) return { state: 'not_invited' };
 
   await admitParticipant(session.id, viewer.profileId);
-  return result('admitted', claims);
+  return result('admitted', claims, recordedKick);
 }
 
 /**

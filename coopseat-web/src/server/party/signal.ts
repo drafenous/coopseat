@@ -60,6 +60,38 @@ export async function signalCommand(
   }
 }
 
+/**
+ * True when the room is holding a kick that no token can pass yet. Admission and
+ * TURN treat an unknown answer as not held: the room still rejects the socket.
+ * A lift passes `closed`, so a missed answer cannot reopen the kick.
+ */
+export async function signalKickHeld(
+  sessionId: string,
+  profileId: string,
+  whenUnknown: 'open' | 'closed' = 'open',
+): Promise<boolean> {
+  if (!env.partySignalUrl) return false;
+  const command: InternalCommand = { action: 'removed', profileId };
+  const body = JSON.stringify(command);
+  const unknown = whenUnknown === 'closed';
+  try {
+    const res = await fetch(
+      `${env.partySignalUrl}/internal/sessions/${sessionId}`,
+      {
+        method: 'POST',
+        headers: await internalHeaders(env.partySignalSecret, body),
+        body,
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+      },
+    );
+    if (!res.ok) return unknown;
+    const data = (await res.json()) as { closed?: unknown };
+    return data.closed === true;
+  } catch {
+    return unknown;
+  }
+}
+
 /** Verifies an HMAC-signed call from coopseat-signal and burns its nonce (replay protection). */
 export async function verifySignalRequest(
   req: NextRequest,

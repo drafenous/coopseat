@@ -13,8 +13,8 @@ export const POST = route(async (req) => {
   const ip = clientIp(req);
   await rateLimit('forgot', ip);
   const input = await readJson(req, forgotSchema);
-  await rateLimit('forgot', input.email);
   await verifyCaptcha(input.captchaToken, ip);
+  await rateLimit('forgot', input.email);
   await gotrue
     .resendSignup(input.email, `${env.appUrl}/api/auth/confirm?flow=signup`)
     .catch(() => undefined);

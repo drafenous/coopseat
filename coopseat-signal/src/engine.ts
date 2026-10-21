@@ -57,6 +57,18 @@ export type Member = {
   msgHits: number[];
 };
 
+/**
+ * A ban or sanction rejects tokens issued at or before `at`. A kick rejects every
+ * token until `open` is set to a second after `at`, and still rejects tokens
+ * issued at or before the kick. A newer `iat` alone is not a re-admission.
+ */
+export type RemovalRecord = {
+  at: number;
+  reason: 'kick' | 'ban' | 'sanction';
+  /** Earliest token `iat` that may pass a kick. Absent until a clearance after `at`. */
+  open?: number;
+};
+
 export type State = {
   sid: string;
   ownerId: string | null;
@@ -66,6 +78,11 @@ export type State = {
   requests: Record<string, PendingUser>;
   /** streamerId -> viewerId -> quality */
   subs: Record<string, Record<string, Quality>>;
+  /**
+   * Removals that invalidate room tokens. Absent on Durable Objects persisted
+   * before this field existed.
+   */
+  removed?: Record<string, RemovalRecord>;
   ended: EndReason | null;
 };
 
@@ -84,6 +101,7 @@ export function initialState(sid: string): State {
     chat: [],
     requests: {},
     subs: {},
+    removed: {},
     ended: null,
   };
 }
@@ -182,6 +200,9 @@ export class RoomEngine {
       return this.flush();
     }
     if (claims.sid !== s.sid) return this.reject(claims.sub, 'invalid');
+    const cutoff = s.removed?.[claims.sub];
+    if (cutoff && this.tokenBlocked(cutoff, claims.iat))
+      return this.reject(claims.sub, cutoff.reason);
     if (claims.role === 'owner') {
       s.ownerId = claims.sub;
       s.cfg = claims.cfg;
@@ -297,8 +318,57 @@ export class RoomEngine {
     return this.flush();
   }
 
+  /**
+   * Remembers a kick, ban or sanction so a room token issued at or before this
+   * moment cannot rejoin. Denial and token expiry stay out: a refreshed token
+   * can be older than the expiry drop and must still be accepted. A new kick
+   * drops any previous clearance.
+   */
+  private tombstone(id: string, reason: RemovalReason, now: number) {
+    if (reason !== 'kick' && reason !== 'ban' && reason !== 'sanction') return;
+    const removed = (this.state.removed ??= {});
+    const at = Math.floor(now / 1000);
+    const prev = removed[id];
+    if (!prev || at >= prev.at) removed[id] = { at, reason };
+  }
+
+  /** True while a kick rejects every token, including ones issued after it. */
+  closedKick(profileId: string): boolean {
+    const row = this.state.removed?.[profileId];
+    return row?.reason === 'kick' && row.open === undefined;
+  }
+
+  private tokenBlocked(
+    cutoff: RemovalRecord,
+    iat: number | undefined,
+  ): boolean {
+    if (cutoff.reason === 'kick')
+      return (
+        cutoff.open === undefined ||
+        typeof iat !== 'number' ||
+        iat <= cutoff.at ||
+        iat < cutoff.open
+      );
+    return typeof iat !== 'number' || iat <= cutoff.at;
+  }
+
+  /**
+   * Lets a token issued after this kick back in. A clearance from the kick
+   * second or earlier is ignored. The first accepted one wins, so a replay
+   * cannot lower it.
+   */
+  private reopen(id: string, open: number) {
+    const row = this.state.removed?.[id];
+    if (!row || row.reason !== 'kick' || row.open !== undefined) return;
+    if (!Number.isFinite(open)) return;
+    const at = Math.floor(open);
+    if (at <= row.at) return;
+    row.open = at;
+  }
+
   /** Removes a member for good (kick, ban, sanction, denial). */
-  private remove(m: Member, reason: RemovalReason) {
+  private remove(m: Member, reason: RemovalReason, now: number) {
+    this.tombstone(m.id, reason, now);
     this.send(m.id, { t: 'removed', reason });
     if (m.connected)
       this.fx.push({ k: 'close', to: m.id, code: CLOSE.removed, reason });
@@ -379,7 +449,7 @@ export class RoomEngine {
         this.broadcast({ t: 'presence', peer: this.participant(m) });
       }
       if (m.status === 'pending' && now - m.joinedAt >= PENDING_TTL_MS) {
-        this.remove(m, 'denied');
+        this.remove(m, 'denied', now);
         continue;
       }
       if (m.goneAt === null || now - m.goneAt < RECONNECT_GRACE_MS) continue;
@@ -410,16 +480,28 @@ export class RoomEngine {
     return times.length ? Math.min(...times) : null;
   }
 
-  internal(cmd: InternalCommand): Effect[] {
+  internal(cmd: InternalCommand, now = Date.now()): Effect[] {
     if (cmd.action === 'end') return this.end(cmd.reason, false);
+    if (cmd.action === 'remove') {
+      this.tombstone(cmd.profileId, cmd.reason, now);
+      const target = this.state.members[cmd.profileId];
+      if (target) this.remove(target, cmd.reason, now);
+      return this.flush();
+    }
+    if (cmd.action === 'clear') {
+      this.reopen(cmd.profileId, cmd.iat);
+      return this.flush();
+    }
+    if (cmd.action === 'removed') return this.flush();
+    // The member is already gone after a kick. Opening the cutoff still has to
+    // happen, or the owner's re-admission can never produce a token the room accepts.
+    if (cmd.action === 'approve')
+      this.reopen(cmd.profileId, Math.floor(now / 1000));
     const m = this.state.members[cmd.profileId];
     if (!m) return this.flush();
     switch (cmd.action) {
-      case 'remove':
-        this.remove(m, cmd.reason);
-        break;
       case 'deny':
-        if (m.status === 'pending') this.remove(m, 'denied');
+        if (m.status === 'pending') this.remove(m, 'denied', now);
         break;
       case 'approve':
         if (m.status === 'pending') {
@@ -443,7 +525,7 @@ export class RoomEngine {
     if (!m || this.state.ended) return this.flush();
     m.lastSeen = now;
     if (now / 1000 > m.exp + ROOM_TOKEN_GRACE_SECONDS) {
-      this.remove(m, 'token_expired');
+      this.remove(m, 'token_expired', now);
       return this.flush();
     }
     m.msgHits = m.msgHits.filter((t) => now - t < MSG_WINDOW_MS);
@@ -522,7 +604,7 @@ export class RoomEngine {
         this.relaySignal(m, target, msg.data, raw.length);
         break;
       case 'kick':
-        this.kick(m, target);
+        this.kick(m, target, now);
         break;
       case 'end':
         if (m.role === 'owner') return this.end('owner_ended', true);
@@ -671,11 +753,12 @@ export class RoomEngine {
     this.send(target.id, { t: 'signal', from: m.id, data });
   }
 
-  private kick(actor: Member, target: Member | undefined) {
+  private kick(actor: Member, target: Member | undefined, now: number) {
     if (!this.perms(actor)?.kick) return this.error(actor.id, 'forbidden');
     if (!this.canTarget(actor, target))
       return this.error(actor.id, 'invalid_target');
-    this.remove(target, 'kick');
+    // The removal row has to exist before the socket closes, or TURN still
+    // accepts the old token. The Durable Object awaits this one event.
     this.fx.push({
       k: 'event',
       event: {
@@ -685,6 +768,7 @@ export class RoomEngine {
         by: actor.id,
       },
     });
+    this.remove(target, 'kick', now);
   }
 }
 

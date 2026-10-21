@@ -20,6 +20,7 @@ import type { Env } from './env';
 type Attachment = { sub: string | null; at: number; replaced?: boolean };
 
 const AUTH_TIMEOUT_MS = 10_000;
+const KICK_EVENT_TIMEOUT_MS = 3_000;
 let publicKey: Promise<CryptoKey> | undefined;
 
 async function verifyToken(
@@ -93,9 +94,16 @@ export class PartySession extends DurableObject<Env> {
           }
         }
       } else if (e.k === 'event') {
-        // The BFF write can take seconds. Waiting here stalls the single-threaded room,
-        // including the approve that just let someone in.
-        this.ctx.waitUntil(this.report(e.event));
+        if (e.event.type === 'kicked') {
+          // One short wait so markRemoved commits before the socket closes.
+          // A failure falls through to the background retries.
+          const err = await this.deliver(e.event, KICK_EVENT_TIMEOUT_MS);
+          if (err) this.ctx.waitUntil(this.report(e.event, 1));
+        } else {
+          // The BFF write can take seconds. Waiting here stalls the single-threaded room,
+          // including the approve that just let someone in.
+          this.ctx.waitUntil(this.report(e.event));
+        }
       } else if (e.k === 'alarm') {
         const pendingAuth = this.ctx
           .getWebSockets()
@@ -118,25 +126,35 @@ export class PartySession extends DurableObject<Env> {
     }
   }
 
-  private async report(event: unknown): Promise<void> {
+  /** Null when the BFF accepted the event. */
+  private async deliver(
+    event: unknown,
+    timeoutMs?: number,
+  ): Promise<string | null> {
     const body = JSON.stringify(event);
+    try {
+      const res = await fetch(
+        `${this.env.APP_URL.replace(/\/$/, '')}/api/party/internal/events`,
+        {
+          method: 'POST',
+          headers: await internalHeaders(this.env.PARTY_SIGNAL_SECRET, body),
+          body,
+          signal: timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined,
+        },
+      );
+      return res.ok ? null : String(res.status);
+    } catch (err) {
+      return String(err);
+    }
+  }
+
+  private async report(event: unknown, from = 0): Promise<void> {
     let last = 'unknown';
-    for (let attempt = 0; attempt < 5; attempt++) {
+    for (let attempt = from; attempt < 5; attempt++) {
       if (attempt) await scheduler.wait(1000 * 2 ** (attempt - 1));
-      try {
-        const res = await fetch(
-          `${this.env.APP_URL.replace(/\/$/, '')}/api/party/internal/events`,
-          {
-            method: 'POST',
-            headers: await internalHeaders(this.env.PARTY_SIGNAL_SECRET, body),
-            body,
-          },
-        );
-        if (!res.ok) throw new Error(String(res.status));
-        return;
-      } catch (err) {
-        last = String(err);
-      }
+      const err = await this.deliver(event);
+      if (!err) return;
+      last = err;
     }
     console.warn('event failed', last);
   }
@@ -160,7 +178,9 @@ export class PartySession extends DurableObject<Env> {
 
     if (url.pathname === '/internal' && req.method === 'POST') {
       const cmd = (await req.json()) as InternalCommand;
-      await this.apply(engine.internal(cmd));
+      if (cmd.action === 'removed')
+        return Response.json({ closed: engine.closedKick(cmd.profileId) });
+      await this.apply(engine.internal(cmd, Date.now()));
       return Response.json({ ok: true });
     }
     return new Response('not found', { status: 404 });
