@@ -54,6 +54,10 @@ export const passwordSchema = z
 
 export const captchaSchema = z.string().max(4096).optional();
 
+export const pkceChallengeSchema = z
+  .string()
+  .regex(/^[A-Za-z0-9_-]{43}$/, 'pkce_challenge_invalid');
+
 export const TERMS_VERSION = '2026-10-04';
 
 export const signupSchema = z.object({
@@ -69,6 +73,7 @@ export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1, 'password_required').max(72),
   captchaToken: captchaSchema,
+  desktopChallenge: pkceChallengeSchema.optional(),
 });
 
 export const forgotSchema = z.object({
@@ -103,9 +108,6 @@ export const PROVIDER_LABELS: Record<OAuthProvider, string> = {
   discord: 'Discord',
 };
 
-export const pkceChallengeSchema = z
-  .string()
-  .regex(/^[A-Za-z0-9_-]{43}$/, 'pkce_challenge_invalid');
 export const pkceVerifierSchema = z
   .string()
   .regex(/^[A-Za-z0-9._~-]{43,128}$/, 'pkce_verifier_invalid');

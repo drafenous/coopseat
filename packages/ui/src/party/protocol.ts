@@ -54,6 +54,8 @@ export type RoomTokenClaims = {
   mod: ModPerms | null;
   cfg: RoomConfig;
   exp: number;
+  /** Unix seconds set by the issuer. A removal rejects any token whose `iat` is not newer. */
+  iat?: number;
 };
 
 /** Key env vars may hold a PEM (real or `\n`-escaped newlines) or just its base64 body on one line. */

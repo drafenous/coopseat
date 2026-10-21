@@ -11,7 +11,7 @@ const ALG = 'EdDSA';
 let privateKey: Promise<CryptoKey> | undefined;
 let publicKey: Promise<CryptoKey> | undefined;
 
-export type RoomTokenInput = Omit<RoomTokenClaims, 'exp'>;
+export type RoomTokenInput = Omit<RoomTokenClaims, 'exp' | 'iat'>;
 
 /** Short-lived Ed25519 JWT the signal server verifies offline with the public key. */
 export async function signRoomToken(

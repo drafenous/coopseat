@@ -9,6 +9,7 @@ const fake = vi.hoisted(() => ({ current: null as unknown as FakeDb }));
 vi.mock('@/prisma/db', () => ({
   adminDb: async () => fake.current.db,
   getDb: async () => fake.current.db,
+  tryLockedRateLimit: async () => 'unsupported' as const,
 }));
 vi.mock('@/server/jwt', () => ({
   verifyAccessToken: async (token: string) =>
@@ -148,6 +149,46 @@ describe('POST /api/turn', () => {
 
     fake.current.data.PartySession[0]!.endedAt = new Date().toISOString();
     expect(await status({ roomToken: room.token })).toBe(403);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('refuses credentials after a kick or ban, and allows an expired ban', async () => {
+    const sid = fake.current.data.PartySession[0]!.id as string;
+    await fake.current.db.orm.public.PartySessionParticipant.create({
+      sessionId: sid,
+      profileId: 'user-1',
+      removal: 'kick',
+      removedBy: 'owner-1',
+    });
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
+
+    fake.current.data.PartySessionParticipant[0]!.removal = 'ban';
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    fake.current.data.PartySessionParticipant[0]!.removal = null;
+    await fake.current.db.orm.public.PartyRoomBan.create({
+      roomId: 'owner-1',
+      profileId: 'user-1',
+      bannedBy: 'owner-1',
+    });
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
+    expect(fetchSpy).not.toHaveBeenCalled();
+
+    fake.current.data.PartyRoomBan[0]!.expiresAt = new Date(
+      Date.now() - 1000,
+    ).toISOString();
+    const res = await turn(request('valid'), ctx);
+    expect(res.status).toBe(200);
+    expect((await res.json()).relay).toBe(true);
+  });
+
+  it('refuses credentials while a join sanction is active', async () => {
+    await fake.current.db.orm.public.PlatformSanction.create({
+      profileId: 'user-1',
+      scope: 'party_join',
+    });
+    expect((await turn(request('valid'), ctx)).status).toBe(403);
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 

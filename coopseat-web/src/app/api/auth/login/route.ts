@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { loginSchema } from '@/lib/validation/account';
+import { loginSchema, pkceChallengeSchema } from '@/lib/validation/account';
 import { withAuthDb } from '@/prisma/request-db';
 import { auth } from '@/server/auth-errors';
 import { verifyCaptcha } from '@/server/captcha';
 import { gotrue } from '@/server/gotrue';
-import { clientIp, readJson, route } from '@/server/http';
+import { ApiError, clientIp, readJson, route } from '@/server/http';
 import {
   hasVerifiedFactor,
   sealMfaToken,
@@ -14,6 +14,7 @@ import {
 import { ensureProfile } from '@/server/profiles';
 import { rateLimit } from '@/server/rate-limit';
 import { assertSameOrigin, isDesktop, sessionResponse } from '@/server/session';
+import { createTicket } from '@/server/tickets';
 
 export const POST = route((req) =>
   withAuthDb(async () => {
@@ -21,12 +22,32 @@ export const POST = route((req) =>
     const ip = clientIp(req);
     await rateLimit('login', ip);
     const input = await readJson(req, loginSchema);
-    await rateLimit('login', input.email);
-    // Turnstile can't run on the desktop's file:// origin; desktop logins rely on the rate limits above.
-    if (!isDesktop(req)) await verifyCaptcha(input.captchaToken, ip);
+    await verifyCaptcha(input.captchaToken, ip);
 
-    const tokens = await auth(gotrue.passwordGrant(input.email, input.password));
+    let tokens;
+    try {
+      tokens = await auth(gotrue.passwordGrant(input.email, input.password));
+    } catch (err) {
+      if (err instanceof ApiError && err.code === 'invalid_credentials')
+        await rateLimit('login', input.email);
+      throw err;
+    }
+    await rateLimit('login', input.email);
     await ensureProfile(tokens.user.id);
+
+    const challenge = input.desktopChallenge
+      ? pkceChallengeSchema.parse(input.desktopChallenge)
+      : undefined;
+    if (challenge) {
+      const payload = hasVerifiedFactor(tokens)
+        ? { mfaRequired: true, mfaToken: sealMfaToken(tokens) }
+        : { tokens };
+      const ticket = await createTicket('desktop_login', payload, challenge);
+      const to = `coopseat://auth/callback?ticket=${ticket}`;
+      return NextResponse.json({
+        openApp: `/auth/open-app?to=${encodeURIComponent(to)}`,
+      });
+    }
 
     if (hasVerifiedFactor(tokens)) {
       const body = { mfaRequired: true, factors: verifiedFactors(tokens) };

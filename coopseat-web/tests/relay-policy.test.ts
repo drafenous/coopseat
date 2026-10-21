@@ -11,6 +11,7 @@ const fake = vi.hoisted(() => ({ current: null as unknown as FakeDb }));
 vi.mock('@/prisma/db', () => ({
   adminDb: async () => fake.current.db,
   getDb: async () => fake.current.db,
+  tryLockedRateLimit: async () => 'unsupported' as const,
 }));
 
 describe('compareSemver', () => {

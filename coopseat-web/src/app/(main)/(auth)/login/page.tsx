@@ -5,8 +5,26 @@ import { Card, Divider } from '@/components/ui';
 import { localeHref } from '@/i18n/config';
 import { getDictionary, getLocale } from '@/i18n/server';
 import { pageMetadata } from '@/lib/seo';
+import { pkceChallengeSchema } from '@/lib/validation/account';
 import { safeNextPath } from '@/server/http';
 import { LoginForm } from './LoginForm';
+
+function desktopChallengeOf(
+  params: Record<string, string | string[] | undefined>,
+) {
+  if (params['client'] !== 'desktop' || typeof params['challenge'] !== 'string')
+    return undefined;
+  const parsed = pkceChallengeSchema.safeParse(params['challenge']);
+  return parsed.success ? parsed.data : undefined;
+}
+
+function prefillEmail(value: string | string[] | undefined) {
+  if (typeof value !== 'string') return undefined;
+  const email = value.trim();
+  if (!email || email.length > 254 || !email.includes('@') || /\s/.test(email))
+    return undefined;
+  return email;
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const [{ meta }, locale] = await Promise.all([getDictionary(), getLocale()]);
@@ -37,6 +55,8 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
     typeof params['next'] === 'string' ? params['next'] : null,
     href('/account'),
   );
+  const desktopChallenge = desktopChallengeOf(params);
+  const email = prefillEmail(params['email']);
   return (
     <Card
       title={t.login.title}
@@ -49,9 +69,17 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
         </>
       }
     >
-      <ProviderButtons next={next} action={t.providers.signInWith} />
+      <ProviderButtons
+        next={next}
+        action={t.providers.signInWith}
+        desktopChallenge={desktopChallenge}
+      />
       <Divider label={t.common.orWithEmail} />
-      <LoginForm next={next} />
+      <LoginForm
+        next={next}
+        desktopChallenge={desktopChallenge}
+        defaultEmail={email}
+      />
       <p className="text-center text-sm">
         <Link
           href={href('/forgot-password')}

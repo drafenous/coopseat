@@ -8,6 +8,8 @@ import { localeFromRequest } from '@/i18n/server';
 import { adminDb } from '@/prisma/db';
 import { turnSchema } from '@/lib/validation/party';
 import { ApiError, readJson, route } from '@/server/http';
+import { getActiveBan } from '@/server/party/access';
+import { activeSanctions, isBlocked } from '@/server/party/sanctions';
 import { verifyRoomToken } from '@/server/party/tokens';
 import { rateLimit } from '@/server/rate-limit';
 import { evaluateRelay, type RelayDenyReason } from '@/server/relay-policy';
@@ -39,7 +41,8 @@ function appVersion(req: NextRequest): string | null {
 
 /**
  * A room token is issued only after the watch gate (verified 18+) and admission to a live session,
- * so it stands in for both checks; the session must still be live.
+ * so it stands in for both checks. The session must still be live, and a kick, ban or join
+ * sanction recorded after the token was issued must still block relay credentials.
  */
 async function assertAdmitted(
   roomToken: string,
@@ -53,6 +56,16 @@ async function assertAdmitted(
     id: claims.sid,
   }).first();
   if (!session || session.endedAt !== null)
+    throw new ApiError(403, 'party_token_invalid');
+  const participant = await db.orm.public.PartySessionParticipant.where({
+    sessionId: claims.sid,
+    profileId,
+  }).first();
+  if (participant?.removal === 'kick' || participant?.removal === 'ban')
+    throw new ApiError(403, 'party_token_invalid');
+  if (await getActiveBan(session.roomId, profileId))
+    throw new ApiError(403, 'party_token_invalid');
+  if (isBlocked(await activeSanctions(profileId), 'party_join'))
     throw new ApiError(403, 'party_token_invalid');
 }
 

@@ -161,16 +161,31 @@ export async function getActiveBan(roomId: string, profileId: string) {
     : null;
 }
 
-async function admittedParticipant(sessionId: string, profileId: string) {
+/**
+ * A kick of someone who is still a moderator or still on the allow list lasts for this
+ * session. Only the owner may clear it. A kicked stranger stays on the normal approval path.
+ */
+export async function assertCanLiftKick(
+  actor: Actor,
+  roomId: string,
+  sessionId: string,
+  profileId: string,
+): Promise<void> {
+  if (actor.role === 'owner') return;
   const db = await adminDb();
-  const row = await db.orm.public.PartySessionParticipant.where({
-    sessionId,
-    profileId,
-  }).first();
-  return row && row.removal === null ? row : null;
+  const [row, moderator, listed] = await Promise.all([
+    db.orm.public.PartySessionParticipant.where({
+      sessionId,
+      profileId,
+    }).first(),
+    getModerator(roomId, profileId),
+    db.orm.public.PartyRoomWhitelist.where({ roomId, profileId }).first(),
+  ]);
+  if (row?.removal === 'kick' && (moderator || listed))
+    throw new ApiError(403, 'party_forbidden');
 }
 
-/** One row per (session, profile); re-admission after a kick clears the removal. */
+/** One row per (session, profile); an explicit re-admission after a kick clears the removal. */
 export async function admitParticipant(
   sessionId: string,
   profileId: string,
@@ -216,6 +231,7 @@ export type AccessResult =
   | { state: 'offline'; isOwner: boolean; canOpen: boolean }
   | { state: 'password_required' }
   | { state: 'not_invited' }
+  | { state: 'kicked' }
   | { state: 'banned' }
   | { state: 'unavailable' }
   | { state: 'disabled' }
@@ -242,9 +258,7 @@ export async function decideAccess(input: {
   const policyPromise = input.policy ?? getPartyPolicy();
   const [policy, sanctions, ban, room, session] = await Promise.all([
     policyPromise,
-    input.sanctions ??
-      viewer.sanctions ??
-      activeSanctions(viewer.profileId),
+    input.sanctions ?? viewer.sanctions ?? activeSanctions(viewer.profileId),
     isOwner ? null : getActiveBan(owner.id, viewer.profileId),
     input.room ?? getRoom(owner.id),
     getActiveSession(owner.id, policyPromise),
@@ -262,8 +276,7 @@ export async function decideAccess(input: {
     return {
       state: 'offline',
       isOwner,
-      canOpen:
-        isOwner || (await durableCanStream(room, viewer, sanctions)),
+      canOpen: isOwner || (await durableCanStream(room, viewer, sanctions)),
     };
   }
 
@@ -308,20 +321,27 @@ export async function decideAccess(input: {
   }
 
   const db = await adminDb();
-  const [moderator, listed, returning] = await Promise.all([
+  const [moderator, listed, participant] = await Promise.all([
     getModerator(room.ownerId, viewer.profileId),
     db.orm.public.PartyRoomWhitelist.where({
       roomId: room.ownerId,
       profileId: viewer.profileId,
     }).first(),
-    admittedParticipant(session.id, viewer.profileId),
+    db.orm.public.PartySessionParticipant.where({
+      sessionId: session.id,
+      profileId: viewer.profileId,
+    }).first(),
   ]);
+  const returning = participant?.removal === null ? participant : null;
   const role = moderator ? ('moderator' as const) : ('member' as const);
   const claims = {
     role,
     canStream: listed?.canStream ?? false,
     mod: moderator ? modPerms(moderator) : null,
   };
+
+  if (participant?.removal === 'kick' && (moderator || listed))
+    return { state: 'kicked' };
 
   if (moderator || listed || returning) {
     // A row already open for this session does not need another read/write on every token refresh.

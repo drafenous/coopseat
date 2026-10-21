@@ -13,7 +13,6 @@ export function AuthModal({ auth, onClose }: { auth: Auth; onClose(): void }) {
   const T = useT(),
     t = T.authModal;
   const [email, setEmail] = useState(''),
-    [password, setPassword] = useState(''),
     [code, setCode] = useState(''),
     [recovery, setRecovery] = useState(false);
   const [busy, setBusy] = useState(false),
@@ -96,8 +95,7 @@ export function AuthModal({ auth, onClose }: { auth: Auth; onClose(): void }) {
 
   const submit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (email && password)
-      void run(() => auth.loginWithPassword(email.trim(), password));
+    void run(() => auth.startEmailLogin(email.trim() || undefined));
   };
   return (
     <Modal
@@ -128,7 +126,13 @@ export function AuthModal({ auth, onClose }: { auth: Auth; onClose(): void }) {
           className="mt-3.5 flex items-center justify-between gap-3 rounded-lg border border-dashed border-line p-3"
           role="status"
         >
-          <p>{t.continueIn(PROVIDER_LABELS[auth.waiting])}</p>
+          <p>
+            {t.continueIn(
+              auth.waiting === 'email'
+                ? t.email
+                : PROVIDER_LABELS[auth.waiting],
+            )}
+          </p>
           <Button variant="secondary" onClick={auth.cancelOAuth}>
             {T.common.cancel}
           </Button>
@@ -140,21 +144,9 @@ export function AuthModal({ auth, onClose }: { auth: Auth; onClose(): void }) {
         <TextInput
           type="email"
           autoComplete="email"
-          required
           maxLength={254}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-        />
-      </label>
-      <label className={field}>
-        {t.password}
-        <TextInput
-          type="password"
-          autoComplete="current-password"
-          required
-          maxLength={72}
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
         />
       </label>
       {error && (
@@ -162,7 +154,7 @@ export function AuthModal({ auth, onClose }: { auth: Auth; onClose(): void }) {
           {error}
         </p>
       )}
-      <Button type="submit" disabled={busy || !email || !password}>
+      <Button type="submit" disabled={busy}>
         {busy ? t.signingIn : t.signIn}
       </Button>
       <div className="mt-3.5 flex justify-between gap-3">

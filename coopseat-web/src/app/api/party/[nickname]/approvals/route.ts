@@ -4,6 +4,7 @@ import { ApiError, readJson, route } from '@/server/http';
 import {
   actorFor,
   admitParticipant,
+  assertCanLiftKick,
   getActiveBan,
   getActiveSession,
   logModeration,
@@ -45,6 +46,7 @@ export const POST = route<Ctx>(async (req, ctx) => {
   if (!session) throw new ApiError(409, 'party_no_session');
   if (input.approve) {
     if (ban) throw new ApiError(400, 'party_target_invalid');
+    await assertCanLiftKick(actor, owner.id, session.id, input.profileId);
     await admitParticipant(session.id, input.profileId);
   }
 

@@ -38,7 +38,7 @@ export function useAuth({ setError, setNotice, onPartyLink }: Props) {
   const [status, setStatus] = useState<AuthStatus>('loading');
   const [account, setAccount] = useState<Account | null>(null);
   const [mfa, setMfa] = useState<MfaPending | null>(null);
-  const [waiting, setWaiting] = useState<OAuthProvider | null>(null);
+  const [waiting, setWaiting] = useState<OAuthProvider | 'email' | null>(null);
   const verifier = useRef<string | null>(null);
   const p = platform(),
     web = p.kind === 'web',
@@ -174,14 +174,24 @@ export function useAuth({ setError, setNotice, onPartyLink }: Props) {
       if (web) location.assign('/signup');
       else await openWeb('/signup');
     },
-    loginWithPassword: async (email: string, password: string) =>
-      finishLogin(
-        await api<LoginResult>('/api/auth/login', {
-          method: 'POST',
-          body: { email, password },
-          auth: false,
-        }),
-      ),
+    /** Password login runs on the site, where Turnstile can run. The app only holds the PKCE verifier. */
+    startEmailLogin: async (email?: string) => {
+      const v = createVerifier();
+      verifier.current = v;
+      setWaiting('email');
+      try {
+        const params = new URLSearchParams({
+          client: 'desktop',
+          challenge: await challengeFor(v),
+        });
+        if (email) params.set('email', email);
+        await openWeb(`/login?${params}`);
+      } catch (e) {
+        verifier.current = null;
+        setWaiting(null);
+        throw e;
+      }
+    },
     startOAuth: async (provider: OAuthProvider) => {
       const v = createVerifier();
       verifier.current = v;

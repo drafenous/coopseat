@@ -57,6 +57,12 @@ export type Member = {
   msgHits: number[];
 };
 
+/** A room token is admitted only when its `iat` is strictly newer than `at`. */
+export type RemovalRecord = {
+  at: number;
+  reason: 'kick' | 'ban' | 'sanction';
+};
+
 export type State = {
   sid: string;
   ownerId: string | null;
@@ -66,6 +72,11 @@ export type State = {
   requests: Record<string, PendingUser>;
   /** streamerId -> viewerId -> quality */
   subs: Record<string, Record<string, Quality>>;
+  /**
+   * Removals that invalidate room tokens issued at or before `at`.
+   * Absent on Durable Objects persisted before this field existed.
+   */
+  removed?: Record<string, RemovalRecord>;
   ended: EndReason | null;
 };
 
@@ -84,6 +95,7 @@ export function initialState(sid: string): State {
     chat: [],
     requests: {},
     subs: {},
+    removed: {},
     ended: null,
   };
 }
@@ -182,6 +194,9 @@ export class RoomEngine {
       return this.flush();
     }
     if (claims.sid !== s.sid) return this.reject(claims.sub, 'invalid');
+    const cutoff = s.removed?.[claims.sub];
+    if (cutoff && (typeof claims.iat !== 'number' || claims.iat <= cutoff.at))
+      return this.reject(claims.sub, cutoff.reason);
     if (claims.role === 'owner') {
       s.ownerId = claims.sub;
       s.cfg = claims.cfg;
@@ -297,8 +312,22 @@ export class RoomEngine {
     return this.flush();
   }
 
+  /**
+   * Remembers a kick, ban or sanction so a room token issued at or before this
+   * moment cannot rejoin. Denial and token expiry stay out: a refreshed token
+   * can be older than the expiry drop and must still be accepted.
+   */
+  private tombstone(id: string, reason: RemovalReason, now: number) {
+    if (reason !== 'kick' && reason !== 'ban' && reason !== 'sanction') return;
+    const removed = (this.state.removed ??= {});
+    const at = Math.floor(now / 1000);
+    const prev = removed[id];
+    if (!prev || at >= prev.at) removed[id] = { at, reason };
+  }
+
   /** Removes a member for good (kick, ban, sanction, denial). */
-  private remove(m: Member, reason: RemovalReason) {
+  private remove(m: Member, reason: RemovalReason, now: number) {
+    this.tombstone(m.id, reason, now);
     this.send(m.id, { t: 'removed', reason });
     if (m.connected)
       this.fx.push({ k: 'close', to: m.id, code: CLOSE.removed, reason });
@@ -379,7 +408,7 @@ export class RoomEngine {
         this.broadcast({ t: 'presence', peer: this.participant(m) });
       }
       if (m.status === 'pending' && now - m.joinedAt >= PENDING_TTL_MS) {
-        this.remove(m, 'denied');
+        this.remove(m, 'denied', now);
         continue;
       }
       if (m.goneAt === null || now - m.goneAt < RECONNECT_GRACE_MS) continue;
@@ -410,16 +439,19 @@ export class RoomEngine {
     return times.length ? Math.min(...times) : null;
   }
 
-  internal(cmd: InternalCommand): Effect[] {
+  internal(cmd: InternalCommand, now = Date.now()): Effect[] {
     if (cmd.action === 'end') return this.end(cmd.reason, false);
+    if (cmd.action === 'remove') {
+      this.tombstone(cmd.profileId, cmd.reason, now);
+      const target = this.state.members[cmd.profileId];
+      if (target) this.remove(target, cmd.reason, now);
+      return this.flush();
+    }
     const m = this.state.members[cmd.profileId];
     if (!m) return this.flush();
     switch (cmd.action) {
-      case 'remove':
-        this.remove(m, cmd.reason);
-        break;
       case 'deny':
-        if (m.status === 'pending') this.remove(m, 'denied');
+        if (m.status === 'pending') this.remove(m, 'denied', now);
         break;
       case 'approve':
         if (m.status === 'pending') {
@@ -443,7 +475,7 @@ export class RoomEngine {
     if (!m || this.state.ended) return this.flush();
     m.lastSeen = now;
     if (now / 1000 > m.exp + ROOM_TOKEN_GRACE_SECONDS) {
-      this.remove(m, 'token_expired');
+      this.remove(m, 'token_expired', now);
       return this.flush();
     }
     m.msgHits = m.msgHits.filter((t) => now - t < MSG_WINDOW_MS);
@@ -522,7 +554,7 @@ export class RoomEngine {
         this.relaySignal(m, target, msg.data, raw.length);
         break;
       case 'kick':
-        this.kick(m, target);
+        this.kick(m, target, now);
         break;
       case 'end':
         if (m.role === 'owner') return this.end('owner_ended', true);
@@ -671,11 +703,12 @@ export class RoomEngine {
     this.send(target.id, { t: 'signal', from: m.id, data });
   }
 
-  private kick(actor: Member, target: Member | undefined) {
+  private kick(actor: Member, target: Member | undefined, now: number) {
     if (!this.perms(actor)?.kick) return this.error(actor.id, 'forbidden');
     if (!this.canTarget(actor, target))
       return this.error(actor.id, 'invalid_target');
-    this.remove(target, 'kick');
+    // The removal row has to exist before the socket closes, or TURN still
+    // accepts the old token. The Durable Object awaits this one event.
     this.fx.push({
       k: 'event',
       event: {
@@ -685,6 +718,7 @@ export class RoomEngine {
         by: actor.id,
       },
     });
+    this.remove(target, 'kick', now);
   }
 }
 

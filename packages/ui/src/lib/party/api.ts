@@ -35,6 +35,7 @@ export type ClosedAccess =
     }
   | { state: 'password_required'; room: RoomInfo }
   | { state: 'not_invited'; room: RoomInfo }
+  | { state: 'kicked'; room: RoomInfo }
   | { state: 'banned'; room: RoomInfo }
   | { state: 'unavailable'; room: RoomInfo }
   | { state: 'disabled'; room: RoomInfo }

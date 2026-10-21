@@ -1,7 +1,9 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { POST as exchange } from '@/app/api/auth/desktop/exchange/route';
+import { POST as forgot } from '@/app/api/auth/password/forgot/route';
 import { POST as login } from '@/app/api/auth/login/route';
+import { POST as resend } from '@/app/api/auth/resend/route';
 import { POST as webhook } from '@/app/api/identity/webhooks/[provider]/route';
 import { GET as nicknameAvailable } from '@/app/api/nicknames/available/route';
 import { pkceChallenge, randomToken } from '@/server/crypto';
@@ -14,10 +16,19 @@ const fake = vi.hoisted(() => ({ current: null as unknown as FakeDb }));
 vi.mock('@/prisma/db', () => ({
   adminDb: async () => fake.current.db,
   getDb: async () => fake.current.db,
+  tryLockedRateLimit: async () => 'unsupported' as const,
 }));
 vi.mock('@/server/gotrue', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/server/gotrue')>();
-  return { ...actual, gotrue: { ...actual.gotrue, passwordGrant: vi.fn() } };
+  return {
+    ...actual,
+    gotrue: {
+      ...actual.gotrue,
+      passwordGrant: vi.fn(),
+      recover: vi.fn(),
+      resendSignup: vi.fn(),
+    },
+  };
 });
 
 const ctx = undefined as never;
@@ -60,6 +71,10 @@ const credentials = { email: 'a@b.com', password: 'senhaForte1' };
 beforeEach(() => {
   fake.current = createFakeDb();
   vi.mocked(gotrue.passwordGrant).mockReset();
+  vi.mocked(gotrue.recover).mockReset();
+  vi.mocked(gotrue.resendSignup).mockReset();
+  vi.mocked(gotrue.recover).mockResolvedValue(undefined);
+  vi.mocked(gotrue.resendSignup).mockResolvedValue(undefined);
 });
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -67,25 +82,61 @@ afterEach(() => {
 });
 
 describe('POST /api/auth/login', () => {
-  it('returns tokens in the body for the desktop, without captcha', async () => {
+  it('requires captcha for a desktop header when Turnstile is configured', async () => {
     vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
-    const fetchSpy = vi.fn();
-    vi.stubGlobal('fetch', fetchSpy);
     vi.mocked(gotrue.passwordGrant).mockResolvedValue(tokens());
 
     const res = await login(
       request('/api/auth/login', { body: credentials, headers: desktop }),
       ctx,
     );
-    const body = await res.json();
+    expect(res.status).toBe(400);
+    expect((await res.json()).error.code).toBe('captcha_required');
+    expect(gotrue.passwordGrant).not.toHaveBeenCalled();
+  });
+
+  it('returns an open-app ticket for a desktop challenge and cookies otherwise', async () => {
+    vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ success: true })),
+    );
+    vi.mocked(gotrue.passwordGrant).mockResolvedValue(tokens());
+    const challenge = pkceChallenge(randomToken(32));
+
+    const res = await login(
+      request('/api/auth/login', {
+        body: {
+          ...credentials,
+          captchaToken: 'ok',
+          desktopChallenge: challenge,
+        },
+        headers: web,
+      }),
+      ctx,
+    );
     expect(res.status).toBe(200);
-    expect(body.session).toMatchObject({
-      accessToken: 'access-jwt',
-      refreshToken: 'refresh-token',
-    });
+    const body = await res.json();
+    const to = new URL(body.openApp, 'https://coopseat.com').searchParams.get(
+      'to',
+    );
+    expect(to).toMatch(
+      /^coopseat:\/\/auth\/callback\?ticket=[A-Za-z0-9_-]{43}$/,
+    );
     expect(res.headers.get('set-cookie')).toBeNull();
-    expect(fetchSpy).not.toHaveBeenCalled();
-    expect(fake.current.data.Profile).toHaveLength(1);
+    expect(JSON.stringify(body)).not.toContain('access-jwt');
+    expect(fake.current.data.AuthTicket).toHaveLength(1);
+
+    const cookies = await login(
+      request('/api/auth/login', {
+        body: { ...credentials, captchaToken: 'ok' },
+        headers: web,
+      }),
+      ctx,
+    );
+    expect(cookies.status).toBe(200);
+    expect(cookies.headers.get('set-cookie')).toMatch(/cs_at=.*HttpOnly/i);
+    expect(JSON.stringify(await cookies.json())).not.toContain('openApp');
   });
 
   it('sets httpOnly cookies for the web and never returns tokens', async () => {
@@ -97,6 +148,40 @@ describe('POST /api/auth/login', () => {
     expect(res.status).toBe(200);
     expect(JSON.stringify(await res.json())).not.toContain('access-jwt');
     expect(res.headers.get('set-cookie')).toMatch(/cs_at=.*HttpOnly/i);
+  });
+
+  it('does not spend the email budget on captcha-less logins', async () => {
+    vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ success: true })),
+    );
+    vi.mocked(gotrue.passwordGrant).mockResolvedValue(tokens());
+
+    for (let i = 0; i < 10; i++) {
+      const res = await login(
+        request('/api/auth/login', {
+          body: credentials,
+          headers: { ...web, 'x-forwarded-for': `203.0.113.${i + 1}` },
+        }),
+        ctx,
+      );
+      expect(res.status).toBe(400);
+    }
+    expect(gotrue.passwordGrant).not.toHaveBeenCalled();
+    expect(
+      fake.current.data.RateLimitHit.some((hit) => hit.key === 'login:a@b.com'),
+    ).toBe(false);
+
+    const res = await login(
+      request('/api/auth/login', {
+        body: { ...credentials, captchaToken: 'ok' },
+        headers: { ...web, 'x-forwarded-for': '203.0.113.50' },
+      }),
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    expect(gotrue.passwordGrant).toHaveBeenCalledOnce();
   });
 
   it('requires captcha on the web when Turnstile is configured', async () => {
@@ -167,6 +252,64 @@ describe('POST /api/auth/login', () => {
     );
     expect(invalid.status).toBe(400);
     expect((await invalid.json()).error.fields).toHaveProperty('email');
+  });
+});
+
+describe('password reset and confirmation resend', () => {
+  async function exhaustWithoutCaptcha(
+    post: (req: NextRequest, ctx: never) => Promise<Response>,
+    path: string,
+  ) {
+    vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ success: true })),
+    );
+    for (let i = 0; i < 5; i++) {
+      const res = await post(
+        request(path, {
+          body: { email: 'a@b.com' },
+          headers: { ...web, 'x-forwarded-for': `203.0.113.${i + 1}` },
+        }),
+        ctx,
+      );
+      expect(res.status).toBe(400);
+    }
+    expect(
+      fake.current.data.RateLimitHit.some(
+        (hit) => hit.key === 'forgot:a@b.com',
+      ),
+    ).toBe(false);
+  }
+
+  it('does not spend the email budget on captcha-less resets', async () => {
+    await exhaustWithoutCaptcha(forgot, '/api/auth/password/forgot');
+    expect(gotrue.recover).not.toHaveBeenCalled();
+
+    const res = await forgot(
+      request('/api/auth/password/forgot', {
+        body: { email: 'a@b.com', captchaToken: 'ok' },
+        headers: { ...web, 'x-forwarded-for': '203.0.113.50' },
+      }),
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    expect(gotrue.recover).toHaveBeenCalledOnce();
+  });
+
+  it('does not spend the email budget on captcha-less resends', async () => {
+    await exhaustWithoutCaptcha(resend, '/api/auth/resend');
+    expect(gotrue.resendSignup).not.toHaveBeenCalled();
+
+    const res = await resend(
+      request('/api/auth/resend', {
+        body: { email: 'a@b.com', captchaToken: 'ok' },
+        headers: { ...web, 'x-forwarded-for': '203.0.113.50' },
+      }),
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    expect(gotrue.resendSignup).toHaveBeenCalledOnce();
   });
 });
 
