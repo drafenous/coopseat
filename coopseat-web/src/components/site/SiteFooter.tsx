@@ -52,6 +52,11 @@ export async function SiteFooter() {
                 {h.footer.account}
               </Link>
             </li>
+            <li>
+              <Link href={href('/contact')} className="hover:text-strong">
+                {h.footer.contact}
+              </Link>
+            </li>
           </ul>
         </div>
         <div>

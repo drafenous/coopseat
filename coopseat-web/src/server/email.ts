@@ -1,6 +1,13 @@
 import { env } from './env';
 import { ApiError } from './http';
 
+export type EmailAttachment = {
+  filename: string;
+  /** Base64, without a data-URL prefix. */
+  content: string;
+  contentType: string;
+};
+
 export type EmailMessage = {
   to: string | string[];
   subject: string;
@@ -8,6 +15,7 @@ export type EmailMessage = {
   text?: string;
   replyTo?: string;
   tags?: { name: string; value: string }[];
+  attachments?: EmailAttachment[];
   /** Resend drops repeated sends with the same key for 24 h. */
   idempotencyKey?: string;
 };
@@ -32,6 +40,15 @@ export async function sendEmail(message: EmailMessage): Promise<string> {
       text: message.text,
       reply_to: message.replyTo,
       tags: message.tags,
+      ...(message.attachments?.length
+        ? {
+            attachments: message.attachments.map((file) => ({
+              filename: file.filename,
+              content: file.content,
+              content_type: file.contentType,
+            })),
+          }
+        : {}),
     }),
     cache: 'no-store',
   });

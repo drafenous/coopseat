@@ -20,6 +20,7 @@ export async function SiteHeader() {
     { href: href('/#how'), label: h.nav.how },
     { href: href('/#local'), label: h.nav.local },
     { href: href('/#faq'), label: h.nav.faq },
+    { href: href('/contact'), label: h.nav.contact },
   ];
 
   return (
@@ -27,15 +28,25 @@ export async function SiteHeader() {
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-6">
         <Brand href={href('/')} version={null} />
         <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
-          {nav.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="transition hover:text-strong"
-            >
-              {item.label}
-            </a>
-          ))}
+          {nav.map((item) =>
+            item.href.includes('#') ? (
+              <a
+                key={item.href}
+                href={item.href}
+                className="transition hover:text-strong"
+              >
+                {item.label}
+              </a>
+            ) : (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="transition hover:text-strong"
+              >
+                {item.label}
+              </Link>
+            ),
+          )}
         </nav>
         <div className="ml-auto flex items-center gap-2">
           {account ? (

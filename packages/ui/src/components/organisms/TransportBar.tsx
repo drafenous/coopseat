@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Activity,
   Clapperboard,
+  Flag,
   Keyboard,
   Maximize,
   PictureInPicture2,
@@ -34,6 +35,7 @@ type Props = {
   onAutoCinema(auto: boolean): void;
   onCinemaDelay(delay: number): void;
   onFullscreen(): void;
+  onReport(): void;
 };
 
 export function TransportBar({
@@ -58,8 +60,10 @@ export function TransportBar({
   onAutoCinema,
   onCinemaDelay,
   onFullscreen,
+  onReport,
 }: Props) {
-  const t = useT().transport;
+  const all = useT();
+  const t = all.transport;
   const [shortcuts, setShortcuts] = useState(false);
   return (
     <>
@@ -130,6 +134,13 @@ export function TransportBar({
             onClick={onFullscreen}
           >
             <Maximize size={17} />
+          </IconButton>
+          <IconButton
+            label={all.report.open}
+            title={all.report.openTitle}
+            onClick={onReport}
+          >
+            <Flag size={17} />
           </IconButton>
         </div>
       </div>

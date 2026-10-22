@@ -1,7 +1,7 @@
 export { Alert } from './Alert';
 export { Brand } from './Brand';
 export { Card } from './Card';
-export { Field } from './Field';
+export { fieldClass, Field } from './Field';
 export { CaptureButton } from './CaptureButton';
 export { ChecklistItem } from './ChecklistItem';
 export { DeviceSelect } from './DeviceSelect';

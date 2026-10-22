@@ -43,6 +43,10 @@ export const env = {
   get turnstileSecret() {
     return process.env['TURNSTILE_SECRET_KEY'] ?? '';
   },
+  /** Public site key. Empty in local dev, where the widget and the check are both skipped. */
+  get turnstileSiteKey() {
+    return process.env['NEXT_PUBLIC_TURNSTILE_SITE_KEY'] ?? '';
+  },
   get kycProvider() {
     return process.env['KYC_PROVIDER'] ?? 'mock';
   },

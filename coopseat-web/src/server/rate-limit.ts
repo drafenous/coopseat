@@ -15,6 +15,8 @@ export const LIMITS = {
   kyc: { max: 5, windowSeconds: 3600 },
   turn: { max: 20, windowSeconds: 600 },
   telemetry: { max: 30, windowSeconds: 600 },
+  contact: { max: 5, windowSeconds: 3600 },
+  report: { max: 5, windowSeconds: 3600 },
   party_join: { max: 60, windowSeconds: 600 },
   party_password: { max: 5, windowSeconds: 600 },
   party_admin: { max: 120, windowSeconds: 600 },

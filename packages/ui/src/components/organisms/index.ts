@@ -23,6 +23,7 @@ export { PresetPicker } from './PresetPicker';
 export { SavePresetModal } from './SavePresetModal';
 export { SettingsPanel } from './SettingsPanel';
 export { ShortcutsModal } from './ShortcutsModal';
+export { ReportModal } from './ReportModal';
 export { TelemetryModal } from './TelemetryModal';
 export { ToastStack } from './ToastStack';
 export { TransportBar } from './TransportBar';
