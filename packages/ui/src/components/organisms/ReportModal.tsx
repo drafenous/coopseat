@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import { useT } from '../../i18n';
 import { api, ApiError } from '../../lib/api';
 import { Button, FieldHint } from '../atoms';
+import { TurnstileField } from '../molecules/TurnstileField';
 import {
   Alert,
   Field,
@@ -45,11 +46,25 @@ export function ReportModal({
   const [error, setError] = useState<string>();
   const [sent, setSent] = useState<string>();
   const [pending, setPending] = useState(false);
+  const [siteKey, setSiteKey] = useState('');
+  const [captcha, setCaptcha] = useState<string>();
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   imagesRef.current = images;
   useEffect(() => {
     if (!emailEdited.current) setEmail(initialEmail);
   }, [initialEmail]);
+  useEffect(() => {
+    let cancelled = false;
+    api<{ siteKey?: string }>('/api/captcha', { auth: false })
+      .then((body) => {
+        if (!cancelled && body.siteKey) setSiteKey(body.siteKey);
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   useEffect(
     () => () => {
       for (const image of imagesRef.current) URL.revokeObjectURL(image.preview);
@@ -105,15 +120,18 @@ export function ReportModal({
           category,
           email,
           message,
-          images: images.map((image) => image.data),
+          images: imagesRef.current.map((image) => image.data),
           room: room || undefined,
           surface,
           website,
+          captchaToken: captcha,
         },
       });
       setSent(res.message);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : all.api.generic);
+      setCaptcha(undefined);
+      setCaptchaReset((n) => n + 1);
     } finally {
       setPending(false);
     }
@@ -229,6 +247,13 @@ export function ReportModal({
             aria-hidden
             className="absolute h-px w-px overflow-hidden opacity-0"
           />
+          {siteKey ? (
+            <TurnstileField
+              siteKey={siteKey}
+              onToken={setCaptcha}
+              resetKey={captchaReset}
+            />
+          ) : null}
           <ModalActions>
             <Button variant="secondary" onClick={onClose}>
               {all.common.cancel}

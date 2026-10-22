@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { dictionaryFor, localeFromRequest } from '@/i18n/server';
 import { parseEvidence, reportSchema } from '@/lib/validation/inbound';
+import { verifyCaptcha } from '@/server/captcha';
 import { ApiError, clientIp, readJson, route } from '@/server/http';
 import { getProfile } from '@/server/profiles';
 import { rateLimit } from '@/server/rate-limit';
@@ -10,7 +11,8 @@ import { HELP_INBOX, renderMail } from '@/server/support-mail';
 
 export const POST = route(async (req) => {
   assertSameOrigin(req);
-  await rateLimit('report', clientIp(req));
+  const ip = clientIp(req);
+  await rateLimit('report', ip);
   const input = await readJson(req, reportSchema);
   if (input.website?.trim()) {
     return NextResponse.json({
@@ -18,13 +20,18 @@ export const POST = route(async (req) => {
     });
   }
 
+  // A desktop header or an unverified Bearer prefix skips the origin check
+  // and is not a session. Those requests pass Turnstile, the same gate as
+  // POST /api/contact. A verified session may skip it: the desktop shell
+  // cannot run the widget, and getAuth is what checks the bearer token.
+  const auth = await getAuth(req);
+  if (!auth) await verifyCaptcha(input.captchaToken, ip);
+
   const images = (input.images ?? []).map((data, index) => {
     const parsed = parseEvidence(data, index);
     if (typeof parsed === 'string') throw new ApiError(400, parsed);
     return parsed;
   });
-
-  const auth = await getAuth(req);
   let account = '';
   if (auth) {
     const profile = await getProfile(auth.claims.sub).catch((err: unknown) => {

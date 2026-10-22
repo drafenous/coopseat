@@ -1,5 +1,10 @@
 import { NextRequest } from 'next/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const verifyAccessToken = vi.hoisted(() => vi.fn(async () => null));
+vi.mock('@/server/jwt', () => ({ verifyAccessToken }));
+
+import { GET as captchaConfig } from '@/app/api/captcha/route';
 import { POST as contact } from '@/app/api/contact/route';
 import { POST as report } from '@/app/api/report/route';
 import { sendEmail } from '@/server/email';
@@ -55,9 +60,13 @@ beforeEach(() => {
   fake.current = createFakeDb();
   vi.mocked(sendEmail).mockClear();
   vi.mocked(sendEmail).mockResolvedValue('email-1');
+  verifyAccessToken.mockReset();
+  verifyAccessToken.mockResolvedValue(null);
 });
 afterEach(() => {
   vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe('POST /api/contact', () => {
@@ -102,6 +111,19 @@ describe('POST /api/contact', () => {
   });
 });
 
+describe('GET /api/captcha', () => {
+  it('returns the public site key', async () => {
+    vi.stubEnv('NEXT_PUBLIC_TURNSTILE_SITE_KEY', 'site-key');
+    vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+    const res = await captchaConfig(
+      new NextRequest('https://coopseat.com/api/captcha'),
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ siteKey: 'site-key' });
+  });
+});
+
 describe('POST /api/report', () => {
   it('mails help@ with the image attached', async () => {
     const res = await report(
@@ -130,7 +152,7 @@ describe('POST /api/report', () => {
     expect(message.text).toContain('Version: 1.2.3');
   });
 
-  it('accepts a desktop report without an Origin header', async () => {
+  it('accepts a desktop report without an Origin header when Turnstile is not configured', async () => {
     const res = await report(
       request(
         '/api/report',
@@ -193,6 +215,86 @@ describe('POST /api/report', () => {
     expect(tooBig.status).toBe(400);
     expect((await tooBig.json()).error.message).toContain('1 MB');
     expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('rejects a spoofed desktop client when Turnstile is configured', async () => {
+    vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+    const desktop = await report(
+      request(
+        '/api/report',
+        { ...reportBody, images: [] },
+        { 'x-coopseat-client': 'desktop' },
+      ),
+      ctx,
+    );
+    expect(desktop.status).toBe(400);
+    expect((await desktop.json()).error.code).toBe('captcha_required');
+
+    const bearer = await report(
+      request(
+        '/api/report',
+        { ...reportBody, images: [] },
+        {
+          authorization: 'Bearer forged',
+          origin: 'https://coopseat.com',
+          'x-forwarded-for': '203.0.113.30',
+        },
+      ),
+      ctx,
+    );
+    expect(bearer.status).toBe(400);
+    expect((await bearer.json()).error.code).toBe('captcha_required');
+    expect(sendEmail).not.toHaveBeenCalled();
+  });
+
+  it('accepts a verified session without a captcha when Turnstile is configured', async () => {
+    vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+    verifyAccessToken.mockResolvedValue({
+      sub: 'user-1',
+      email: 'ada@example.com',
+      role: 'authenticated',
+      exp: 9_999_999_999,
+    } as never);
+    const res = await report(
+      request(
+        '/api/report',
+        { ...reportBody, images: [] },
+        {
+          authorization: 'Bearer real-session',
+          'x-forwarded-for': '203.0.113.40',
+        },
+      ),
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    expect(sendEmail).toHaveBeenCalledOnce();
+    expect(vi.mocked(sendEmail).mock.calls[0]![0].text).toContain(
+      'Account: user-1',
+    );
+  });
+
+  it('sends the report once Turnstile accepts the token', async () => {
+    vi.stubEnv('TURNSTILE_SECRET_KEY', 'turnstile-secret');
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => Response.json({ success: true })),
+    );
+    const res = await report(
+      request(
+        '/api/report',
+        { ...reportBody, images: [], captchaToken: 'ok' },
+        {
+          'x-coopseat-client': 'desktop',
+          'x-forwarded-for': '203.0.113.31',
+        },
+      ),
+      ctx,
+    );
+    expect(res.status).toBe(200);
+    expect(sendEmail).toHaveBeenCalledOnce();
+    expect(vi.mocked(fetch).mock.calls[0]?.[0]).toBe(
+      'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+    );
   });
 
   it('stops after 5 reports from the same IP', async () => {

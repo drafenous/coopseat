@@ -30,6 +30,7 @@ export const reportSchema = z.object({
     .optional()
     .transform((value) => value || undefined),
   website: z.string().max(200).optional(),
+  captchaToken: captchaSchema,
   images: z
     .array(z.string().min(1).max(MAX_IMAGE_CHARS, 'image_too_large'))
     .max(3, 'too_many_images')
