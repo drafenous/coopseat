@@ -34,7 +34,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'801aea61a645f68a114948ec6d1482b5b02adb80acd24b20351f8b3017e08263'>;
+  StorageHashBase<'ac614c0f6d849d988afc6be1224f3b5b5f52e92d8a914cb0ce14681843458df2'>;
 export type ExecutionHash =
   ExecutionHashBase<'16212b2a108edf1cbe98d9f03d5e864cbec4a88abc22f9ce1eb15d63c410a8c7'>;
 export type ProfileHash =
@@ -294,6 +294,7 @@ export type FieldOutputTypes = {
     readonly PartyRoom: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly defaultLayout: CodecTypes['pg/text@1']['output'];
+      readonly listed: CodecTypes['pg/bool@1']['output'];
       readonly maxParticipants: CodecTypes['pg/int4@1']['output'] | null;
       readonly ownerId: CodecTypes['pg/uuid@1']['output'];
       readonly passwordHash: CodecTypes['pg/text@1']['output'] | null;
@@ -465,6 +466,7 @@ export type FieldInputTypes = {
     readonly PartyRoom: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly defaultLayout: CodecTypes['pg/text@1']['input'];
+      readonly listed: CodecTypes['pg/bool@1']['input'];
       readonly maxParticipants: CodecTypes['pg/int4@1']['input'] | null;
       readonly ownerId: CodecTypes['pg/uuid@1']['input'];
       readonly passwordHash: CodecTypes['pg/text@1']['input'] | null;
@@ -664,6 +666,7 @@ export type StorageColumnTypes = {
     readonly party_rooms: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly defaultLayout: CodecTypes['pg/text@1']['output'];
+      readonly listed: CodecTypes['pg/bool@1']['output'];
       readonly maxParticipants: CodecTypes['pg/int4@1']['output'] | null;
       readonly ownerId: CodecTypes['pg/uuid@1']['output'];
       readonly passwordHash: CodecTypes['pg/text@1']['output'] | null;
@@ -835,6 +838,7 @@ export type StorageColumnInputTypes = {
     readonly party_rooms: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
       readonly defaultLayout: CodecTypes['pg/text@1']['input'];
+      readonly listed: CodecTypes['pg/bool@1']['input'];
       readonly maxParticipants: CodecTypes['pg/int4@1']['input'] | null;
       readonly ownerId: CodecTypes['pg/uuid@1']['input'];
       readonly passwordHash: CodecTypes['pg/text@1']['input'] | null;
@@ -984,6 +988,7 @@ export namespace Models {
   export type public_PartyRoom = {
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     defaultLayout: CodecTypes['pg/text@1']['output'];
+    listed: CodecTypes['pg/bool@1']['output'];
     maxParticipants: CodecTypes['pg/int4@1']['output'] | null;
     ownerId: CodecTypes['pg/uuid@1']['output'];
     passwordHash: CodecTypes['pg/text@1']['output'] | null;
@@ -1772,6 +1777,15 @@ type ContractBase = Omit<
                   readonly default: {
                     readonly kind: 'literal';
                     readonly value: DefaultLiteralValue<'pg/text@1', 'stage'>;
+                  };
+                };
+                readonly listed: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
                   };
                 };
                 readonly maxParticipants: {
@@ -2850,6 +2864,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly listed: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
               readonly maxParticipants: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int4@1' };
@@ -2898,6 +2916,7 @@ type ContractBase = Omit<
               readonly fields: {
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly defaultLayout: { readonly column: 'defaultLayout' };
+                readonly listed: { readonly column: 'listed' };
                 readonly maxParticipants: { readonly column: 'maxParticipants' };
                 readonly ownerId: { readonly column: 'ownerId' };
                 readonly passwordHash: { readonly column: 'passwordHash' };

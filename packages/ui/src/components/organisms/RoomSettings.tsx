@@ -170,6 +170,19 @@ export function RoomSettings({
             )}
           </div>
         </form>
+        <label className="mt-3 flex items-start gap-2.5">
+          <Switch
+            checked={room.listed}
+            disabled={busy}
+            onChange={(e) => void update({ listed: e.target.checked })}
+          />
+          <span>
+            <span className="block text-[13px] text-[#c9d4de]">{t.listed}</span>
+            <span className="mt-0.5 block text-[12px] leading-snug text-[#8494a5]">
+              {t.listedHint}
+            </span>
+          </span>
+        </label>
       </Collapsible>
 
       <Collapsible icon={<Eye size={14} />} title={t.visibility}>

@@ -16,6 +16,7 @@ export const updateRoomSchema = z
     requireApproval: z.boolean().optional(),
     whitelistEnabled: z.boolean().optional(),
     defaultLayout: z.enum(['stage', 'grid']).optional(),
+    listed: z.boolean().optional(),
   })
   .strict();
 

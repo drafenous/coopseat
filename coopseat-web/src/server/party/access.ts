@@ -46,14 +46,20 @@ export async function loadViewer(session: AuthContext): Promise<Viewer> {
 export type RoomOwner = { id: string; nickname: string };
 
 /** Rooms are addressed by the owner's nickname (case-insensitive). */
-export async function findOwner(nickname: string): Promise<RoomOwner | null> {
+export async function findOwner(
+  nickname: string,
+): Promise<(RoomOwner & { avatarUrl: string | null }) | null> {
   if (!NICKNAME_PATTERN.test(nickname)) return null;
   const db = await adminDb();
   const profile = await db.orm.public.Profile.where({
     nicknameKey: nickname.toLowerCase(),
   }).first();
   return profile?.nickname
-    ? { id: profile.id, nickname: profile.nickname }
+    ? {
+        id: profile.id,
+        nickname: profile.nickname,
+        avatarUrl: profile.avatarUrl,
+      }
     : null;
 }
 

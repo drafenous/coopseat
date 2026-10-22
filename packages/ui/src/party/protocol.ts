@@ -333,6 +333,21 @@ export async function internalHeaders(
   };
 }
 
+export {
+  parseRoomQuery,
+  isRoomStatusFilter,
+  isRoomPasswordFilter,
+  isRoomVisibilityFilter,
+  roomVisibility,
+  ROOM_STATUS_FILTERS,
+  ROOM_PASSWORD_FILTERS,
+  ROOM_VISIBILITY_FILTERS,
+  type RoomListing,
+  type RoomStatusFilter,
+  type RoomPasswordFilter,
+  type RoomVisibilityFilter,
+} from './room-query';
+
 export const isUuid = (v: unknown): v is string =>
   typeof v === 'string' &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(v);

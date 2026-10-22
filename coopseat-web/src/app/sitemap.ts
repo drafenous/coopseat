@@ -6,6 +6,7 @@ const PRIORITY: Partial<Record<(typeof INDEXABLE_PATHS)[number], number>> = {
   '/': 1,
   '/download': 0.9,
   '/play': 0.7,
+  '/rooms': 0.8,
 };
 
 export default function sitemap(): MetadataRoute.Sitemap {

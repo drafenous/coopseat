@@ -34,6 +34,9 @@ export const en = {
     contact: 'Contact',
     contactDescription:
       'Send a message to CoopSeat about the site, the app or your account.',
+    rooms: 'Rooms',
+    roomsDescription:
+      'Find an open Gaming-Party room, see how many people are inside, and whether it asks for a password or approval.',
   },
   playPage: {
     title: 'Play your console in the browser',
@@ -66,6 +69,7 @@ export const en = {
       how: 'How it works',
       local: 'Local player',
       faq: 'FAQ',
+      rooms: 'Rooms',
       contact: 'Contact',
     },
     signIn: 'Sign in',

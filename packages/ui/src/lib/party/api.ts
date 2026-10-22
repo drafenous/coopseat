@@ -51,6 +51,7 @@ export type RoomView = {
   requireApproval: boolean;
   whitelistEnabled: boolean;
   defaultLayout: Layout;
+  listed: boolean;
   maxParticipants: number;
   maxStreamers: number;
   enabled: boolean;
@@ -112,6 +113,7 @@ export const partyApi = {
     requireApproval?: boolean;
     whitelistEnabled?: boolean;
     defaultLayout?: Layout;
+    listed?: boolean;
   }) => api<RoomView>('/api/party/room', { method: 'PATCH', body }),
   allow: (nickname: string, canStream: boolean) =>
     api<RoomView>('/api/party/room/whitelist', {

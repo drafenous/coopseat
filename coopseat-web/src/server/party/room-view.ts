@@ -24,6 +24,7 @@ export async function roomView(ownerId: string, ownerNickname: string | null) {
     requireApproval: room.requireApproval,
     whitelistEnabled: room.whitelistEnabled,
     defaultLayout: room.defaultLayout === 'grid' ? 'grid' : 'stage',
+    listed: room.listed,
     maxParticipants: roomCapacity(policy, room),
     maxStreamers: policy.maxStreamers,
     enabled: policy.enabled,
