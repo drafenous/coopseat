@@ -28,6 +28,8 @@ jobs:
     runs-on: windows-latest
     # Tag releases upload the installers from this job; a second job + artifacts
     # hits Actions storage quota (recalculated only every 6–12h after deletes).
+    # Production secrets exist only on a desktop tag. Other runs leave this empty.
+    environment: ${{ startsWith(github.ref, 'refs/tags/desktop-v') && 'production' || '' }}
     permissions:
       contents: write
     defaults:
@@ -92,7 +94,8 @@ jobs:
           fail_on_unmatched_files: true
       - name: Publish installers to R2
         # Versioned keys: downloads.coopseat.com/<version>/CoopSeat-<version>-Setup.exe
-        # Requires CLOUDFLARE_ACCOUNT_ID and a token with Workers R2 Storage Edit.
+        # Requires the production environment secrets CLOUDFLARE_ACCOUNT_ID and
+        # CLOUDFLARE_API_TOKEN (Workers R2 Storage Edit).
         if: startsWith(github.ref, 'refs/tags/desktop-v')
         working-directory: .
         shell: pwsh
@@ -102,7 +105,7 @@ jobs:
           R2_BUCKET: coopseat-downloads
         run: |
           if ([string]::IsNullOrWhiteSpace($env:CLOUDFLARE_API_TOKEN) -or [string]::IsNullOrWhiteSpace($env:CLOUDFLARE_ACCOUNT_ID)) {
-            Write-Error "Set the CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN repository secrets before publishing a desktop tag."
+            Write-Error "Set CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN on the production environment before publishing a desktop tag."
             exit 1
           }
           $files = @(

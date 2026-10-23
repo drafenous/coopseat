@@ -56,7 +56,7 @@ git tag -a desktop-v0.2.0 -m "desktop 0.2.0"
 git tag -a ui-v0.1.1 -m "ui 0.1.1"
 ```
 
-**6. Push only after the user confirms.** Pushing a `desktop-v*` tag publishes a public installer and uploads it to R2. The repository secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (Workers R2 Storage Edit) must already exist, and the bucket `coopseat-downloads` must be public at `downloads.coopseat.com`. Then:
+**6. Push only after the user confirms.** Pushing a `desktop-v*` tag publishes a public installer and uploads it to R2. The `production` environment secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (Workers R2 Storage Edit) must already exist, and the bucket `coopseat-downloads` must be publicly readable. Then:
 
 ```bash
 git push origin main desktop-v0.2.0 ui-v0.1.1
