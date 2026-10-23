@@ -9,7 +9,7 @@ Three packages, each versioned and tagged independently:
 
 | Key       | Directory       | Tag              | What the tag triggers                                                             |
 | --------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
-| `desktop` | `coopseat-desktop/` | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installer and creates a GitHub Release |
+| `desktop` | `coopseat-desktop/` | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installer, creates a GitHub Release, and uploads both `.exe` files to the R2 bucket `coopseat-downloads` at `<version>/CoopSeat-<version>-Setup.exe` and `<version>/CoopSeat-<version>-Portable.exe` |
 | `web`     | `coopseat-web/` | `web-vX.Y.Z`     | Nothing; marks what is deployed from `main`                                       |
 | `ui`      | `packages/ui/`  | `ui-vX.Y.Z`      | Nothing; `@coopseat/ui` is private and consumed through npm workspaces            |
 
@@ -56,7 +56,7 @@ git tag -a desktop-v0.2.0 -m "desktop 0.2.0"
 git tag -a ui-v0.1.1 -m "ui 0.1.1"
 ```
 
-**6. Push only after the user confirms.** Pushing a `desktop-v*` tag publishes a public installer. Then:
+**6. Push only after the user confirms.** Pushing a `desktop-v*` tag publishes a public installer and uploads it to R2. The repository secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (Workers R2 Storage Edit) must already exist, and the bucket `coopseat-downloads` must be public at `downloads.coopseat.com`. Then:
 
 ```bash
 git push origin main desktop-v0.2.0 ui-v0.1.1

@@ -90,3 +90,30 @@ jobs:
             coopseat-desktop/release/*-Portable.exe
           generate_release_notes: true
           fail_on_unmatched_files: true
+      - name: Publish installers to R2
+        # Versioned keys: downloads.coopseat.com/<version>/CoopSeat-<version>-Setup.exe
+        # Requires CLOUDFLARE_ACCOUNT_ID and a token with Workers R2 Storage Edit.
+        if: startsWith(github.ref, 'refs/tags/desktop-v')
+        working-directory: .
+        shell: pwsh
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_BUCKET: coopseat-downloads
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CLOUDFLARE_API_TOKEN) -or [string]::IsNullOrWhiteSpace($env:CLOUDFLARE_ACCOUNT_ID)) {
+            Write-Error "Set the CLOUDFLARE_ACCOUNT_ID and CLOUDFLARE_API_TOKEN repository secrets before publishing a desktop tag."
+            exit 1
+          }
+          $files = @(
+            "CoopSeat-$env:VERSION-Setup.exe",
+            "CoopSeat-$env:VERSION-Portable.exe"
+          )
+          foreach ($name in $files) {
+            $path = "coopseat-desktop/release/$name"
+            if (-not (Test-Path $path)) {
+              Write-Error "Missing $path"
+              exit 1
+            }
+            npm exec -w coopseat-signal -- wrangler r2 object put "$env:R2_BUCKET/$env:VERSION/$name" --file="$path" --content-type=application/octet-stream --remote
+          }
