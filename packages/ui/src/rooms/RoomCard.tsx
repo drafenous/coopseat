@@ -103,8 +103,14 @@ export function RoomCard({
     return (
       <article className="flex flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
         <div className="min-w-40 flex-1">{name}</div>
-        {status}
-        {facts}
+        {room.listed ? (
+          <>
+            {status}
+            {facts}
+          </>
+        ) : (
+          <p className="text-sm text-muted">{t.unlisted}</p>
+        )}
         <div className="ml-auto">{actions}</div>
       </article>
     );
@@ -114,9 +120,9 @@ export function RoomCard({
     <article className="flex flex-col gap-3 rounded-2xl border border-line bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         {name}
-        {status}
+        {room.listed && status}
       </div>
-      {facts}
+      {room.listed ? facts : <p className="text-sm text-muted">{t.unlisted}</p>}
       {actions}
     </article>
   );

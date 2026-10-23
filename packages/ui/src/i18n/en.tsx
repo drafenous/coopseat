@@ -135,6 +135,7 @@ export const en = {
     emptyHint: 'Try another filter, or search for a room by name.',
     loading: 'Loading rooms…',
     notFound: 'No room with that name.',
+    unlisted: 'This room is not in the public list.',
     invalid: 'Use a nickname or a room link.',
     error: "Couldn't load rooms. Try again.",
     back: 'Back',

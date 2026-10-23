@@ -8,8 +8,10 @@ const NICKNAME = /^[A-Za-z0-9_]{3,20}$/;
 /** A room as the directory and the header search show it. No ids, no secrets. */
 export type RoomListing = {
   nickname: string;
-  /** Profile photo. Null when the host has not set one. */
+  /** Profile photo. Null when the host has not set one, or the room is not listed. */
   avatarUrl: string | null;
+  /** False hides live occupancy and room protections. Search can still open the room. */
+  listed: boolean;
   open: boolean;
   people: number;
   capacity: number;

@@ -78,7 +78,7 @@ describe('room directory', () => {
     });
   }
 
-  it('looks up an unlisted room and counts only people still inside', async () => {
+  it('hides live details until the owner lists the room', async () => {
     const session = await hostRoom({ listed: false });
     await tables().PartySessionParticipant.create({
       sessionId: session!.id,
@@ -100,16 +100,17 @@ describe('room directory', () => {
       .Profile.where({ id: 'host-1' })
       .updateAll({ avatarUrl: 'https://cdn.example/host.png' });
 
-    const room = await lookupRoom('https://coopseat.com/party/host');
-    expect(room).toEqual({
+    const hidden = await lookupRoom('https://coopseat.com/party/host');
+    expect(hidden).toEqual({
       nickname: 'Host',
-      avatarUrl: 'https://cdn.example/host.png',
-      open: true,
-      people: 1,
+      avatarUrl: null,
+      listed: false,
+      open: false,
+      people: 0,
       capacity: 10,
-      hasPassword: true,
+      hasPassword: false,
       requireApproval: false,
-      inviteOnly: true,
+      inviteOnly: false,
     });
     expect(await listRooms('all')).toEqual({
       rooms: [],
@@ -117,6 +118,22 @@ describe('room directory', () => {
       page: 1,
       pageSize: ROOM_PAGE_SIZE,
     });
+    await tables().PartyRoom.where({ ownerId: 'host-1' }).updateAll({ listed: true });
+    const room = await lookupRoom('host');
+    expect(room).toEqual({
+      nickname: 'Host',
+      avatarUrl: 'https://cdn.example/host.png',
+      listed: true,
+      open: true,
+      people: 1,
+      capacity: 10,
+      hasPassword: true,
+      requireApproval: false,
+      inviteOnly: true,
+    });
+    expect((await listRooms('open')).rooms.map((item) => item.nickname)).toEqual([
+      'Host',
+    ]);
   });
 
   it('lists only opted-in rooms and splits open from closed', async () => {
@@ -207,12 +224,15 @@ describe('room directory', () => {
 
   it('treats a nickname with no room row as closed, and unknown names as missing', async () => {
     await profile('new-1', 'New_User');
-    expect(await lookupRoom('New_User')).toMatchObject({
+    expect(await lookupRoom('New_User')).toEqual({
       nickname: 'New_User',
+      avatarUrl: null,
+      listed: false,
       open: false,
       people: 0,
+      capacity: 10,
       hasPassword: false,
-      requireApproval: true,
+      requireApproval: false,
       inviteOnly: false,
     });
     await expect(lookupRoom('Missing')).rejects.toMatchObject({

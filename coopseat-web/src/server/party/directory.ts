@@ -37,12 +37,28 @@ function toCard(
   return {
     nickname,
     avatarUrl,
+    listed: true,
     open,
     people: open ? people : 0,
     capacity: roomCapacity(policy, room),
     hasPassword: room?.passwordHash != null,
     requireApproval: room?.requireApproval ?? true,
     inviteOnly,
+  };
+}
+
+/** A direct lookup of a room the owner did not list. Enough to open it, nothing about the live session. */
+function unlistedCard(nickname: string, policy: PartyPolicy): RoomListing {
+  return {
+    nickname,
+    avatarUrl: null,
+    listed: false,
+    open: false,
+    people: 0,
+    capacity: roomCapacity(policy, null),
+    hasPassword: false,
+    requireApproval: false,
+    inviteOnly: false,
   };
 }
 
@@ -63,7 +79,7 @@ async function presentCounts(sessionIds: string[]): Promise<Map<string, number>>
 
 /**
  * One room by nickname or link. Reads only: a public lookup must not end sessions or create rooms.
- * A nickname with no room row yet is closed, with the same defaults a new room would get.
+ * Unlisted rooms, and nicknames with no room row, stay findable, without occupancy or protections.
  */
 export async function lookupRoom(raw: string): Promise<RoomListing> {
   const nickname = parseRoomQuery(raw);
@@ -71,13 +87,14 @@ export async function lookupRoom(raw: string): Promise<RoomListing> {
   const owner = await findOwner(nickname);
   if (!owner) throw new ApiError(404, 'party_not_found');
   const db = await adminDb();
-  const [room, policy, session] = await Promise.all([
+  const [room, policy] = await Promise.all([
     getRoom(owner.id),
     getPartyPolicy(),
-    db.orm.public.PartySession.where({ roomId: owner.id })
-      .where((s) => s.endedAt.isNull())
-      .first(),
   ]);
+  if (room?.listed !== true) return unlistedCard(owner.nickname, policy);
+  const session = await db.orm.public.PartySession.where({ roomId: owner.id })
+    .where((s) => s.endedAt.isNull())
+    .first();
   const open = Boolean(session && isLive(session.startedAt, policy));
   const people =
     open && session ? ((await presentCounts([session.id])).get(session.id) ?? 0) : 0;

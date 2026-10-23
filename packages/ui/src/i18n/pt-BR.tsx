@@ -127,6 +127,7 @@ export const ptBR: UiDictionary = {
     emptyHint: 'Tente outro filtro ou busque uma sala pelo nome.',
     loading: 'Carregando salas…',
     notFound: 'Não há sala com esse nome.',
+    unlisted: 'Esta sala não está na lista pública.',
     invalid: 'Use um apelido ou o link da sala.',
     error: 'Não foi possível carregar as salas. Tente de novo.',
     back: 'Voltar',

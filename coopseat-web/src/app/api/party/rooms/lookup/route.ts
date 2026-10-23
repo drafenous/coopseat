@@ -4,7 +4,7 @@ import { lookupRoom } from '@/server/party/directory';
 import { NO_STORE } from '@/server/party/routes';
 import { rateLimit } from '@/server/rate-limit';
 
-/** One room by nickname or link, including rooms that are not in the public list. */
+/** One room by nickname or link. Unlisted rooms stay openable, without live details. */
 export const GET = route(async (req) => {
   await rateLimit('party_directory', clientIp(req));
   const room = await lookupRoom(req.nextUrl.searchParams.get('q') ?? '');
