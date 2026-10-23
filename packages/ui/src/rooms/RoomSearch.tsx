@@ -59,6 +59,8 @@ function SearchForm({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const wasOpen = useRef(false);
+  // Ignores a lookup that finishes after the field changes or a newer search starts.
+  const lookupSeq = useRef(0);
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<Result>({ kind: 'idle' });
   const [open, setOpen] = useState(false);
@@ -130,6 +132,7 @@ function SearchForm({
     event.preventDefault();
     const nickname = parseRoomQuery(query);
     if (!nickname) {
+      lookupSeq.current += 1;
       setResult({ kind: 'invalid' });
       return;
     }
@@ -140,13 +143,16 @@ function SearchForm({
       openRoom(result.room.nickname);
       return;
     }
+    const seq = ++lookupSeq.current;
     setResult({ kind: 'loading' });
     try {
       const data = await publicGet<{ room: RoomListing }>(
         `/api/party/rooms/lookup?q=${encodeURIComponent(nickname)}`,
       );
+      if (lookupSeq.current !== seq) return;
       setResult({ kind: 'found', room: data.room });
     } catch (err) {
+      if (lookupSeq.current !== seq) return;
       if (err instanceof ApiError && err.status === 404)
         setResult({ kind: 'missing' });
       else if (err instanceof ApiError && err.status === 400)
@@ -195,6 +201,7 @@ function SearchForm({
               maxLength={300}
               aria-label={t.searchLabel}
               onChange={(event) => {
+                lookupSeq.current += 1;
                 setQuery(event.target.value);
                 setResult({ kind: 'idle' });
               }}

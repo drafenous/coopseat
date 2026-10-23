@@ -222,6 +222,28 @@ describe('room directory', () => {
     ]);
   });
 
+  it('marks listed rooms closed when party is turned off', async () => {
+    const session = await hostRoom();
+    await tables().PartySessionParticipant.create({
+      sessionId: session!.id,
+      profileId: 'host-1',
+    });
+    await tables().PartyPolicy.create({ enabled: false });
+    const room = await lookupRoom('host');
+    expect(room.open).toBe(false);
+    expect(room.people).toBe(0);
+    expect(await listRooms('open')).toEqual({
+      rooms: [],
+      total: 0,
+      page: 1,
+      pageSize: ROOM_PAGE_SIZE,
+    });
+    const all = await listRooms('all');
+    expect(all.rooms.map((item) => item.nickname)).toEqual(['Host']);
+    expect(all.rooms[0]?.open).toBe(false);
+    expect(all.rooms[0]?.people).toBe(0);
+  });
+
   it('treats a nickname with no room row as closed, and unknown names as missing', async () => {
     await profile('new-1', 'New_User');
     expect(await lookupRoom('New_User')).toEqual({

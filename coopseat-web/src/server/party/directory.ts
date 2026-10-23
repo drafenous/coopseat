@@ -21,8 +21,9 @@ type RoomShape = {
   maxParticipants: number | null;
 };
 
+/** Still inside its limit. The party kill switch makes every session offline. */
 function isLive(startedAt: string, policy: PartyPolicy): boolean {
-  return sessionEndsAt(startedAt, policy) * 1000 > Date.now();
+  return policy.enabled && sessionEndsAt(startedAt, policy) * 1000 > Date.now();
 }
 
 function toCard(
