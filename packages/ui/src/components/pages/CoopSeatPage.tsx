@@ -22,8 +22,11 @@ import {
   track,
   useTelemetryConsent,
 } from '../../lib/telemetry';
-import { bridge } from '../../platform';
-import { I18nProvider, useT, type UiLocale } from '../../i18n';
+import { bridge, platform } from '../../platform';
+import { RoomDirectory } from '../../rooms/RoomDirectory';
+import { downloadPath, partyPath } from '../../rooms/paths';
+import { openDesktopRoom } from '../../rooms/open-desktop';
+import { I18nProvider, useLocale, useT, type UiLocale } from '../../i18n';
 import {
   LAST_VOLUME_KEY,
   ONBOARDED_KEY,
@@ -77,6 +80,7 @@ export function CoopSeatPage({
 
 function CoopSeat({ initialParty }: { initialParty: string | null }) {
   const t = useT();
+  const locale = useLocale();
   const update = useUpdateNotice();
   const { settings: s, setSettings, change } = useSettings();
   const { error, setError, notice, setNotice } = useToasts();
@@ -119,6 +123,12 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
   }, [panelCollapsed]);
 
   const [partyNick, setPartyNick] = useState<string | null>(initialParty);
+  const [roomsOpen, setRoomsOpen] = useState(false);
+  const openRoom = (nickname: string) => {
+    setRoomsOpen(false);
+    if (platform().kind === 'desktop') setPartyNick(nickname);
+    else location.assign(partyPath(nickname, locale));
+  };
   const auth = useAuth({ setError, setNotice, onPartyLink: setPartyNick });
   const signedIn = auth.status === 'signedIn';
   const setBansRef = useRef<(bans: BanEntry[]) => void>(() => {});
@@ -187,7 +197,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
     backend: partyMode ? 'compat' : s.backend,
     autoFull: !partyMode && s.autoFull,
     cinemaDelay: s.cinemaDelay,
-    blocked: modalOpen || presetMenu || cinemaMenu,
+    blocked: modalOpen || presetMenu || cinemaMenu || roomsOpen,
   });
   const stageVideoRef = useRef<HTMLVideoElement | null>(null);
   const nativeSlotRef = useRef<HTMLElement | null>(null);
@@ -199,7 +209,8 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
     party.slots.main.includes(party.self.id);
   useNativeBounds(
     nativeOnSlot ? nativeSlotRef : capture.screenRef,
-    running &&
+    !roomsOpen &&
+      running &&
       s.backend === 'native' &&
       (!partyMode || party.slots.main.length === 0 || nativeOnSlot),
     modalOpen,
@@ -475,7 +486,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
 
   return (
     <MainLayout
-      immersive={cinema.chromeHidden}
+      immersive={cinema.chromeHidden && !roomsOpen}
       panelSide={panelSide}
       panelCollapsed={panelCollapsed}
       roomCollapsed={roomCollapsed}
@@ -490,6 +501,18 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
             onMyAccount={myAccount}
             onMyRoom={myRoom}
             onSignOut={signOut}
+            onOpenRoom={openRoom}
+            onRooms={() => setRoomsOpen((open) => !open)}
+            onBrowseRooms={() => setRoomsOpen(true)}
+            roomsOpen={roomsOpen}
+            onOpenDesktop={
+              platform().kind === 'web' && partyNick
+                ? () => openDesktopRoom(partyNick, downloadPath(locale))
+                : undefined
+            }
+            downloadHref={
+              platform().kind === 'web' ? downloadPath(locale) : undefined
+            }
           />
           {update.version ? (
             <UpdateNotice
@@ -501,7 +524,15 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         </>
       }
       viewer={
-        partyMode ? (
+        roomsOpen ? (
+          <RoomDirectory
+            onOpenRoom={openRoom}
+            downloadHref={
+              platform().kind === 'web' ? downloadPath(locale) : undefined
+            }
+            onBack={() => setRoomsOpen(false)}
+          />
+        ) : partyMode ? (
           <StreamStage
             party={party}
             onLeave={leaveParty}
@@ -571,6 +602,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         )
       }
       panelTop={
+        !roomsOpen &&
         !partyMode &&
         auth.available &&
         auth.status === 'signedOut' && (
@@ -578,7 +610,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         )
       }
       panel={
-        !partyMode || streamer ? (
+        !roomsOpen && (!partyMode || streamer) ? (
           panelCollapsed ? (
             <PanelRail
               label={t.settings.title}
@@ -592,7 +624,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         ) : undefined
       }
       roomPanel={
-        partyMode && signedIn ? (
+        !roomsOpen && partyMode && signedIn ? (
           roomCollapsed ? (
             <PanelRail
               label={t.party.tabs.chat}
@@ -627,6 +659,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         />
       }
       metrics={
+        !roomsOpen &&
         showStats &&
         (partyMode ? (
           <MetricsBar

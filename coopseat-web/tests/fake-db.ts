@@ -231,6 +231,7 @@ export function createFakeDb() {
           whitelistEnabled: true,
           defaultLayout: 'stage',
           maxParticipants: null,
+          listed: false,
           createdAt: now(),
           updatedAt: now(),
         }));

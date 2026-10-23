@@ -199,6 +199,8 @@ namespace public {
     whitelistEnabled Boolean                    @default(true)
     defaultLayout    String                     @default("stage")
     maxParticipants  Int?
+    /// Owner opted this room into the public directory. Direct lookup by nickname still works when this is off.
+    listed           Boolean                    @default(false)
     createdAt        TimestamptzString          @default(now())
     updatedAt        temporal.updatedAtString()
 

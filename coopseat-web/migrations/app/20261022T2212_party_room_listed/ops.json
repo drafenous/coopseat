@@ -1,0 +1,44 @@
+[
+  {
+    "id": "column.public.party_rooms.listed",
+    "label": "Add column \"listed\" to \"party_rooms\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "listed",
+        "table": "party_rooms"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"listed\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "party_rooms",
+          "listed"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"listed\"",
+        "sql": "ALTER TABLE \"public\".\"party_rooms\" ADD COLUMN \"listed\" bool DEFAULT false NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"listed\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "party_rooms",
+          "listed"
+        ]
+      }
+    ]
+  }
+]

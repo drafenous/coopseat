@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Download } from 'lucide-react';
 import { Brand } from '@coopseat/ui/design';
+import { RoomSearch } from '@coopseat/ui/rooms/search';
 import { localeHref } from '@/i18n/config';
 import { getDictionary, getLocale } from '@/i18n/server';
 import { DOWNLOAD_URL } from '@/lib/links';
@@ -20,14 +21,15 @@ export async function SiteHeader() {
     { href: href('/#how'), label: h.nav.how },
     { href: href('/#local'), label: h.nav.local },
     { href: href('/#faq'), label: h.nav.faq },
+    { href: href('/rooms'), label: h.nav.rooms },
     { href: href('/contact'), label: h.nav.contact },
   ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-line-soft/70 bg-background/75 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-6xl items-center gap-8 px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:gap-5">
         <Brand href={href('/')} version={null} />
-        <nav className="hidden items-center gap-6 text-sm text-muted md:flex">
+        <nav className="hidden items-center gap-6 text-sm text-muted lg:flex">
           {nav.map((item) =>
             item.href.includes('#') ? (
               <a
@@ -49,6 +51,7 @@ export async function SiteHeader() {
           )}
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <RoomSearch locale={locale} />
           {account ? (
             <div className="hidden sm:block">
               <SiteAccountMenu

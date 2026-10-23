@@ -574,6 +574,13 @@
                   "kind": "scalar"
                 }
               },
+              "listed": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
               "maxParticipants": {
                 "nullable": true,
                 "type": {
@@ -642,6 +649,9 @@
                 },
                 "defaultLayout": {
                   "column": "defaultLayout"
+                },
+                "listed": {
+                  "column": "listed"
                 },
                 "maxParticipants": {
                   "column": "maxParticipants"
@@ -2873,6 +2883,15 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "listed": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
                 "maxParticipants": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
@@ -3833,7 +3852,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "801aea61a645f68a114948ec6d1482b5b02adb80acd24b20351f8b3017e08263",
+    "storageHash": "ac614c0f6d849d988afc6be1224f3b5b5f52e92d8a914cb0ce14681843458df2",
     "types": {
       "AuthUserId": {
         "codecId": "pg/uuid@1",
