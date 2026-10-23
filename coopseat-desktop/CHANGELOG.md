@@ -4,6 +4,10 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+### Changed
+
+- Silent setup installs CoopSeat for every user on the PC and lists it in Apps & features. The setup window still asks who to install for.
+
 ## [0.4.0] - 2026-10-20
 
 ### Changed
