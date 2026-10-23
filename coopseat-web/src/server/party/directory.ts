@@ -106,9 +106,7 @@ function matchesRestrictions(
   if (password === 'no' && card.hasPassword) return false;
   const visibility = restrictions.visibility;
   if (visibility == null || visibility === 'any') return true;
-  const allowed = (Array.isArray(visibility) ? visibility : [visibility]).filter(
-    (item) => item !== 'any',
-  );
+  const allowed = Array.isArray(visibility) ? visibility : [visibility];
   return allowed.length === 0 || allowed.includes(roomVisibility(card));
 }
 

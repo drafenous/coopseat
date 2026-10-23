@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import {
   isRoomPasswordFilter,
   isRoomStatusFilter,
-  isRoomVisibilityFilter,
 } from '@coopseat/ui/party-protocol';
 import { ApiError, clientIp, route } from '@/server/http';
 import { listRooms } from '@/server/party/directory';
@@ -18,7 +17,7 @@ function parseVisibility(raw: string[]) {
     return undefined;
   const picked: Array<'protected' | 'private' | 'public'> = [];
   for (const token of tokens) {
-    if (token === 'any' || !isRoomVisibilityFilter(token))
+    if (token !== 'protected' && token !== 'private' && token !== 'public')
       throw new ApiError(400, 'invalid_input');
     if (!picked.includes(token)) picked.push(token);
   }
