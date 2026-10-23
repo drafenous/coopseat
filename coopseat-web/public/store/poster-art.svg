@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="2160" viewBox="0 0 1440 2160">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#121a24"/>
+      <stop offset="48%" stop-color="#0b1016"/>
+      <stop offset="100%" stop-color="#070b10"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="46%" r="52%">
+      <stop offset="0%" stop-color="#b0f3d2" stop-opacity="0.14"/>
+      <stop offset="58%" stop-color="#b0f3d2" stop-opacity="0.04"/>
+      <stop offset="100%" stop-color="#b0f3d2" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#071018" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#071018" stop-opacity="0.72"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-16%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="28" stdDeviation="32" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+    <clipPath id="screen">
+      <rect x="96" y="706" width="1248" height="748" rx="18"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1440" height="2160" fill="url(#bg)"/>
+  <ellipse cx="720" cy="1080" rx="760" ry="560" fill="url(#glow)"/>
+
+  <!-- Brand -->
+  <g transform="translate(80 112) scale(0.140625)">
+    <rect width="512" height="512" rx="146.29" fill="#b0f3d2"/>
+    <g transform="translate(95.09 95.09) scale(13.4095)" fill="none" stroke="#122b25" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/>
+      <path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/>
+      <path d="M5 18v2"/>
+      <path d="M19 18v2"/>
+    </g>
+  </g>
+  <text x="172" y="148" font-family="Segoe UI" font-size="34" font-weight="700" fill="#f3f6f8">CoopSeat</text>
+
+  <rect x="1128" y="126" width="232" height="44" rx="22" fill="#b0f3d214" stroke="#b0f3d255" stroke-width="1.5"/>
+  <text x="1244" y="148" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI" font-size="18" font-weight="700" fill="#b0f3d2">Grátis até 720p</text>
+
+  <!-- Headline -->
+  <text x="80" y="292" font-family="Segoe UI" font-size="84" font-weight="700" fill="#f3f6f8" letter-spacing="-1.6">Transmita a jogatina</text>
+  <text x="80" y="390" font-family="Segoe UI" font-size="84" font-weight="700" fill="#f3f6f8" letter-spacing="-1.6">para os amigos.</text>
+  <text x="80" y="470" font-family="Segoe UI" font-size="46" font-weight="700" fill="#b0f3d2" letter-spacing="-0.6">Jogue junto na mesma sala.</text>
+  <text x="80" y="530" font-family="Segoe UI" font-size="26" fill="#a2afbd">Pela placa de captura ou por uma janela do seu PC.</text>
+
+  <!-- Capture window -->
+  <g filter="url(#shadow)">
+    <rect x="72" y="590" width="1296" height="900" rx="28" fill="#131c26" stroke="#33465a" stroke-width="1.5"/>
+  </g>
+  <text x="108" y="632" dominant-baseline="central" font-family="Segoe UI" font-size="22" font-weight="700" fill="#e8edf3">Monitor de captura</text>
+  <text x="720" y="632" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI" font-size="18" fill="#a2afbd">1920 × 1080 · 60 fps</text>
+  <rect x="1252" y="616" width="92" height="32" rx="16" fill="#b0f3d21f" stroke="#b0f3d266" stroke-width="1.5"/>
+  <text x="1298" y="632" text-anchor="middle" dominant-baseline="central" font-family="Segoe UI" font-size="14" font-weight="700" fill="#b0f3d2">NATIVO</text>
+  <line x1="96" y1="674" x2="1344" y2="674" stroke="#25313d" stroke-width="1.5"/>
+
+  <g clip-path="url(#screen)">
+    <rect x="96" y="706" width="1248" height="748" fill="#070b10"/>
+    <image href="game-scene.jpg" x="96" y="668" width="1560" height="878" preserveAspectRatio="xMinYMin meet"/>
+    <rect x="96" y="1288" width="1248" height="166" fill="url(#scrim)"/>
+    <circle cx="128" cy="1404" r="7" fill="#b0f3d2"/>
+    <text x="148" y="1410" font-family="Segoe UI" font-size="22" font-weight="700" fill="#f3f6f8" stroke="#071018" stroke-width="5" paint-order="stroke fill">Ao vivo</text>
+    <text x="1308" y="1410" text-anchor="end" font-family="Segoe UI" font-size="22" fill="#f3f6f8" stroke="#071018" stroke-width="5" paint-order="stroke fill">2 pessoas na sala</text>
+  </g>
+
+  <!-- Facts -->
+  <g font-family="Segoe UI">
+    <rect x="72" y="1554" width="416" height="228" rx="24" fill="#131c26" stroke="#25313d" stroke-width="1.5"/>
+    <rect x="104" y="1586" width="40" height="5" rx="2.5" fill="#b0f3d2"/>
+    <text x="104" y="1636" font-size="18" font-weight="700" fill="#b0f3d2">Transmissão</text>
+    <text x="104" y="1696" font-size="42" font-weight="700" fill="#f3f6f8">720p</text>
+    <text x="104" y="1742" font-size="22" fill="#a2afbd">Grátis para a sala</text>
+
+    <rect x="512" y="1554" width="416" height="228" rx="24" fill="#131c26" stroke="#25313d" stroke-width="1.5"/>
+    <rect x="544" y="1586" width="40" height="5" rx="2.5" fill="#b0f3d2"/>
+    <text x="544" y="1636" font-size="18" font-weight="700" fill="#b0f3d2">Captura</text>
+    <text x="544" y="1696" font-size="42" font-weight="700" fill="#f3f6f8">No seu PC</text>
+    <text x="544" y="1742" font-size="22" fill="#a2afbd">Placa ou janela</text>
+
+    <rect x="952" y="1554" width="416" height="228" rx="24" fill="#131c26" stroke="#25313d" stroke-width="1.5"/>
+    <rect x="984" y="1586" width="40" height="5" rx="2.5" fill="#b0f3d2"/>
+    <text x="984" y="1636" font-size="18" font-weight="700" fill="#b0f3d2">Sessão</text>
+    <text x="984" y="1696" font-size="40" font-weight="700" fill="#f3f6f8">Nada gravado</text>
+    <text x="984" y="1742" font-size="22" fill="#a2afbd">A imagem não fica salva</text>
+  </g>
+
+  <!-- Footer -->
+  <line x1="72" y1="1988" x2="1368" y2="1988" stroke="#25313d" stroke-width="1.5"/>
+  <g transform="translate(72 2036) scale(0.09765625)">
+    <rect width="512" height="512" rx="146.29" fill="#b0f3d2"/>
+    <g transform="translate(95.09 95.09) scale(13.4095)" fill="none" stroke="#122b25" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3"/>
+      <path d="M3 16a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v1.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V11a2 2 0 0 0-4 0z"/>
+      <path d="M5 18v2"/>
+      <path d="M19 18v2"/>
+    </g>
+  </g>
+  <text x="140" y="2068" font-family="Segoe UI" font-size="26" font-weight="700" fill="#e8edf3">CoopSeat</text>
+  <text x="1368" y="2068" text-anchor="end" font-family="Segoe UI" font-size="24" fill="#6f8193">coopseat.com</text>
+</svg>
