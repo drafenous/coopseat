@@ -119,8 +119,10 @@ jobs:
             "CoopSeat-$env:VERSION.msix"
           )
           foreach ($name in $files) {
-            $path = "coopseat-desktop/release/$name"
-            if (-not (Test-Path $path)) {
+            # npm exec -w runs Wrangler inside coopseat-signal, so a relative path
+            # would be resolved there and miss release/ at the repository root.
+            $path = Join-Path $env:GITHUB_WORKSPACE "coopseat-desktop\release\$name"
+            if (-not (Test-Path -LiteralPath $path)) {
               Write-Error "Missing $path"
               exit 1
             }
