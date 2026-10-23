@@ -9,7 +9,7 @@ Three packages, each versioned and tagged independently:
 
 | Key       | Directory       | Tag              | What the tag triggers                                                             |
 | --------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
-| `desktop` | `coopseat-desktop/` | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installer, creates a GitHub Release, and uploads both `.exe` files to the R2 bucket `coopseat-downloads` at `<version>/CoopSeat-<version>-Setup.exe` and `<version>/CoopSeat-<version>-Portable.exe` |
+| `desktop` | `coopseat-desktop/` | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installers, creates a GitHub Release, and uploads the Setup `.exe`, the portable `.exe` and the `.msix` to the R2 bucket `coopseat-downloads` at `<version>/CoopSeat-<version>-Setup.exe`, `<version>/CoopSeat-<version>-Portable.exe` and `<version>/CoopSeat-<version>.msix` |
 | `web`     | `coopseat-web/` | `web-vX.Y.Z`     | Nothing; marks what is deployed from `main`                                       |
 | `ui`      | `packages/ui/`  | `ui-vX.Y.Z`      | Nothing; `@coopseat/ui` is private and consumed through npm workspaces            |
 

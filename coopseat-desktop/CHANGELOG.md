@@ -4,9 +4,24 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-23
+
+### Added
+
+- Microsoft Store package (`CoopSeat-<version>.msix`) for the packaged-app submission. The Store signs it on publish.
+
 ### Changed
 
 - Silent setup installs CoopSeat for every user on the PC and lists it in Apps & features. The setup window still asks who to install for.
+
+## [0.4.1] - 2026-10-22
+
+### Added
+
+- A room list inside the app, and a search (Ctrl+K) for a room by name or link. A room shows up there only when the host chooses to list it.
+- Open a room in the app from that list or from the search result.
+- Report a problem from inside the app. A check has to pass before the report is sent.
+- A notice when a newer version of the app is already published, with a link to download it.
 
 ## [0.4.0] - 2026-10-20
 

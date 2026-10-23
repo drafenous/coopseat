@@ -18,6 +18,7 @@
     "start:desktop": "npm run start -w coopseat-desktop",
     "dist:desktop": "npm run dist -w coopseat-desktop",
     "dist:desktop:portable": "npm run dist:portable -w coopseat-desktop",
+    "dist:desktop:msix": "npm run dist:msix -w coopseat-desktop",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm test --workspaces --if-present",
     "format": "prettier --write .",

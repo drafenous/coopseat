@@ -1,6 +1,6 @@
 {
   "name": "coopseat-desktop",
-  "version": "0.4.0",
+  "version": "0.4.2",
   "private": true,
   "description": "CoopSeat: jogue o console numa janela do Windows pela placa de captura USB",
   "author": "Rodrigo Almeida",
@@ -15,7 +15,8 @@
     "dist": "npm run native:build && npm run build && electron-builder --win nsis --x64",
     "dist:compat": "npm run build && electron-builder --win nsis --x64 --config electron-builder.compat.cjs",
     "test": "node --test tests/*.test.cjs",
-    "dist:portable": "npm run native:build && npm run build && electron-builder --win portable --x64 --config portable.config.cjs"
+    "dist:portable": "npm run native:build && npm run build && electron-builder --win portable --x64 --config portable.config.cjs",
+    "dist:msix": "npm run native:build && npm run build && node scripts/dist-msix.mjs"
   },
   "devDependencies": {
     "@coopseat/ui": "0.3.1",
