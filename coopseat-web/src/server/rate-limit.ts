@@ -21,6 +21,7 @@ export const LIMITS = {
   party_password: { max: 5, windowSeconds: 600 },
   party_admin: { max: 120, windowSeconds: 600 },
   party_session: { max: 20, windowSeconds: 600 },
+  party_directory: { max: 60, windowSeconds: 60 },
 } satisfies Record<string, Limit>;
 
 /** Sliding-window limiter backed by Postgres, so it holds across serverless instances. */

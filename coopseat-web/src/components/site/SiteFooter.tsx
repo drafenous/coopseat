@@ -40,6 +40,11 @@ export async function SiteFooter() {
                 {h.playInBrowser}
               </a>
             </li>
+            <li>
+              <Link href={href('/rooms')} className="hover:text-strong">
+                {h.nav.rooms}
+              </Link>
+            </li>
             {!session && (
               <li>
                 <Link href={href('/signup')} className="hover:text-strong">

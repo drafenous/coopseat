@@ -6,7 +6,7 @@ export function Avatar({
   account,
   small,
 }: {
-  account: Pick<Account, 'nickname' | 'email' | 'avatarUrl'>;
+  account: Pick<Account, 'nickname' | 'avatarUrl'> & { email?: string | null };
   small?: boolean;
 }) {
   const [broken, setBroken] = useState(false);

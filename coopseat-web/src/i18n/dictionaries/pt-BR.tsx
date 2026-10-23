@@ -33,6 +33,9 @@ export const ptBR: Dictionary = {
     contact: 'Contato',
     contactDescription:
       'Envie uma mensagem para o CoopSeat sobre o site, o app ou a sua conta.',
+    rooms: 'Salas',
+    roomsDescription:
+      'Encontre uma sala de Gaming-Party aberta, veja quantas pessoas estão dentro e se ela pede senha ou aprovação.',
   },
   playPage: {
     title: 'Jogue o videogame no navegador',
@@ -65,6 +68,7 @@ export const ptBR: Dictionary = {
       how: 'Como funciona',
       local: 'Player local',
       faq: 'Dúvidas',
+      rooms: 'Salas',
       contact: 'Contato',
     },
     signIn: 'Entrar',

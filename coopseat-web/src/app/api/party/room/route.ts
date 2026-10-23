@@ -38,6 +38,7 @@ export const PATCH = route(async (req) => {
     requireApproval: input.requireApproval ?? room.requireApproval,
     whitelistEnabled: input.whitelistEnabled ?? room.whitelistEnabled,
     defaultLayout: input.defaultLayout ?? room.defaultLayout,
+    listed: input.listed ?? room.listed,
   };
 
   const db = await adminDb();
