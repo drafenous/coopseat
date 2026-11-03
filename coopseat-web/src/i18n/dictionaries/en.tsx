@@ -253,6 +253,12 @@ export const en = {
       body: "Runs without installing, from any folder or a USB stick. Good for computers where you can't install programs.",
       button: 'Download portable',
     },
+    store: {
+      title: 'Microsoft Store',
+      body: 'Installs CoopSeat from the Microsoft Store and keeps it updated automatically.',
+      badgeAlt: 'Download from the Microsoft Store',
+      caption: 'Opens the Microsoft Store',
+    },
     stepsTitle: 'After downloading',
     steps: [
       {

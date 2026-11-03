@@ -252,6 +252,12 @@ export const ptBR: Dictionary = {
       body: 'Roda sem instalar, de qualquer pasta ou pendrive. Bom para computadores onde você não pode instalar programas.',
       button: 'Baixar portátil',
     },
+    store: {
+      title: 'Microsoft Store',
+      body: 'Instala o CoopSeat pela Microsoft Store e o mantém atualizado automaticamente.',
+      badgeAlt: 'Baixe na Microsoft Store',
+      caption: 'Abre a Microsoft Store',
+    },
     stepsTitle: 'Depois de baixar',
     steps: [
       {

@@ -9,20 +9,28 @@ import {
   Monitor,
   Play,
   Sparkles,
+  Store,
   Usb,
   Wifi,
 } from 'lucide-react';
 import { JsonLd } from '@/components/JsonLd';
-import { localeHref } from '@/i18n/config';
+import { localeHref, type Locale } from '@/i18n/config';
 import { getDictionary, getLocale } from '@/i18n/server';
-import { INSTALLER_URL, PORTABLE_URL } from '@/lib/links';
+import { INSTALLER_URL, MICROSOFT_STORE_URL, PORTABLE_URL } from '@/lib/links';
 import { pageMetadata, softwareApplication } from '@/lib/seo';
 import { latestRelease, type LatestRelease } from '@/server/releases';
 
 const REQUIREMENT_ICONS = [Monitor, Cpu, Cable, Usb, HardDrive, Wifi];
 
-const primaryCta =
-  'inline-flex items-center justify-center gap-2 rounded-xl border border-accent-border bg-accent px-6 py-3.5 text-[15px] font-[650] text-accent-ink shadow-[0_10px_34px_-8px_#b0f3d27a] transition hover:-translate-y-0.5 hover:bg-accent-hover';
+/**
+ * White Microsoft Store badge, for this dark page.
+ * The pt-BR files swap the theme suffix: `dark.svg` is the white artwork.
+ */
+const STORE_BADGE: Record<Locale, string> = {
+  en: 'https://get.microsoft.com/images/en-us%20light.svg',
+  'pt-BR': 'https://get.microsoft.com/images/pt-br%20dark.svg',
+};
+
 const secondaryCta =
   'inline-flex items-center justify-center gap-2 rounded-xl border border-line-strong bg-white/[0.02] px-6 py-3.5 text-[15px] font-semibold text-[#d4dee8] transition hover:-translate-y-0.5 hover:bg-white/[0.06]';
 
@@ -73,17 +81,16 @@ export default async function DownloadPage() {
           href: localeHref(locale, INSTALLER_URL),
           Icon: HardDriveDownload,
           copy: d.installer,
-          primary: true,
         },
         {
           variant: 'portable' as const,
           href: localeHref(locale, PORTABLE_URL),
           Icon: Usb,
           copy: d.portable,
-          primary: false,
         },
       ].filter((o) => release.files[o.variant])
     : [];
+  const cardCount = options.length + 1;
 
   const installerSize = release?.files.installer?.size;
   const structuredData = {
@@ -111,7 +118,7 @@ export default async function DownloadPage() {
           aria-hidden
           className="absolute -top-40 left-1/2 h-[420px] w-[800px] -translate-x-1/2 rounded-full bg-accent/10 blur-[120px]"
         />
-        <div className="relative mx-auto max-w-4xl px-6 pt-20 pb-16 text-center sm:pt-28">
+        <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-16 text-center sm:pt-28">
           <p className="text-sm font-semibold tracking-[0.18em] text-accent uppercase">
             {d.kicker}
           </p>
@@ -128,12 +135,45 @@ export default async function DownloadPage() {
                 {d.version(release.version)} · {d.released(date!)}
               </p>
               <div
-                className={`mx-auto mt-5 grid gap-4 text-left ${options.length > 1 ? 'sm:grid-cols-2' : 'max-w-md'}`}
+                className={`mx-auto mt-5 grid gap-4 text-left ${cardCount > 2 ? 'sm:grid-cols-2 lg:grid-cols-3' : cardCount > 1 ? 'sm:grid-cols-2' : 'max-w-md'}`}
               >
-                {options.map(({ variant, href, Icon, copy, primary }) => (
+                <article className="flex flex-col rounded-2xl border border-accent/35 bg-surface p-6">
+                  <div className="flex items-center gap-3">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+                      <Store size={20} />
+                    </span>
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                      <h2 className="text-lg font-semibold text-nowrap text-strong">
+                        {d.store.title}
+                      </h2>
+                      <span className="ml-auto rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">
+                        {d.recommended}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="mt-3 flex-1 leading-relaxed text-muted">
+                    {d.store.body}
+                  </p>
+                  <a
+                    href={MICROSOFT_STORE_URL}
+                    className="mt-6 inline-flex self-center rounded-md transition hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+                  >
+                    {/* Official badge, intrinsic 161×44, shown at the size Microsoft documents. */}
+                    <img
+                      src={STORE_BADGE[locale]}
+                      alt={d.store.badgeAlt}
+                      width={200}
+                      height={55}
+                    />
+                  </a>
+                  <p className="mt-3 text-center text-xs text-subtle">
+                    {d.store.caption}
+                  </p>
+                </article>
+                {options.map(({ variant, href, Icon, copy }) => (
                   <article
                     key={variant}
-                    className={`flex flex-col rounded-2xl border p-6 ${primary ? 'border-accent/35 bg-surface' : 'border-line bg-surface/60'}`}
+                    className="flex flex-col rounded-2xl border border-line bg-surface/60 p-6"
                   >
                     <div className="flex items-center gap-3">
                       <span className="grid size-10 place-items-center rounded-xl bg-accent/10 text-accent">
@@ -142,19 +182,11 @@ export default async function DownloadPage() {
                       <h2 className="text-lg font-semibold text-strong">
                         {copy.title}
                       </h2>
-                      {primary && (
-                        <span className="ml-auto rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 text-xs font-semibold text-accent">
-                          {d.recommended}
-                        </span>
-                      )}
                     </div>
                     <p className="mt-3 flex-1 leading-relaxed text-muted">
                       {copy.body}
                     </p>
-                    <a
-                      href={href}
-                      className={`${primary ? primaryCta : secondaryCta} mt-6`}
-                    >
+                    <a href={href} className={`${secondaryCta} mt-6`}>
                       <Download size={18} />
                       {copy.button}
                     </a>
