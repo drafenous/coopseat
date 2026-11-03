@@ -75,6 +75,11 @@ type Side = 'streamer' | 'viewer';
 const pcId = (streamer: string, viewer: string) => `${streamer}>${viewer}`;
 const RETRY_MS = 1_000;
 const MAX_RETRIES = 3;
+/**
+ * A viewer link with no remote offer is not negotiating, so ICE never reaches `failed`
+ * and the tile would spin forever. Signaling delivers an offer in well under this.
+ */
+const OFFER_WAIT_MS = 8_000;
 
 /**
  * One peer connection. The streamer adds the capture tracks and offers.
@@ -92,6 +97,8 @@ class PlainLink {
   private scaledTrack: string | null = null;
   /** One extra apply after the offer, so a late encoder still gets the cap. */
   private recapped = false;
+  /** Viewer only: fires when no offer arrives. Cleared on close. */
+  private offerTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private id: string,
@@ -124,6 +131,13 @@ class PlainLink {
       this.remote.addTrack(track);
       this.onTrack?.(this.remote);
     };
+    if (side === 'viewer') {
+      this.offerTimer = setTimeout(() => {
+        this.offerTimer = null;
+        if (this.closed || this.pc.remoteDescription) return;
+        this.onState?.('failed');
+      }, OFFER_WAIT_MS);
+    }
   }
 
   /** First media on a streamer connection. One offer covers every track added here. */
@@ -169,6 +183,7 @@ class PlainLink {
         if (desc.type === 'offer' && this.side === 'streamer') return;
         if (desc.type === 'answer' && this.side === 'viewer') return;
         await pc.setRemoteDescription({ type: desc.type, sdp: desc.sdp });
+        if (desc.type === 'offer') this.clearOfferWait();
         if (desc.type === 'offer') {
           const answer = await pc.createAnswer();
           if (this.closed) return;
@@ -205,11 +220,18 @@ class PlainLink {
   close() {
     if (this.closed) return;
     this.closed = true;
+    this.clearOfferWait();
     this.pc.onnegotiationneeded = null;
     this.pc.onicecandidate = null;
     this.pc.oniceconnectionstatechange = null;
     this.pc.ontrack = null;
     this.pc.close();
+  }
+
+  private clearOfferWait() {
+    if (!this.offerTimer) return;
+    clearTimeout(this.offerTimer);
+    this.offerTimer = null;
   }
 
   private async offer() {
@@ -286,8 +308,12 @@ class PlainLink {
 export class PlainMesh {
   private out = new Map<string, PlainLink>();
   private inc = new Map<string, PlainLink>();
-  private openingOut = new Set<string>();
   private openingIn = new Set<string>();
+  /**
+   * Bumped on every subscribe and every drop. An in-flight open whose generation
+   * no longer matches must not publish: a newer subscribe, or an unsubscribe, won.
+   */
+  private subscribeGen = new Map<string, number>();
   private stream: MediaStream | null = null;
   /** The capture track the gate is reading, so a repeat of the same stream does not rebuild it. */
   private gatedSource: MediaStreamTrack | null = null;
@@ -336,38 +362,42 @@ export class PlainMesh {
 
   async onSubscribe(viewerId: string, _quality: Quality) {
     if (this.closed || !this.stream) return;
-    if (this.out.has(viewerId) || this.openingOut.has(viewerId)) return;
-    this.openingOut.add(viewerId);
+    // The viewer only subscribes after creating a new peer connection. The link
+    // already in `out` belongs to a previous tab or socket (web → desktop, refresh,
+    // rejoin within the grace window). That socket is gone, and ICE on the new
+    // one never starts until an offer arrives, so it never reaches `failed`.
+    const gen = (this.subscribeGen.get(viewerId) ?? 0) + 1;
+    this.subscribeGen.set(viewerId, gen);
+    this.closeOutgoing(viewerId);
     let ice: IceConfig;
     try {
       ice = await this.iceConfig();
     } catch {
-      this.openingOut.delete(viewerId);
       return;
     }
     const stream = this.outgoing();
-    if (
-      this.closed ||
-      !stream ||
-      !this.openingOut.has(viewerId) ||
-      this.out.has(viewerId)
-    ) {
-      this.openingOut.delete(viewerId);
+    if (this.closed || !stream || this.subscribeGen.get(viewerId) !== gen)
       return;
-    }
     const link = this.open(
       pcId(this.opts.selfId, viewerId),
       'streamer',
       viewerId,
       ice,
     );
+    if (this.closed || this.subscribeGen.get(viewerId) !== gen) {
+      link.close();
+      return;
+    }
     this.out.set(viewerId, link);
-    this.openingOut.delete(viewerId);
     link.attach(stream);
   }
 
   dropViewer(viewerId: string) {
-    this.openingOut.delete(viewerId);
+    this.subscribeGen.set(viewerId, (this.subscribeGen.get(viewerId) ?? 0) + 1);
+    this.closeOutgoing(viewerId);
+  }
+
+  private closeOutgoing(viewerId: string) {
     const link = this.out.get(viewerId);
     if (!link) return;
     link.close();
@@ -458,7 +488,6 @@ export class PlainMesh {
     for (const link of this.out.values()) link.close();
     this.out.clear();
     this.openingIn.clear();
-    this.openingOut.clear();
   }
 
   private async tick() {
@@ -599,7 +628,9 @@ export class PlainMesh {
             if (state === 'failed') this.onIncomingFailed(peerId);
             else this.opts.onLinkState?.(peerId, state);
           }
-        : undefined,
+        : (state) => {
+            if (state === 'failed') this.dropViewer(peerId);
+          },
     );
   }
 

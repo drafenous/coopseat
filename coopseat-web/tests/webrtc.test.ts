@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   placeIntoSlot,
   removeFromGrid,
@@ -6,16 +6,19 @@ import {
   slotQuality,
   stageSlots,
 } from '@coopseat/ui/party-layout';
+import type { ClientMessage } from '@coopseat/ui/party-protocol';
 import {
   allocateBitrates,
   AUDIO_KBPS,
   BitrateAdapter,
   MIN_VIDEO_KBPS,
+  PlainMesh,
   senderLimits,
   sendScale,
   takeFrame,
   VIDEO_PROFILES,
   withStereoOpus,
+  type IceConfig,
   type OutboundSample,
 } from '@coopseat/ui/webrtc';
 
@@ -214,13 +217,12 @@ describe('stage layouts', () => {
   });
 
   it('keeps removed streamers on the strip (paused) in grid mode', () => {
-    const slots = stageSlots(
-      'grid',
-      streamers,
-      null,
+    const slots = stageSlots('grid', streamers, null, 'owner', [
       'owner',
-      ['owner', 'b', null, 'c'],
-    );
+      'b',
+      null,
+      'c',
+    ]);
     expect(slots.main).toEqual(['owner', 'b', null, 'c']);
     expect(slots.strip).toEqual(['d']);
     expect(slots.hidden).toEqual(['d']);
@@ -262,5 +264,233 @@ describe('stage layouts', () => {
         stageSlots('grid', streamers, null, 'owner', ['owner', 'b']),
       ),
     ).toEqual({ owner: 'high', b: 'high', c: null, d: null });
+  });
+});
+
+const ice: IceConfig = {
+  iceServers: [],
+  relay: false,
+  reason: 'relay_unavailable',
+  message: '',
+};
+
+/** `attach` starts the offer without awaiting it. */
+async function drainOffers() {
+  for (let i = 0; i < 20; i++) await Promise.resolve();
+}
+
+function installPeerFakes() {
+  const prevPc = globalThis.RTCPeerConnection;
+  const prevStream = globalThis.MediaStream;
+
+  class FakeMediaStream {
+    private tracks: MediaStreamTrack[];
+    constructor(tracks?: MediaStreamTrack[]) {
+      this.tracks = tracks ? [...tracks] : [];
+    }
+    addTrack(track: MediaStreamTrack) {
+      this.tracks.push(track);
+    }
+    getTracks() {
+      return this.tracks;
+    }
+    getVideoTracks() {
+      return this.tracks.filter((track) => track.kind === 'video');
+    }
+    getAudioTracks() {
+      return this.tracks.filter((track) => track.kind === 'audio');
+    }
+  }
+
+  class FakePeerConnection {
+    signalingState = 'stable';
+    iceConnectionState = 'new';
+    localDescription: { type: string; sdp: string } | null = null;
+    remoteDescription: { type: string; sdp: string } | null = null;
+    onnegotiationneeded: (() => void) | null = null;
+    onicecandidate:
+      ((ev: { candidate: RTCIceCandidate | null }) => void) | null = null;
+    oniceconnectionstatechange: (() => void) | null = null;
+    ontrack: ((ev: { track: MediaStreamTrack }) => void) | null = null;
+    private senders: {
+      track: MediaStreamTrack | null;
+      getParameters(): { encodings: never[] };
+      setParameters(): Promise<void>;
+    }[] = [];
+
+    addTrack(track: MediaStreamTrack) {
+      this.senders.push({
+        track,
+        getParameters: () => ({ encodings: [] }),
+        setParameters: async () => {},
+      });
+    }
+    getSenders() {
+      return this.senders;
+    }
+    getTransceivers() {
+      return [];
+    }
+    async createOffer() {
+      return { type: 'offer' as const, sdp: 'v=0' };
+    }
+    async setLocalDescription(desc: RTCSessionDescriptionInit) {
+      this.localDescription = {
+        type: desc.type ?? 'offer',
+        sdp: desc.sdp ?? '',
+      };
+      this.signalingState = 'have-local-offer';
+    }
+    async createAnswer() {
+      return { type: 'answer' as const, sdp: 'v=0' };
+    }
+    async setRemoteDescription(desc: RTCSessionDescriptionInit) {
+      this.remoteDescription = {
+        type: desc.type ?? 'offer',
+        sdp: desc.sdp ?? '',
+      };
+      this.signalingState = 'stable';
+    }
+    async addIceCandidate() {}
+    close() {
+      this.signalingState = 'closed';
+    }
+  }
+
+  if (typeof globalThis.MediaStream === 'undefined')
+    globalThis.MediaStream = FakeMediaStream as unknown as typeof MediaStream;
+  globalThis.RTCPeerConnection =
+    FakePeerConnection as unknown as typeof RTCPeerConnection;
+  return () => {
+    globalThis.RTCPeerConnection = prevPc;
+    globalThis.MediaStream = prevStream;
+  };
+}
+
+function capture(): MediaStream {
+  const track = {
+    kind: 'video',
+    id: 'video-1',
+    contentHint: '',
+    getSettings: () => ({ width: 1280, height: 720 }),
+  } as MediaStreamTrack;
+  return {
+    getTracks: () => [track],
+    getVideoTracks: () => [track],
+    getAudioTracks: () => [],
+  } as unknown as MediaStream;
+}
+
+function peerMesh(
+  send: (msg: ClientMessage) => void,
+  getIceConfig: () => Promise<IceConfig> = async () => ice,
+) {
+  return new PlainMesh({
+    selfId: 'host',
+    send,
+    getIceConfig,
+    onRemoteStream: () => {},
+  });
+}
+
+function offerCount(sent: ClientMessage[]) {
+  return sent.filter(
+    (msg) => msg.t === 'signal' && msg.data.description?.type === 'offer',
+  ).length;
+}
+
+describe('PlainMesh subscriptions', () => {
+  it('offers again when the same viewer subscribes on a new peer connection', async () => {
+    const restore = installPeerFakes();
+    const sent: ClientMessage[] = [];
+    const mesh = peerMesh((msg) => sent.push(msg));
+    try {
+      await mesh.setLocalStream(capture());
+      await mesh.onSubscribe('viewer', 'high');
+      await drainOffers();
+      await mesh.onSubscribe('viewer', 'high');
+      await drainOffers();
+      expect(offerCount(sent)).toBe(2);
+      expect(mesh.viewerCount).toBe(1);
+    } finally {
+      mesh.close();
+      restore();
+    }
+  });
+
+  it('keeps only the newest subscribe when two overlap', async () => {
+    const restore = installPeerFakes();
+    let resolveIce: (config: IceConfig) => void = () => {};
+    const sent: ClientMessage[] = [];
+    const mesh = peerMesh(
+      (msg) => sent.push(msg),
+      () =>
+        new Promise((resolve) => {
+          resolveIce = resolve;
+        }),
+    );
+    try {
+      await mesh.setLocalStream(capture());
+      const first = mesh.onSubscribe('viewer', 'high');
+      const second = mesh.onSubscribe('viewer', 'high');
+      resolveIce(ice);
+      await first;
+      await second;
+      await drainOffers();
+      expect(offerCount(sent)).toBe(1);
+      expect(mesh.viewerCount).toBe(1);
+    } finally {
+      mesh.close();
+      restore();
+    }
+  });
+
+  it('does not offer after the viewer drops while ice is still loading', async () => {
+    const restore = installPeerFakes();
+    let resolveIce: (config: IceConfig) => void = () => {};
+    const sent: ClientMessage[] = [];
+    const mesh = peerMesh(
+      (msg) => sent.push(msg),
+      () =>
+        new Promise((resolve) => {
+          resolveIce = resolve;
+        }),
+    );
+    try {
+      await mesh.setLocalStream(capture());
+      const pending = mesh.onSubscribe('viewer', 'high');
+      mesh.dropViewer('viewer');
+      resolveIce(ice);
+      await pending;
+      await drainOffers();
+      expect(offerCount(sent)).toBe(0);
+      expect(mesh.viewerCount).toBe(0);
+    } finally {
+      mesh.close();
+      restore();
+    }
+  });
+
+  it('resubscribes when no offer arrives', async () => {
+    const restore = installPeerFakes();
+    vi.useFakeTimers();
+    const sent: ClientMessage[] = [];
+    const mesh = peerMesh((msg) => sent.push(msg));
+    try {
+      await mesh.watch('streamer', 'high');
+      expect(sent.map((msg) => msg.t)).toEqual(['subscribe']);
+      await vi.advanceTimersByTimeAsync(8_000);
+      expect(sent.map((msg) => msg.t)).toEqual(['subscribe', 'unsubscribe']);
+      await vi.advanceTimersByTimeAsync(1_000);
+      expect(sent.map((msg) => msg.t)).toEqual([
+        'subscribe',
+        'unsubscribe',
+        'subscribe',
+      ]);
+    } finally {
+      mesh.close();
+      vi.useRealTimers();
+      restore();
+    }
   });
 });
