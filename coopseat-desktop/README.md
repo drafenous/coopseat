@@ -125,7 +125,9 @@ git tag -a desktop-v0.2.0 -m "desktop 0.2.0"
 git push origin main desktop-v0.2.0
 ```
 
-O workflow confere se a tag bate com o `package.json` e cria uma GitHub Release com o `CoopSeat-<versão>-Setup.exe`, usando a seção da versão no `CHANGELOG.md` como texto, seguida das notas geradas a partir dos commits. O instalador não é assinado, então o Windows SmartScreen exibe um aviso na primeira execução.
+O workflow confere se a tag bate com o `package.json` e cria uma GitHub Release com o `CoopSeat-<versão>-Setup.exe`, usando a seção da versão no `CHANGELOG.md` como texto, seguida das notas geradas a partir dos commits. O mesmo job envia o `CoopSeat-<versão>.msix` ao Partner Center, que assina o pacote na certificação. O instalador `.exe` não é assinado, então o Windows SmartScreen exibe um aviso na primeira execução.
+
+Antes da primeira tag com esse envio, o ambiente `production` do GitHub precisa dos segredos `PARTNER_CENTER_TENANT_ID`, `PARTNER_CENTER_SELLER_ID`, `PARTNER_CENTER_CLIENT_ID`, `PARTNER_CENTER_CLIENT_SECRET` e `PARTNER_CENTER_PRODUCT_ID` (o Store ID do produto). O aplicativo do Entra ID entra no Partner Center com a função Manager. A primeira submissão do app continua manual: a CLI só publica atualizações, e hoje só de produtos gratuitos.
 
 ## Estrutura
 
