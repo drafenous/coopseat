@@ -9,7 +9,7 @@ Three packages, each versioned and tagged independently:
 
 | Key       | Directory       | Tag              | What the tag triggers                                                             |
 | --------- | --------------- | ---------------- | --------------------------------------------------------------------------------- |
-| `desktop` | `coopseat-desktop/` | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installers, creates a GitHub Release, uploads the Setup `.exe`, the portable `.exe` and the `.msix` to the R2 bucket `coopseat-downloads` at `<version>/CoopSeat-<version>-Setup.exe`, `<version>/CoopSeat-<version>-Portable.exe` and `<version>/CoopSeat-<version>.msix`, and submits that `.msix` to Partner Center |
+| `desktop` | `coopseat-desktop/` | `desktop-vX.Y.Z` | `.github/workflows/desktop.yml` builds the installers, creates a GitHub Release, and uploads the Setup `.exe`, the portable `.exe` and the `.msix` to the R2 bucket `coopseat-downloads` at `<version>/CoopSeat-<version>-Setup.exe`, `<version>/CoopSeat-<version>-Portable.exe` and `<version>/CoopSeat-<version>.msix` |
 | `web`     | `coopseat-web/` | `web-vX.Y.Z`     | Nothing; marks what is deployed from `main`                                       |
 | `ui`      | `packages/ui/`  | `ui-vX.Y.Z`      | Nothing; `@coopseat/ui` is private and consumed through npm workspaces            |
 
@@ -56,7 +56,7 @@ git tag -a desktop-v0.2.0 -m "desktop 0.2.0"
 git tag -a ui-v0.1.1 -m "ui 0.1.1"
 ```
 
-**6. Push only after the user confirms.** Pushing a `desktop-v*` tag publishes a public installer, uploads it to R2, and submits the `.msix` to Partner Center for Store certification. The `production` environment secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (Workers R2 Storage Edit) must already exist, and the bucket `coopseat-downloads` must be publicly readable. The same environment also needs `PARTNER_CENTER_TENANT_ID`, `PARTNER_CENTER_SELLER_ID`, `PARTNER_CENTER_CLIENT_ID`, `PARTNER_CENTER_CLIENT_SECRET` and `PARTNER_CENTER_PRODUCT_ID`. The Entra app has the Manager role in Partner Center, the product already has a live first submission, and Store updates from GitHub Actions are for free products. Then:
+**6. Push only after the user confirms.** Pushing a `desktop-v*` tag publishes a public installer and uploads it to R2. The `production` environment secrets `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` (Workers R2 Storage Edit) must already exist, and the bucket `coopseat-downloads` must be publicly readable. The `.msix` is attached to the GitHub Release for a manual Store submission. Then:
 
 ```bash
 git push origin main desktop-v0.2.0 ui-v0.1.1
