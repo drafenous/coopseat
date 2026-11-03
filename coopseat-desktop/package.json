@@ -1,6 +1,6 @@
 {
   "name": "coopseat-desktop",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "description": "CoopSeat: jogue o console numa janela do Windows pela placa de captura USB",
   "author": "Rodrigo Almeida",
@@ -19,7 +19,7 @@
     "dist:msix": "npm run native:build && npm run build && node scripts/dist-msix.mjs"
   },
   "devDependencies": {
-    "@coopseat/ui": "0.3.1",
+    "@coopseat/ui": "0.3.2",
     "@tailwindcss/vite": "^4.3.3",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",

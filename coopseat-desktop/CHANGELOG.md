@@ -4,6 +4,15 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-11-02
+
+### Fixed
+
+- A party connection that goes quiet reconnects and keeps the seat, instead of being dropped as a bad token.
+- The sign-in renews on its own during a long session, before the access token lapses.
+- A room token that fails to refresh on the network is tried again within a few seconds.
+- The Microsoft Store package names the publisher Partner Center expects, and includes the Store tile images.
+
 ## [0.4.2] - 2026-10-23
 
 ### Added

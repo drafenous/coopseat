@@ -4,6 +4,26 @@ All notable changes to `@coopseat/ui` are documented here. The format is based o
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-11-02
+
+### Added
+
+- A room directory and a search, so a listed room can be opened from its name or link.
+- Report a problem from inside the player. A check has to pass before the report is sent.
+- A notice when a newer version of the Windows app is already published.
+
+### Changed
+
+- A room the host did not list can still be opened by name, without live occupancy or profile photos.
+- A party connection that goes quiet reconnects and keeps the seat.
+- The sign-in renews on its own during a long session, before the access token lapses.
+- A room token refreshes from its own expiry. If that refresh fails on the network, it tries again within a few seconds.
+
+### Fixed
+
+- A kick stays in effect when a newer room token arrives before the removal is stored.
+- Report images stay attached when another image is added or removed while a file is still being read.
+
 ## [0.3.1] - 2026-10-20
 
 ### Changed

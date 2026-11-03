@@ -4,6 +4,27 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-11-02
+
+### Added
+
+- A public room directory, so people can find rooms the host chose to list.
+- A contact page, and a report from inside the player. A check has to pass before the report is emailed.
+- The Windows app can ask which desktop version is published and point people to the download page.
+- Signing in from the Windows app keeps the desktop challenge, and the e-mail field can open already filled in.
+
+### Changed
+
+- Looking up a room that is not listed returns the name only, so live occupancy and profile photos stay private.
+- A page that stays open renews the sign-in before the access token lapses.
+
+### Fixed
+
+- A kick stays in effect when a newer room token arrives before the removal is stored.
+- Removed members and signed-out attempts no longer skip the party and captcha checks.
+- Report images stay attached when another image is added or removed while a file is still being read.
+- The Windows app can load the public room list.
+
 ## [0.4.1] - 2026-10-20
 
 ### Changed
