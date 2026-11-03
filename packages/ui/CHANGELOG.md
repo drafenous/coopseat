@@ -4,6 +4,12 @@ All notable changes to `@coopseat/ui` are documented here. The format is based o
 
 ## [Unreleased]
 
+## [0.3.3] - 2026-11-03
+
+### Fixed
+
+- A stream that is already on connects when you join, rejoin, or open the room in the desktop app. The host no longer has to stop and start the transmission.
+
 ## [0.3.2] - 2026-11-02
 
 ### Added

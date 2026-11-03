@@ -4,6 +4,12 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-11-03
+
+### Fixed
+
+- A stream that is already on connects when you join, rejoin, or open the room in the desktop app. The host no longer has to stop and start the transmission.
+
 ## [0.4.2] - 2026-11-02
 
 ### Added

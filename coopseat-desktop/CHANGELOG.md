@@ -4,6 +4,12 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-11-03
+
+### Fixed
+
+- A stream that is already on connects when you join, including after leaving and coming back or opening the room from the website. The host no longer has to stop and start the transmission.
+
 ## [0.4.3] - 2026-11-02
 
 ### Fixed
