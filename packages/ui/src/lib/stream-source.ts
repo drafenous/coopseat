@@ -84,7 +84,8 @@ export function cardSource(
 /**
  * Screen or window. On desktop the source comes from our own picker (`sourceId`). `system` audio is
  * every program except CoopSeat; `window` audio is that window's own program. On the web the browser
- * shows its picker and its own audio switch.
+ * shows its picker: a window asks for `windowAudio: "window"` (UA falls back to system audio when
+ * isolation is unavailable), a screen asks for system audio, and a tab keeps the browser default.
  */
 export async function displaySource({
   kind,
@@ -136,6 +137,7 @@ export async function displaySource({
       selfBrowserSurface: 'exclude',
       surfaceSwitching: 'include',
       systemAudio: audio ? 'include' : 'exclude',
+      ...(kind === 'window' && audio ? { windowAudio: 'window' } : {}),
     } as object),
   } as DisplayMediaStreamOptions);
   const name = label ?? stream.getVideoTracks()[0]?.label ?? '';
