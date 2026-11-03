@@ -167,7 +167,41 @@ async function send<T>(
   return data as T;
 }
 
+/** Readable cookie set beside the httpOnly session. Matches `EXPIRY_COOKIE` in the BFF. */
+const EXPIRY_COOKIE = 'cs_exp';
+const AUTH_LEAD_S = 60;
+
 let refreshing: Promise<Session | null> | null = null;
+let cookieRefreshing: Promise<boolean> | null = null;
+
+function accessCookieExpiry(): number | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(
+    new RegExp(`(?:^|; )${EXPIRY_COOKIE}=(\\d+)`),
+  );
+  if (!match?.[1]) return null;
+  const exp = Number(match[1]);
+  return Number.isFinite(exp) ? exp : null;
+}
+
+/**
+ * Renews the httpOnly session cookies. One flight: the refresh token rotates, and a second
+ * call with the old one would sign the user out.
+ */
+function refreshCookieSession(): Promise<boolean> {
+  return (cookieRefreshing ??= (async () => {
+    try {
+      await send('/api/auth/refresh', { method: 'POST' });
+      return true;
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) return false;
+      throw e;
+    }
+  })().finally(() => {
+    cookieRefreshing = null;
+  }));
+}
+
 /** Single-flight refresh; a rejected refresh token signs the user out. */
 export function refreshSession() {
   return (refreshing ??= (async () => {
@@ -203,14 +237,31 @@ export const checkNickname = (nickname: string) =>
 
 export async function api<T>(path: string, opts: Options = {}): Promise<T> {
   if (opts.auth === false) return send<T>(path, opts);
+  const cookies = cookieSession();
   let s = await loadSession();
-  if (s && s.expiresAt - 60 < Date.now() / 1000) s = await refreshSession();
+  if (s && s.expiresAt - AUTH_LEAD_S < Date.now() / 1000)
+    s = await refreshSession();
+  else if (cookies) {
+    const exp = accessCookieExpiry();
+    // No expiry cookie (a session from before it existed) still refreshes on 401 below.
+    if (exp !== null && exp - AUTH_LEAD_S < Date.now() / 1000) {
+      try {
+        await refreshCookieSession();
+      } catch {
+        /* the access cookie may still be valid */
+      }
+    }
+  }
   try {
     return await send<T>(path, opts, s?.accessToken);
   } catch (e) {
-    if (!(e instanceof ApiError && e.status === 401 && s)) throw e;
-    const next = await refreshSession();
-    if (!next) throw e;
-    return send<T>(path, opts, next.accessToken);
+    if (!(e instanceof ApiError && e.status === 401)) throw e;
+    if (s) {
+      const next = await refreshSession();
+      if (!next) throw e;
+      return send<T>(path, opts, next.accessToken);
+    }
+    if (!cookies || !(await refreshCookieSession())) throw e;
+    return send<T>(path, opts);
   }
 }

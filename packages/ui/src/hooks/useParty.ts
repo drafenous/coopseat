@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   LAYOUTS,
-  ROOM_TOKEN_REFRESH_MS,
+  ROOM_TOKEN_RETRY_MS,
+  roomTokenRefreshDelay,
   type EndReason,
   type Layout,
   type Participant,
@@ -61,6 +62,7 @@ type Options = {
 };
 
 const OFFLINE_POLL_MS = 30_000;
+type RefreshResult = 'renewed' | 'retry' | 'lost';
 /** Server errors that mean our stream_start was refused. */
 const STREAM_REFUSED = new Set([
   'owner_not_live',
@@ -123,6 +125,12 @@ export function useParty({
   const chat = useChat();
   /** Profile ids whose approve/deny request is already in flight. */
   const deciding = useRef(new Set<string>());
+  const refreshFlight = useRef<Promise<RefreshResult> | null>(null);
+  /** Set when a failed refresh already moved the phase (error or gate). */
+  const refreshClosed = useRef(false);
+  const renewRef = useRef<() => Promise<boolean>>(async () => false);
+  const resetSessionRef = useRef<() => void>(() => {});
+  const scheduleRefresh = useRef<(ms: number) => void>(() => {});
 
   const setAccess = useCallback((a: Access | null) => {
     accessRef.current = a;
@@ -176,26 +184,48 @@ export function useParty({
     void load();
   }, [load]);
 
-  /** Renews the token for the same session; a non-live answer means admission was lost. */
-  const refresh = useCallback(async (): Promise<boolean> => {
-    const a = accessRef.current;
-    if (!a || !isLive(a)) return false;
+  /**
+   * Renews the room token for this session. `retry` keeps the current token and tries again soon;
+   * a network failure must not wait out the rest of the token's life.
+   */
+  const refresh = useCallback(async (): Promise<RefreshResult> => {
+    const existing = refreshFlight.current;
+    if (existing) return existing;
+    const flight = (async (): Promise<RefreshResult> => {
+      refreshClosed.current = false;
+      const a = accessRef.current;
+      if (!a || !isLive(a)) return 'lost';
+      try {
+        const next = await partyApi.refresh(nickname, a.sessionId);
+        if (isLive(next) && next.sessionId === a.sessionId) {
+          setAccess(next);
+          return 'renewed';
+        }
+        refreshClosed.current = true;
+        enter(next);
+        return 'lost';
+      } catch (e) {
+        if (
+          e instanceof ApiError &&
+          e.status >= 400 &&
+          e.status < 500 &&
+          e.status !== 408 &&
+          e.status !== 429
+        ) {
+          refreshClosed.current = true;
+          fail(e);
+          setPhase('error');
+          setFailure(errorText(e));
+          return 'lost';
+        }
+        return 'retry';
+      }
+    })();
+    refreshFlight.current = flight;
     try {
-      const next = await partyApi.refresh(nickname, a.sessionId);
-      if (isLive(next) && next.sessionId === a.sessionId) {
-        setAccess(next);
-        return true;
-      }
-      enter(next);
-      return false;
-    } catch (e) {
-      if (e instanceof ApiError && e.status >= 400 && e.status < 500) {
-        fail(e);
-        setPhase('error');
-        setFailure(errorText(e));
-        return false;
-      }
-      return true;
+      return await flight;
+    } finally {
+      if (refreshFlight.current === flight) refreshFlight.current = null;
     }
   }, [nickname, enter, fail, setAccess]);
 
@@ -217,7 +247,17 @@ export function useParty({
     url: live?.signalUrl ?? null,
     token: async () => tokenNow(),
     onMessage: (msg) => onMessageRef.current(msg),
-    onInvalid: refresh,
+    onInvalid: async () => {
+      const ok = await renewRef.current();
+      if (!ok) {
+        resetSessionRef.current();
+        if (!refreshClosed.current) {
+          setRemovedReason((current) => current ?? 'token_expired');
+          setPhase('removed');
+        }
+      }
+      return ok;
+    },
     onEnded: (reason) => {
       setEndReason(
         reason === 'owner_ended' ||
@@ -260,6 +300,22 @@ export function useParty({
     setStale(false);
     setPendingStart(false);
   }, [stream, chat]);
+  resetSessionRef.current = resetSession;
+
+  /** Asks for a new room token and, when one arrives, authenticates the open socket again. */
+  const renew = useCallback(async (): Promise<boolean> => {
+    const result = await refresh();
+    if (result === 'lost') return false;
+    if (result === 'renewed') void signal.reauth();
+    const a = accessRef.current;
+    const due =
+      result === 'renewed' && a && isLive(a)
+        ? roomTokenRefreshDelay(a.expiresAt)
+        : ROOM_TOKEN_RETRY_MS;
+    scheduleRefresh.current(due > 0 ? due : ROOM_TOKEN_RETRY_MS);
+    return true;
+  }, [refresh, signal.reauth]);
+  renewRef.current = renew;
 
   const onMessage = (msg: ServerMessage) => {
     mesh.handle(msg);
@@ -327,9 +383,7 @@ export function useParty({
         break;
       case 'approved':
       case 'refresh_token':
-        void refresh().then((ok) => {
-          if (ok) void signal.reauth();
-        });
+        void renew();
         break;
       case 'stream_granted':
         setRequested(false);
@@ -341,6 +395,8 @@ export function useParty({
         setNotice(tRef.current.revoked);
         break;
       case 'removed':
+        // The socket close renews the token and reconnects. Other removals are final.
+        if (msg.reason === 'token_expired') break;
         resetSession();
         setRemovedReason(msg.reason);
         setPhase('removed');
@@ -363,18 +419,29 @@ export function useParty({
   const onMessageRef = useRef(onMessage);
   onMessageRef.current = onMessage;
 
-  // Tokens last 10 minutes; renew well before and re-authenticate the open socket.
+  // Renew from the token's own expiry, not from a fixed interval. A late timer runs
+  // immediately; a failed attempt retries in a few seconds instead of after another full window.
   useEffect(() => {
-    if (!live) return;
-    const id = setInterval(
-      () =>
-        void refresh().then((ok) => {
-          if (ok) void signal.reauth();
-        }),
-      ROOM_TOKEN_REFRESH_MS,
-    );
-    return () => clearInterval(id);
-  }, [live?.sessionId, refresh, signal.reauth]);
+    const current = accessRef.current;
+    if (!current || !isLive(current)) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let stopped = false;
+    const arm = (ms: number) => {
+      if (stopped) return;
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        timer = undefined;
+        void renewRef.current();
+      }, ms);
+    };
+    scheduleRefresh.current = arm;
+    arm(roomTokenRefreshDelay(current.expiresAt));
+    return () => {
+      stopped = true;
+      if (timer) clearTimeout(timer);
+      if (scheduleRefresh.current === arm) scheduleRefresh.current = () => {};
+    };
+  }, [live?.sessionId]);
 
   // ── streams ──
 

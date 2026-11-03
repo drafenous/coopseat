@@ -1,9 +1,7 @@
 const base = require('./package.json').build;
 
-// Store submission. With no code-signing certificate, electron-builder leaves the
-// package unsigned and writes Publisher CN=ms. Partner Center replaces that
-// identity when the packaged app is created. identityName must then match the
-// name reserved there (Product identity).
+// Publisher and identityName are the Partner Center product identity.
+// Omitting publisher makes electron-builder write CN=ms, which the Store rejects.
 module.exports = {
   ...base,
   win: {
@@ -13,6 +11,7 @@ module.exports = {
   appx: {
     applicationId: 'CoopSeat',
     identityName: 'Drafenous.CoopSeat',
+    publisher: 'CN=A510E10B-F3B3-4524-BDEF-551C16696C6B',
     publisherDisplayName: 'Drafenous',
     displayName: 'CoopSeat',
     backgroundColor: '#0b1016',

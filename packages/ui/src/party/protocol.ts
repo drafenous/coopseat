@@ -79,6 +79,20 @@ export const ROOM_TOKEN_TTL_SECONDS = 600;
 /** Clients refresh before expiry; the server tolerates this much lateness before dropping the socket. */
 export const ROOM_TOKEN_REFRESH_MS = 8 * 60_000;
 export const ROOM_TOKEN_GRACE_SECONDS = 120;
+/** How soon to try again when a room-token refresh fails on the network. */
+export const ROOM_TOKEN_RETRY_MS = 15_000;
+
+/**
+ * Milliseconds until a client should renew a room token. Zero means the refresh
+ * window has already started, so the caller should renew on the next turn.
+ */
+export function roomTokenRefreshDelay(
+  expiresAt: number,
+  now = Date.now(),
+): number {
+  const leadMs = ROOM_TOKEN_TTL_SECONDS * 1000 - ROOM_TOKEN_REFRESH_MS;
+  return Math.max(0, expiresAt * 1000 - leadMs - now);
+}
 
 export const MAX_STREAMERS = 10;
 export const CHAT_MAX_GRAPHEMES = 200;

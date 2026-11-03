@@ -10,6 +10,8 @@ export const SIGNAL_CLOSE = {
   removed: 4000,
   ended: 4001,
   invalid: 4002,
+  /** The server stopped hearing this socket. Reconnect; the seat is held through the grace window. */
+  stale: 4003,
 } as const;
 export type SignalStatus = 'connecting' | 'open' | 'reconnecting' | 'closed';
 export type SignalClientOptions = {
@@ -89,9 +91,13 @@ export class SignalClient {
     this.ws = ws;
     this.authed = false;
     ws.onopen = () => {
-      ws.send(JSON.stringify({ t: 'auth', token }));
-      this.lastSeen = Date.now();
-      this.startPing();
+      // A refresh may have replaced the token while this socket was connecting.
+      void this.opts.token().then((fresh) => {
+        if (this.ws !== ws || this.stopped) return;
+        ws.send(JSON.stringify({ t: 'auth', token: fresh ?? token }));
+        this.lastSeen = Date.now();
+        this.startPing();
+      });
     };
     ws.onmessage = (e) => {
       this.lastSeen = Date.now();
@@ -124,6 +130,13 @@ export class SignalClient {
         return;
       }
       if (e.code === SIGNAL_CLOSE.removed) {
+        // The room still accepts a newer token after this drop. Any other removal is final.
+        if (e.reason === 'token_expired') {
+          void this.opts
+            .onInvalid()
+            .then((ok) => (ok ? this.retry() : this.close()));
+          return;
+        }
         this.close();
         return;
       }
@@ -133,6 +146,7 @@ export class SignalClient {
           .then((ok) => (ok ? this.retry() : this.close()));
         return;
       }
+      // Includes a quiet socket (4003): reconnect with the current token.
       this.retry();
     };
   }

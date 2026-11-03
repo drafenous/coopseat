@@ -32,7 +32,12 @@ import {
 
 export type Effect =
   | { k: 'send'; to: string; msg: ServerMessage }
-  | { k: 'close'; to: string; code: number; reason: RemovalReason | EndReason }
+  | {
+      k: 'close';
+      to: string;
+      code: number;
+      reason: RemovalReason | EndReason | 'timeout';
+    }
   | { k: 'event'; event: SignalEvent }
   | { k: 'alarm'; at: number | null };
 
@@ -86,7 +91,13 @@ export type State = {
   ended: EndReason | null;
 };
 
-export const CLOSE = { removed: 4000, ended: 4001, invalid: 4002 } as const;
+export const CLOSE = {
+  removed: 4000,
+  ended: 4001,
+  invalid: 4002,
+  /** The socket went quiet. The client reconnects; this is not a bad token. */
+  stale: 4003,
+} as const;
 const CHAT_WINDOW_MS = 5000;
 const CHAT_MAX_PER_WINDOW = 5;
 const MSG_WINDOW_MS = 10_000;
@@ -434,11 +445,13 @@ export class RoomEngine {
 
     for (const m of Object.values(s.members)) {
       if (m.connected && now - m.lastSeen >= SOCKET_DEAD_MS) {
+        // A quiet socket is a drop. Closing it as an invalid token made the client
+        // refresh admission before reconnecting, and that could miss the grace window.
         this.fx.push({
           k: 'close',
           to: m.id,
-          code: CLOSE.invalid,
-          reason: 'invalid',
+          code: CLOSE.stale,
+          reason: 'timeout',
         });
         m.connected = false;
         m.goneAt = now;

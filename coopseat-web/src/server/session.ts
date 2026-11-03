@@ -11,6 +11,8 @@ import {
 
 export const ACCESS_COOKIE = 'cs_at';
 export const REFRESH_COOKIE = 'cs_rt';
+/** Unix expiry of the access token. Not httpOnly, so a long-lived page can renew before it lapses. */
+export const EXPIRY_COOKIE = 'cs_exp';
 const REFRESH_MAX_AGE = 60 * 60 * 24 * 30;
 
 export type AuthContext = {
@@ -101,11 +103,19 @@ export function setSessionCookies(res: NextResponse, tokens: AuthTokens): void {
     path: '/',
     maxAge: REFRESH_MAX_AGE,
   });
+  res.cookies.set(EXPIRY_COOKIE, String(t.expires_at), {
+    httpOnly: false,
+    secure,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: Math.max(60, t.expires_at - Math.floor(Date.now() / 1000)),
+  });
 }
 
 export function clearSessionCookies(res: NextResponse): void {
   res.cookies.delete(ACCESS_COOKIE);
   res.cookies.delete(REFRESH_COOKIE);
+  res.cookies.delete(EXPIRY_COOKIE);
   res.cookies.delete(STEPUP_COOKIE);
 }
 

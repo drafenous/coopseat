@@ -5,7 +5,7 @@ import {
   RECONNECT_GRACE_MS,
   type RoomTokenClaims,
 } from '@coopseat/ui/party-protocol';
-import { initialState, RoomEngine, type Effect } from '../src/engine';
+import { CLOSE, initialState, RoomEngine, type Effect } from '../src/engine';
 
 const SID = '11111111-1111-4111-8111-111111111111';
 const T0 = 1_800_000_000_000;
@@ -614,9 +614,11 @@ describe('RoomEngine', () => {
     expect(fx).toContainEqual({
       k: 'close',
       to: 'bia',
-      code: 4002,
-      reason: 'invalid',
+      code: CLOSE.stale,
+      reason: 'timeout',
     });
+    expect(quiet.state.ended).toBeNull();
+    expect(quiet.state.members['bia']).toMatchObject({ connected: false });
   });
 
   it('applies backend commands: ban removal, refresh and end', () => {
