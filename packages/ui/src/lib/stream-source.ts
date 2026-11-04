@@ -84,8 +84,9 @@ export function cardSource(
 /**
  * Screen or window. On desktop the source comes from our own picker (`sourceId`). `system` audio is
  * every program except CoopSeat; `window` audio is that window's own program. On the web the browser
- * shows its picker: a window asks for `windowAudio: "window"` (UA falls back to system audio when
- * isolation is unavailable), a screen asks for system audio, and a tab keeps the browser default.
+ * picker chooses the surface: prefer window-only audio when a window is shared (UA falls back to
+ * system audio when isolation is unavailable), include system audio for a full screen, and leave
+ * tab audio to the browser default.
  */
 export async function displaySource({
   kind,
@@ -127,21 +128,21 @@ export async function displaySource({
     });
   }
   const stream = await navigator.mediaDevices.getDisplayMedia({
-    video: {
-      ...GAME_VIDEO,
-      displaySurface: kind === 'screen' ? 'monitor' : 'window',
-    },
+    video: GAME_VIDEO,
     audio: audio ? GAME_AUDIO : false,
     // Chromium-only hints; other browsers ignore unknown members.
     ...({
       selfBrowserSurface: 'exclude',
       surfaceSwitching: 'include',
       systemAudio: audio ? 'include' : 'exclude',
-      ...(kind === 'window' && audio ? { windowAudio: 'window' } : {}),
+      ...(audio ? { windowAudio: 'window' } : {}),
     } as object),
   } as DisplayMediaStreamOptions);
+  const surface = stream.getVideoTracks()[0]?.getSettings().displaySurface;
+  const resolved: 'screen' | 'window' =
+    surface === 'monitor' ? 'screen' : 'window';
   const name = label ?? stream.getVideoTracks()[0]?.label ?? '';
-  return wrap(kind, name, stream);
+  return wrap(resolved, name, stream);
 }
 
 export const canShareScreen = () =>

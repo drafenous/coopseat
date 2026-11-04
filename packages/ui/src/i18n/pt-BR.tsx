@@ -520,6 +520,8 @@ export const ptBR: UiDictionary = {
       card: 'Dispositivo de Captura',
       screen: 'Captura de Tela',
       window: 'Captura de Janela',
+      /** Só na web: uma opção; o picker do navegador escolhe tela, janela ou guia. */
+      display: 'Tela ou janela',
       pick: 'Clique na fonte que você quer transmitir',
       pickInPanel: 'Escolha a tela ou janela no painel de entrada.',
       desktopAudio: {
@@ -536,7 +538,7 @@ export const ptBR: UiDictionary = {
       loading: 'Procurando fontes…',
       empty: 'Nenhuma fonte encontrada.',
       browserPicker:
-        'Ao iniciar a transmissão, o navegador vai perguntar qual tela ou janela compartilhar.',
+        'Ao iniciar a transmissão, o navegador vai perguntar qual tela, janela ou guia compartilhar.',
     },
     layout: {
       label: 'Layout',

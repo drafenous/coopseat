@@ -6,8 +6,6 @@ import { IconButton } from '../atoms';
 import { SelectField, ToggleField } from '../molecules';
 import { useT } from '../../i18n';
 
-const KINDS: StreamSourceKind[] = ['card', 'screen', 'window'];
-
 /** Capture type for the party plus, for screens and windows, the sources to pick from. */
 export function StreamSourceSettings({
   picker: p,
@@ -25,7 +23,11 @@ export function StreamSourceSettings({
         value={p.kind}
         disabled={locked}
         onChange={(v) => p.setKind(v as StreamSourceKind)}
-        options={KINDS.map((k) => ({ value: k, label: t[k] }))}
+        options={p.kinds.map((k) => ({
+          value: k,
+          // Web folds screen/window/tab into one choice; the browser picker decides the surface.
+          label: !p.desktop && k === 'screen' ? t.display : t[k],
+        }))}
       />
       {p.kind !== 'card' && (
         <>

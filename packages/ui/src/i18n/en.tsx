@@ -528,6 +528,8 @@ export const en = {
       card: 'Capture Device',
       screen: 'Screen Capture',
       window: 'Window Capture',
+      /** Web only: one choice; the browser picker selects screen, window or tab. */
+      display: 'Screen or window',
       pick: 'Click the source you want to stream',
       pickInPanel: 'Choose the screen or window in the input panel.',
       desktopAudio: {
@@ -544,7 +546,7 @@ export const en = {
       loading: 'Looking for sources…',
       empty: 'No sources found.',
       browserPicker:
-        'When you start streaming, your browser will ask which screen or window to share.',
+        'When you start streaming, your browser will ask which screen, window or tab to share.',
     },
     layout: {
       label: 'Layout',

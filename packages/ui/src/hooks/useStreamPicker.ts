@@ -12,11 +12,17 @@ import { bridge } from '../platform';
 import { useT } from '../i18n';
 import type { Party } from './useParty';
 
-const KINDS: StreamSourceKind[] = ['card', 'screen', 'window'];
+const DESKTOP_KINDS: StreamSourceKind[] = ['card', 'screen', 'window'];
+/** On the web the browser picker chooses screen, window or tab — one app option is enough. */
+const WEB_KINDS: StreamSourceKind[] = ['card', 'screen'];
 
-function savedKind(): StreamSourceKind {
+function savedKind(desktop: boolean): StreamSourceKind {
+  const kinds = desktop ? DESKTOP_KINDS : WEB_KINDS;
   const v = localStorage.getItem(PARTY_SOURCE_KEY) as StreamSourceKind | null;
-  return v && KINDS.includes(v) ? v : 'card';
+  if (v && kinds.includes(v)) return v;
+  // A saved window choice still means "share display" on the web.
+  if (!desktop && v === 'window') return 'screen';
+  return 'card';
 }
 
 type Input = {
@@ -53,13 +59,20 @@ export function useStreamPicker({
 }: Input) {
   const t = useT().party.source;
   const desktop = Boolean(bridge());
-  const [kind, setKindState] = useState<StreamSourceKind>(savedKind);
+  const kinds = desktop ? DESKTOP_KINDS : WEB_KINDS;
+  const [kind, setKindState] = useState<StreamSourceKind>(() =>
+    savedKind(desktop),
+  );
   const [sources, setSources] = useState<ScreenSource[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   // System audio is the screen default. A window starts with its own program instead, so the two
   // tracks are never both on (the system mix already contains that program).
-  const [systemAudio, setSystemAudioState] = useState(savedKind() !== 'window');
-  const [windowAudio, setWindowAudioState] = useState(savedKind() === 'window');
+  const [systemAudio, setSystemAudioState] = useState(
+    () => savedKind(desktop) !== 'window',
+  );
+  const [windowAudio, setWindowAudioState] = useState(
+    () => savedKind(desktop) === 'window',
+  );
   const [loading, setLoading] = useState(false);
 
   const refresh = useCallback(async () => {
@@ -141,6 +154,7 @@ export function useStreamPicker({
   };
 
   const setKind = (k: StreamSourceKind) => {
+    if (!kinds.includes(k)) return;
     const program = k === 'screen' && systemAudio ? false : windowAudio;
     if (program !== windowAudio) setWindowAudioState(program);
     setKindState(k);
@@ -165,6 +179,7 @@ export function useStreamPicker({
   return {
     kind,
     setKind,
+    kinds,
     desktop,
     sources: visible,
     selected,
