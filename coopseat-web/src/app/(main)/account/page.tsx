@@ -27,7 +27,7 @@ export default async function AccountPage({
   return (
     <main className="mx-auto w-full max-w-2xl flex-1 px-4 py-10">
       <header className="mb-8 flex items-center justify-between gap-4">
-        <Brand href={href('/')} version={null} />
+        <Brand href={href('/')} />
         <div className="flex items-center gap-3">
           {account.nickname && (
             <a

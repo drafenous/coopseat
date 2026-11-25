@@ -2,8 +2,12 @@
 @source "..";
 
 @custom-variant short (@media (max-height: 780px));
-/* Cinema mode: set by MainLayout while the controls are hidden. */
+/* Cinema layout (video full-bleed) while data-immersive is set. */
 @custom-variant immersive (&:where([data-immersive] *));
+/* Cinema with chrome hidden — hide interactive chrome. */
+@custom-variant cinema-idle (&:where([data-immersive]:not([data-cinema-chrome]) *));
+/* Cinema with chrome revealed as overlays over the video. */
+@custom-variant cinema-chrome (&:where([data-cinema-chrome] *));
 
 @theme {
   --font-sans: Inter, 'Segoe UI', Arial, sans-serif;

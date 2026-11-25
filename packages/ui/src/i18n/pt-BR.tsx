@@ -232,7 +232,8 @@ export const ptBR: UiDictionary = {
     startParty: 'Iniciar uma gaming-party',
     cinemaHint: (
       <>
-        Modo cinema · mexa o mouse para sair · <Kbd>F11</Kbd> monitor inteiro
+        Modo cinema · mexa o mouse para ver os controles · <Kbd>Esc</Kbd> sai ·{' '}
+        <Kbd>F11</Kbd> monitor inteiro
       </>
     ),
   },
@@ -254,27 +255,28 @@ export const ptBR: UiDictionary = {
     ],
     twoWays: 'Duas formas de ver só o jogo',
     cinemaTitle: 'Modo cinema',
-    cinemaFooter: 'Mexa o mouse para sair',
+    cinemaFooter: 'Mexa o mouse para mostrar os controles sobre o vídeo',
     cinemaBody: (
       <>
-        Os controles somem e o vídeo ocupa a <strong>janela</strong>. Entra
-        sozinho quando você fica parado, ou pelo botão Cinema.
+        Só o vídeo ocupa a <strong>janela</strong>. Mexa o mouse ou clique para
+        ver os painéis por cima; fique parado e eles somem de novo. Use o botão
+        Cinema ou o cinema automático ao ficar parado.
       </>
     ),
     fullscreenTitle: 'Tela cheia',
     fullscreenFooter: (
       <>
-        <Kbd>F11</Kbd> entra e sai · <Kbd>Esc</Kbd> sai
+        <Kbd>F11</Kbd> entra e sai · independente do cinema
       </>
     ),
     fullscreenBody: (
       <>
-        O vídeo ocupa o <strong>monitor inteiro</strong>, sem bordas nem barra
-        de tarefas.
+        O app ocupa o <strong>monitor inteiro</strong>, sem bordas nem barra de
+        tarefas. O cinema continua controlando os painéis e o tamanho do player.
       </>
     ),
     shortcutFullscreen: 'tela cheia',
-    shortcutExit: 'sair da tela cheia e do modo cinema',
+    shortcutExit: 'sair do cinema (e da tela cheia se estiver)',
     shortcutMute: 'silenciar',
     tips: [
       'Se a placa não abrir, feche OBS, Câmera e outros apps que possam estar usando ela.',
@@ -365,7 +367,7 @@ export const ptBR: UiDictionary = {
     enterIn: 'Entrar automaticamente no modo cinema em:',
     seconds: (s) => (s === 1 ? '1 segundo' : `${s} segundos`),
     never: 'Nunca',
-    hint: 'Com a captura ligada, o modo cinema entra sozinho quando não há atividade no teclado nem no mouse. Mexa em qualquer coisa para voltar.',
+    hint: 'Com a captura ligada, o modo cinema entra sozinho quando não há atividade no teclado nem no mouse. Mexa o mouse para ver os painéis sobre o vídeo; Esc sai do cinema.',
   },
   toasts: {
     cinemaPaused: 'Modo cinema em pausa',
@@ -378,7 +380,7 @@ export const ptBR: UiDictionary = {
   },
   transport: {
     fullscreen: 'tela cheia',
-    exit: 'sair',
+    exit: 'sair do cinema / tela cheia',
     mute: 'silenciar',
     shortcuts: 'Atalhos de teclado',
     shortcutsTitle: 'Atalhos de teclado',
@@ -388,7 +390,8 @@ export const ptBR: UiDictionary = {
     pipTitle:
       'Picture in Picture: abre o vídeo numa janela flutuante (modo compatibilidade)',
     cinema: 'Modo cinema',
-    cinemaTitle: 'Modo cinema: esconde os controles e amplia o vídeo na janela',
+    cinemaTitle:
+      'Modo cinema: só o vídeo; mexa o mouse para ver os painéis por cima',
     cinemaText: 'Cinema',
     fullscreenLabel: 'Tela cheia no monitor inteiro',
     fullscreenTitle: 'Tela cheia no monitor inteiro · F11',
@@ -563,6 +566,10 @@ export const ptBR: UiDictionary = {
       unmute: 'Ativar som',
       loss: (pct: number) => `${pct.toLocaleString('pt-BR')}% de perda`,
       openPanel: 'Mostrar painel da sala',
+      hideStrip: 'Ocultar streamers',
+      showStrip: 'Mostrar streamers',
+      showStripCount: (n: number) =>
+        n === 1 ? 'Mostrar 1 streamer' : `Mostrar ${n} streamers`,
       hidden: (n: number) =>
         n === 1
           ? '1 transmissão oculta (desconectada para economizar dados)'

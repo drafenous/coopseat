@@ -31,6 +31,10 @@ export type Account = {
     securityCodesRemaining: number;
   };
   permissions: { watch: Gate; chat: Gate; host: Gate };
+  features?: {
+    ageVerificationDisabled: boolean;
+    skipAgeVerification: boolean;
+  };
   message?: string;
 };
 export type MfaPending = {

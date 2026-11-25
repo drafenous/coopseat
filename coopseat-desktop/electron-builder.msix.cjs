@@ -1,9 +1,15 @@
 const base = require('./package.json').build;
+const { writeBorderlessCapture } = require('./electron/appx-manifest.cjs');
 
 // Publisher and identityName are the Partner Center product identity.
 // Omitting publisher makes electron-builder write CN=ms, which the Store rejects.
 module.exports = {
   ...base,
+  // Legacy makeappx 10.0.17763 rejects the uap11 borderless-capture capability.
+  toolsets: { winCodeSign: '1.1.0' },
+  appxManifestCreated: (manifestPath) => {
+    writeBorderlessCapture(manifestPath);
+  },
   win: {
     ...base.win,
     target: 'appx',

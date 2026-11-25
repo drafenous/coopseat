@@ -25,9 +25,9 @@ export function PanelRail({
       title={expandLabel}
       onClick={onExpand}
       className={cx(
-        'flex h-full w-11 flex-none flex-col items-center gap-2.5 overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#121921] px-1 py-3 text-[#8494a5]',
+        'flex h-full w-11 flex-none flex-col items-center gap-2.5 overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#121921] px-1 py-3 text-[#8494a5] cinema-chrome:rounded-none',
         'hover:border-[#3a4a5a] hover:bg-[#ffffff08] hover:text-[#c3d0dd]',
-        'immersive:hidden max-[750px]:min-h-[120px]',
+        'max-[750px]:min-h-[120px]',
       )}
     >
       {side === 'right' ? (

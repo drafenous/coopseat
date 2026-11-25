@@ -33,6 +33,7 @@ import {
   PANEL_COLLAPSED_KEY,
   PANEL_SIDE_KEY,
   PARTY_PANEL_KEY,
+  PARTY_STRIP_KEY,
   STATS_KEY,
 } from '../../lib/storage';
 import { PanelRail } from '../molecules';
@@ -153,6 +154,12 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
   useEffect(() => {
     localStorage.setItem(PARTY_PANEL_KEY, roomCollapsed ? '1' : '0');
   }, [roomCollapsed]);
+  const [stripCollapsed, setStripCollapsed] = useState(
+    () => localStorage.getItem(PARTY_STRIP_KEY) === '1',
+  );
+  useEffect(() => {
+    localStorage.setItem(PARTY_STRIP_KEY, stripCollapsed ? '1' : '0');
+  }, [stripCollapsed]);
   const [authOpen, setAuthOpen] = useState(false),
     [nicknameOpen, setNicknameOpen] = useState(false),
     [nicknameSkipped, setNicknameSkipped] = useState(false);
@@ -194,11 +201,18 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
   // Auto cinema would hide the room chat while people just watch and read, so parties only get the manual one.
   const cinema = useCinema({
     running: partyMode ? watching : running,
-    backend: partyMode ? 'compat' : s.backend,
+    // Real backend so native pointer watch works over the HWND (party used to force compat).
+    backend: s.backend,
     autoFull: !partyMode && s.autoFull,
     cinemaDelay: s.cinemaDelay,
     blocked: modalOpen || presetMenu || cinemaMenu || roomsOpen,
   });
+  const cinemaChrome =
+    cinema.cinema && !roomsOpen
+      ? cinema.chromeRevealed
+        ? ('overlay' as const)
+        : ('hidden' as const)
+      : undefined;
   const stageVideoRef = useRef<HTMLVideoElement | null>(null);
   const nativeSlotRef = useRef<HTMLElement | null>(null);
   const nativeOnSlot =
@@ -214,6 +228,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
       s.backend === 'native' &&
       (!partyMode || party.slots.main.length === 0 || nativeOnSlot),
     modalOpen,
+    cinemaChrome === 'overlay',
   );
   const pip = usePictureInPicture({
     videoRef: capture.videoRef,
@@ -470,9 +485,11 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         (partyMode ? watching : running && s.backend === 'compat')
       }
       onPip={activePip.toggle}
-      cinemaActive={cinema.chromeHidden}
+      cinemaActive={cinema.cinema}
       canCinema={partyMode ? watching : running}
-      onCinema={cinema.enterCinema}
+      onCinema={() =>
+        cinema.cinema ? cinema.exitCinema() : cinema.enterCinema()
+      }
       autoCinema={!partyMode && s.autoFull}
       cinemaDelay={s.cinemaDelay}
       cinemaMenu={cinemaMenu}
@@ -481,12 +498,17 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
       onCinemaDelay={(v) => change('cinemaDelay', v)}
       onFullscreen={() => void cinema.fullscreen()}
       onReport={() => setReportOpen(true)}
+      cinemaChrome={cinemaChrome}
+      stripCollapsed={stripCollapsed}
+      canToggleStrip={partyMode && party.slots.strip.length > 0}
+      onToggleStrip={() => setStripCollapsed((x) => !x)}
     />
   );
 
   return (
     <MainLayout
-      immersive={cinema.chromeHidden && !roomsOpen}
+      immersive={cinema.cinema && !roomsOpen}
+      chromeOverlay={cinema.cinema && cinema.chromeRevealed && !roomsOpen}
       panelSide={panelSide}
       panelCollapsed={panelCollapsed}
       roomCollapsed={roomCollapsed}
@@ -494,6 +516,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
         <>
           <AppHeader
             auth={auth}
+            cinemaChrome={cinemaChrome}
             onHelp={() => setHelp(true)}
             onTroubleshoot={() => setTroubleshoot(true)}
             onPreferences={() => setPreferences(true)}
@@ -539,6 +562,7 @@ function CoopSeat({ initialParty }: { initialParty: string | null }) {
             transport={transport}
             volume={s.volume}
             showMetrics={showStats}
+            stripCollapsed={stripCollapsed}
             mainVideoRef={stageVideoRef}
             previewRef={
               s.backend === 'native' && running && party.slots.main.length === 0

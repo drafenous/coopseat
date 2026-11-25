@@ -9,7 +9,7 @@ class Renderer {
  ComPtr<ID3D11Texture2D> tex[2];ComPtr<ID3D11ShaderResourceView> view[2];
  // Filters work at the capture resolution: rgb[0] holds the converted frame, rgb[1] the anti-aliased one.
  ComPtr<ID3D11Texture2D> rgb[2];ComPtr<ID3D11ShaderResourceView> rgbView[2];ComPtr<ID3D11RenderTargetView> rgbTarget[2];
- HWND hwnd;UINT width=0,height=0,windowW=0,windowH=0;GUID format{};bool tearing=false;bool bt709=true,full=false;int smoothing=0,effect=0;float dimming=0;
+ HWND hwnd;UINT width=0,height=0,windowW=0,windowH=0;GUID format{};bool tearing=false;bool bt709=true,full=false,leftAlign=false;int smoothing=0,effect=0;float dimming=0;
  // Constant buffers are sized in 16-byte rows, hence the padding after dim.
  struct Params{float kind,width,bt709,full,texelX,texelY,sharpness,sharpen,outW,outH,colorMode,curve,dim,pad[3];};
  void texture(int slot,UINT w,UINT h,DXGI_FORMAT f){D3D11_TEXTURE2D_DESC d{};d.Width=w;d.Height=h;d.MipLevels=1;d.ArraySize=1;d.Format=f;d.SampleDesc.Count=1;d.Usage=D3D11_USAGE_DEFAULT;d.BindFlags=D3D11_BIND_SHADER_RESOURCE;check(dev->CreateTexture2D(&d,nullptr,&tex[slot]),"Create frame texture");check(dev->CreateShaderResourceView(tex[slot].Get(),nullptr,&view[slot]),"Texture view");}
@@ -102,12 +102,14 @@ float4 lcd(V i):SV_TARGET{
   void look(int value){effect=std::clamp(value,0,7);}
   /** Darkens the output, 0 untouched to 1 black, to match a page backdrop over the video. */
   void dim(float value){dimming=std::clamp(value,0.f,1.f);}
+  /** Letterbox flush left (cinema chrome) instead of centered. Same scale. */
+  void alignLeft(bool on){leftAlign=on;}
  void configure(UINT w,UINT h,GUID f,IMFMediaType* type){width=w;height=h;format=f;for(int i=0;i<2;i++){view[i].Reset();tex[i].Reset();rgbTarget[i].Reset();rgbView[i].Reset();rgb[i].Reset();}UINT32 matrix=0,range=0;type->GetUINT32(MF_MT_YUV_MATRIX,&matrix);type->GetUINT32(MF_MT_VIDEO_NOMINAL_RANGE,&range);bt709=matrix?matrix==MFVideoTransferMatrix_BT709:h>=720;full=range==MFNominalRange_0_255;
   if(f==MFVideoFormat_NV12){texture(0,w,h,DXGI_FORMAT_R8_UNORM);texture(1,w/2,h/2,DXGI_FORMAT_R8G8_UNORM);}else if(f==MFVideoFormat_YUY2)texture(0,w/2,h,DXGI_FORMAT_R8G8B8A8_UNORM);else texture(0,w,h,DXGI_FORMAT_B8G8R8A8_UNORM);
  }
  void upload(const BYTE* bytes,LONG stride){if(stride<=0)throw std::runtime_error("Negative stride must be normalized before upload");ctx->UpdateSubresource(tex[0].Get(),0,nullptr,bytes,static_cast<UINT>(stride),0);if(format==MFVideoFormat_NV12)ctx->UpdateSubresource(tex[1].Get(),0,nullptr,bytes+size_t(stride)*height,static_cast<UINT>(stride),0);}
  bool draw(bool vsync){RECT r{};GetClientRect(hwnd,&r);UINT w=r.right,h=r.bottom;if(!w||!h||IsIconic(hwnd))return false;if(w!=windowW||h!=windowH){ctx->OMSetRenderTargets(0,nullptr,nullptr);target.Reset();check(swap->ResizeBuffers(0,w,h,DXGI_FORMAT_UNKNOWN,tearing?DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING:0),"Resize buffers");ComPtr<ID3D11Texture2D>b;check(swap->GetBuffer(0,IID_PPV_ARGS(&b)),"Back buffer");check(dev->CreateRenderTargetView(b.Get(),nullptr,&target),"Render target");windowW=w;windowH=h;}
-  const float clear[4]={0,0,0,1};ctx->ClearRenderTargetView(target.Get(),clear);float scale=std::min(float(w)/width,float(h)/height);D3D11_VIEWPORT vp{(w-width*scale)/2,(h-height*scale)/2,width*scale,height*scale,0,1},source{0,0,float(width),float(height),0,1};
+  const float clear[4]={0,0,0,1};ctx->ClearRenderTargetView(target.Get(),clear);float scale=std::min(float(w)/width,float(h)/height);float ox=leftAlign?0.f:(w-width*scale)/2;D3D11_VIEWPORT vp{ox,(h-height*scale)/2,width*scale,height*scale,0,1},source{0,0,float(width),float(height),0,1};
   ctx->VSSetShader(vs.Get(),nullptr,0);ctx->PSSetConstantBuffers(0,1,constants.GetAddressOf());ctx->PSSetSamplers(0,1,sampler.GetAddressOf());ctx->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   Params params{format==MFVideoFormat_NV12?0.f:format==MFVideoFormat_YUY2?1.f:2.f,float(width),bt709?1.f:0.f,full?1.f:0.f,1.f/width,1.f/height,.6f,0,vp.Width,vp.Height,0,0};
    if(!smoothing&&!effect){params.dim=dimming;pass(ps.Get(),target.Get(),view[0].Get(),view[1].Get(),vp,params);}

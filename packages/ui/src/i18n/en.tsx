@@ -237,7 +237,8 @@ export const en = {
     startParty: 'Start a gaming-party',
     cinemaHint: (
       <>
-        Cinema mode · move the mouse to exit · <Kbd>F11</Kbd> whole monitor
+        Cinema mode · move the mouse to show controls · <Kbd>Esc</Kbd> exits ·{' '}
+        <Kbd>F11</Kbd> whole monitor
       </>
     ),
   },
@@ -259,28 +260,28 @@ export const en = {
     ],
     twoWays: 'Two ways to see just the game',
     cinemaTitle: 'Cinema mode',
-    cinemaFooter: 'Move the mouse to exit',
+    cinemaFooter: 'Move the mouse to show controls over the video',
     cinemaBody: (
       <>
-        The controls disappear and the video fills the <strong>window</strong>.
-        It kicks in on its own when you stay still, or through the Cinema
-        button.
+        Only the video fills the <strong>window</strong>. Move the mouse or
+        click to show panels over it; stay still and they hide again. Use the
+        Cinema button or stay still with auto cinema on.
       </>
     ),
     fullscreenTitle: 'Fullscreen',
     fullscreenFooter: (
       <>
-        <Kbd>F11</Kbd> enters and exits · <Kbd>Esc</Kbd> exits
+        <Kbd>F11</Kbd> enters and exits · independent of cinema
       </>
     ),
     fullscreenBody: (
       <>
-        The video fills the <strong>whole monitor</strong>, with no borders or
-        taskbar.
+        The app fills the <strong>whole monitor</strong>, with no borders or
+        taskbar. Cinema still controls the panels and player layout.
       </>
     ),
     shortcutFullscreen: 'fullscreen',
-    shortcutExit: 'exit fullscreen and cinema mode',
+    shortcutExit: 'exit cinema (and fullscreen if active)',
     shortcutMute: 'mute',
     tips: [
       "If the card doesn't open, close OBS, Camera and other apps that may be using it.",
@@ -371,7 +372,7 @@ export const en = {
     enterIn: 'Automatically enter cinema mode in:',
     seconds: (s: number) => (s === 1 ? '1 second' : `${s} seconds`),
     never: 'Never',
-    hint: 'While capturing, cinema mode turns on by itself when there is no keyboard or mouse activity. Touch anything to come back.',
+    hint: 'While capturing, cinema mode turns on by itself when there is no keyboard or mouse activity. Move the mouse to show panels over the video; Esc exits cinema.',
   },
   toasts: {
     cinemaPaused: 'Cinema mode paused',
@@ -384,7 +385,7 @@ export const en = {
   },
   transport: {
     fullscreen: 'fullscreen',
-    exit: 'exit',
+    exit: 'exit cinema / fullscreen',
     mute: 'mute',
     shortcuts: 'Keyboard shortcuts',
     shortcutsTitle: 'Keyboard shortcuts',
@@ -395,7 +396,7 @@ export const en = {
       'Picture in Picture: opens the video in a floating window (compatibility mode)',
     cinema: 'Cinema mode',
     cinemaTitle:
-      'Cinema mode: hides the controls and enlarges the video in the window',
+      'Cinema mode: video only; move the mouse to show panels over it',
     cinemaText: 'Cinema',
     fullscreenLabel: 'Fullscreen on the whole monitor',
     fullscreenTitle: 'Fullscreen on the whole monitor · F11',
@@ -571,6 +572,10 @@ export const en = {
       unmute: 'Unmute',
       loss: (pct: number) => `${pct}% loss`,
       openPanel: 'Show room panel',
+      hideStrip: 'Hide streamers',
+      showStrip: 'Show streamers',
+      showStripCount: (n: number) =>
+        n === 1 ? 'Show 1 streamer' : `Show ${n} streamers`,
       hidden: (n: number) =>
         n === 1
           ? '1 hidden stream (disconnected to save data)'

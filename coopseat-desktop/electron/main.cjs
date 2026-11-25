@@ -29,7 +29,12 @@ const {
 const { resolveBff } = require('./bff.cjs');
 // Host candidates must be real LAN addresses. mDNS (.local) names fail to
 // resolve here, so ICE falls through to a peer-reflexive path that drops.
-app.commandLine.appendSwitch('disable-features', 'WebRtcHideLocalIpsWithMdns');
+// WebRtcWgcRequireBorder makes Windows draw a yellow frame around a shared
+// window or screen. It stays off so a field trial cannot turn that frame on.
+app.commandLine.appendSwitch(
+  'disable-features',
+  'WebRtcHideLocalIpsWithMdns,WebRtcWgcRequireBorder',
+);
 /** The capture currently allowed to deliver one video frame to the page. */
 let mediaPump = null;
 ipcMain.on('native:media:ack', (event) => {
@@ -170,6 +175,34 @@ const binary = () =>
     ? path.join(process.resourcesPath, 'native/InputCapture.exe')
     : path.join(__dirname, '../native/build/Release/InputCapture.exe');
 const available = () => process.platform === 'win32' && existsSync(binary());
+// A packaged app may set the capture border off only after Windows grants
+// graphicsCaptureWithoutBorder. The grant is stored for the package, so the
+// native helper requests it once, before the first share. A consent dialog, if
+// Windows shows one, has a minute to complete; the helper is left running.
+let borderlessReady = null;
+function requestBorderlessCapture() {
+  if (borderlessReady) return borderlessReady;
+  borderlessReady = new Promise((resolve) => {
+    if (!app.isPackaged || !available()) return resolve();
+    let settled = false;
+    const done = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve();
+    };
+    const helper = spawn(binary(), [], {
+      stdio: ['pipe', 'ignore', 'ignore'],
+      windowsHide: true,
+    });
+    const timer = setTimeout(done, 60000);
+    helper.on('exit', done);
+    helper.on('error', done);
+    helper.stdin.on('error', () => {});
+    helper.stdin.end(JSON.stringify({ cmd: 'borderless' }) + '\n');
+  });
+  return borderlessReady;
+}
 function trusted(url) {
   return typeof url === 'string' && url.split('#')[0] === entry;
 }
@@ -397,7 +430,13 @@ app.whenReady().then(() => {
       backgroundThrottling: false,
     },
   });
-  const PERMISSIONS = ['media', 'speaker-selection', 'display-capture'];
+  // clipboard-sanitized-write: RoomPanel copy-link (navigator.clipboard.writeText).
+  const PERMISSIONS = [
+    'media',
+    'speaker-selection',
+    'display-capture',
+    'clipboard-sanitized-write',
+  ];
   session.defaultSession.setPermissionRequestHandler(
     (wc, permission, cb, details) =>
       cb(
@@ -414,7 +453,8 @@ app.whenReady().then(() => {
       PERMISSIONS.includes(permission),
   );
   session.defaultSession.setDisplayMediaRequestHandler(
-    (request, cb) => {
+    async (request, cb) => {
+      await requestBorderlessCapture();
       const choice = picked;
       picked = null;
       if (

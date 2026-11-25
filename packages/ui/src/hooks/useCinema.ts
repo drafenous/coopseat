@@ -19,18 +19,22 @@ type Options = {
 
 export function useCinema(options: Options) {
   const { running, backend, autoFull, cinemaDelay } = options;
-  const [chromeHidden, setChromeHidden] = useState(false),
+  const [cinema, setCinema] = useState(false),
+    [chromeRevealed, setChromeRevealed] = useState(false),
     [countdown, setCountdownState] = useState<Countdown>(null),
     [cinemaHint, setCinemaHint] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined),
     countdownTimer = useRef<ReturnType<typeof setInterval> | undefined>(
       undefined,
     ),
-    pinned = useRef(false),
     grace = useRef(0),
     countdownRef = useRef<Countdown>(null),
+    cinemaRef = useRef(false),
+    chromeRef = useRef(false),
     live = useRef(options);
   live.current = options;
+  cinemaRef.current = cinema;
+  chromeRef.current = chromeRevealed;
 
   const setCountdown = useCallback((v: Countdown) => {
     countdownRef.current = v;
@@ -48,12 +52,32 @@ export function useCinema(options: Options) {
     if (!live.current.running) return;
     cancelAutoFull();
     grace.current = Date.now() + 1200;
-    setChromeHidden(true);
+    setCinema(true);
+    setChromeRevealed(false);
   }, [cancelAutoFull]);
+  const exitCinema = useCallback(() => {
+    cancelAutoFull();
+    setCinema(false);
+    setChromeRevealed(false);
+  }, [cancelAutoFull]);
+
+  /** Silently hide overlay chrome after the idle delay while cinema stays on. */
+  const scheduleHideChrome = useCallback(() => {
+    clearTimeout(timer.current);
+    const o = live.current;
+    if (!o.running || o.blocked || !cinemaRef.current || !chromeRef.current)
+      return;
+    timer.current = setTimeout(() => {
+      if (!cinemaRef.current) return;
+      grace.current = Date.now() + 400;
+      setChromeRevealed(false);
+    }, o.cinemaDelay * 1000);
+  }, []);
+
   const startCountdown = useCallback(() => {
     clearCinemaTimers();
     const o = live.current;
-    if (!o.running || !o.autoFull || o.blocked || pinned.current) {
+    if (!o.running || !o.autoFull || o.blocked || cinemaRef.current) {
       setCountdown(null);
       return;
     }
@@ -68,72 +92,98 @@ export function useCinema(options: Options) {
       clearInterval(countdownTimer.current);
       setCountdown(null);
       grace.current = Date.now() + 400;
-      setChromeHidden(true);
+      setCinema(true);
+      setChromeRevealed(false);
     }, 1000);
   }, [clearCinemaTimers, setCountdown]);
-  const scheduleAutoFull = useCallback(() => {
+
+  const scheduleAutoEnter = useCallback(() => {
     cancelAutoFull();
     const o = live.current;
-    if (!o.running || !o.autoFull || o.blocked) return;
+    if (!o.running || !o.autoFull || o.blocked || cinemaRef.current) return;
     timer.current = setTimeout(
       startCountdown,
       (o.cinemaDelay - countdownFrom(o.cinemaDelay)) * 1000,
     );
   }, [cancelAutoFull, startCountdown]);
+
   const wake = useCallback(() => {
-    if (pinned.current || Date.now() < grace.current) return;
+    if (Date.now() < grace.current) return;
     if (countdownRef.current !== null) {
       clearCinemaTimers();
       setCountdown('paused');
       timer.current = setTimeout(startCountdown, PAUSE_MS);
       return;
     }
-    setChromeHidden(false);
-    scheduleAutoFull();
-  }, [clearCinemaTimers, setCountdown, startCountdown, scheduleAutoFull]);
+    if (cinemaRef.current) {
+      setChromeRevealed(true);
+      chromeRef.current = true;
+      scheduleHideChrome();
+      return;
+    }
+    scheduleAutoEnter();
+  }, [
+    clearCinemaTimers,
+    setCountdown,
+    startCountdown,
+    scheduleHideChrome,
+    scheduleAutoEnter,
+  ]);
 
   const fullscreen = useCallback(async () => {
     const b = bridge();
-    if (live.current.backend === 'native' && live.current.running) {
-      const on = Boolean(await b?.window('fullscreen'));
-      pinned.current = on;
-      setChromeHidden(on);
-    } else if (b) await b.window('fullscreen');
+    if (b) await b.window('fullscreen');
     else if (document.fullscreenElement) await document.exitFullscreen();
     else await document.documentElement.requestFullscreen();
   }, []);
   const exit = useCallback(() => {
-    pinned.current = false;
     void bridge()?.window('exitFullscreen');
-    setChromeHidden(false);
-  }, []);
+    if (document.fullscreenElement) void document.exitFullscreen();
+    exitCinema();
+  }, [exitCinema]);
 
+  const blocked = options.blocked;
   useEffect(() => {
-    if (running && autoFull) scheduleAutoFull();
-    else {
+    if (!running) {
       cancelAutoFull();
-      if (!running) {
-        pinned.current = false;
-        setChromeHidden(false);
-      }
+      setCinema(false);
+      setChromeRevealed(false);
+      return;
     }
-  }, [running, autoFull, cinemaDelay, scheduleAutoFull, cancelAutoFull]);
+    if (blocked) {
+      cancelAutoFull();
+      return;
+    }
+    if (cinema && chromeRevealed) scheduleHideChrome();
+    else if (!cinema && autoFull) scheduleAutoEnter();
+    else cancelAutoFull();
+  }, [
+    running,
+    blocked,
+    autoFull,
+    cinemaDelay,
+    cinema,
+    chromeRevealed,
+    scheduleHideChrome,
+    scheduleAutoEnter,
+    cancelAutoFull,
+  ]);
   useEffect(() => {
-    if (!chromeHidden || backend !== 'compat') {
+    if (!cinema || backend !== 'compat') {
       setCinemaHint(false);
       return;
     }
     setCinemaHint(true);
     const t = setTimeout(() => setCinemaHint(false), 2500);
     return () => clearTimeout(t);
-  }, [chromeHidden, backend]);
+  }, [cinema, backend]);
   useEffect(() => {
     const events = ['mousemove', 'mousedown', 'wheel', 'keydown'] as const;
     events.forEach((n) => window.addEventListener(n, wake, { passive: true }));
     return () => events.forEach((n) => window.removeEventListener(n, wake));
   }, [wake]);
   const watchingPointer =
-    running && backend === 'native' && (autoFull || chromeHidden);
+    running && backend === 'native' && (autoFull || cinema);
   useEffect(() => {
     const b = bridge();
     if (!watchingPointer || !b) return;
@@ -152,5 +202,14 @@ export function useCinema(options: Options) {
     [],
   );
 
-  return { chromeHidden, countdown, cinemaHint, enterCinema, fullscreen, exit };
+  return {
+    cinema,
+    chromeRevealed,
+    countdown,
+    cinemaHint,
+    enterCinema,
+    exitCinema,
+    fullscreen,
+    exit,
+  };
 }

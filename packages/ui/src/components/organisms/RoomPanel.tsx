@@ -75,7 +75,7 @@ export function RoomPanel({
   const active = tabs.find((x) => x.id === tab) ?? tabs[0]!;
   const ActiveIcon = active.icon;
   return (
-    <aside className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#121921] immersive:hidden max-[750px]:min-h-[420px]">
+    <aside className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#121921] cinema-chrome:rounded-none max-[750px]:min-h-[420px]">
       <div className="flex flex-none flex-col px-5 pt-[18px] min-[1800px]:px-6 min-[1800px]:pt-[22px]">
         <div className="mb-[14px] flex items-center gap-[9px] text-[#c3d0dd]">
           <ActiveIcon size={18} />

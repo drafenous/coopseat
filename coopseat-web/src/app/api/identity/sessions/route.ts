@@ -4,6 +4,7 @@ import { env } from '@/server/env';
 import { gotrue } from '@/server/gotrue';
 import { ApiError, route } from '@/server/http';
 import { startVerification } from '@/server/identity/service';
+import { getPlatformPolicy } from '@/server/platform-policy';
 import { getProfile } from '@/server/profiles';
 import { rateLimit } from '@/server/rate-limit';
 import { requireAuth } from '@/server/session';
@@ -12,6 +13,11 @@ import { requireAuth } from '@/server/session';
 export const POST = route(async (req) => {
   const session = await requireAuth(req, { aal2IfEnrolled: true });
   await rateLimit('kyc', session.claims.sub);
+
+  const platform = await getPlatformPolicy();
+  if (platform.ageVerificationDisabled) {
+    throw new ApiError(503, 'kyc_unavailable');
+  }
 
   const user = await auth(gotrue.getUser(session.token));
   if (!user.email || !user.email_confirmed_at) {

@@ -28,7 +28,7 @@ export async function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-line-soft/70 bg-background/75 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4 sm:gap-4 sm:px-6 lg:gap-5">
-        <Brand href={href('/')} version={null} />
+        <Brand href={href('/')} />
         <nav className="hidden items-center gap-6 text-sm text-muted lg:flex">
           {nav.map((item) =>
             item.href.includes('#') ? (

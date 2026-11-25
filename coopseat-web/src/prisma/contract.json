@@ -44,6 +44,10 @@
       "model": "PartySession",
       "namespace": "public"
     },
+    "platform_policy": {
+      "model": "PlatformPolicy",
+      "namespace": "public"
+    },
     "platform_sanctions": {
       "model": "PlatformSanction",
       "namespace": "public"
@@ -1220,6 +1224,67 @@
               "table": "party_session_participants"
             }
           },
+          "PlatformPolicy": {
+            "fields": {
+              "ageVerificationDisabled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "note": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "skipAgeVerification": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {},
+            "storage": {
+              "fields": {
+                "ageVerificationDisabled": {
+                  "column": "ageVerificationDisabled"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "note": {
+                  "column": "note"
+                },
+                "skipAgeVerification": {
+                  "column": "skipAgeVerification"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "platform_policy"
+            }
+          },
           "PlatformSanction": {
             "fields": {
               "createdAt": {
@@ -2033,6 +2098,11 @@
               "kind": "rls",
               "namespaceId": "public",
               "tableName": "party_sessions"
+            },
+            "platform_policy": {
+              "kind": "rls",
+              "namespaceId": "public",
+              "tableName": "platform_policy"
             },
             "platform_sanctions": {
               "kind": "rls",
@@ -3155,6 +3225,62 @@
               },
               "uniques": []
             },
+            "platform_policy": {
+              "checks": [
+                {
+                  "expression": "id = 'global'",
+                  "name": "platform_policy_singleton_3422eee5",
+                  "prefix": "platform_policy_singleton"
+                }
+              ],
+              "columns": {
+                "ageVerificationDisabled": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "global"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "note": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "skipAgeVerification": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "platform_sanctions": {
               "checks": [
                 {
@@ -3852,7 +3978,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "ac614c0f6d849d988afc6be1224f3b5b5f52e92d8a914cb0ce14681843458df2",
+    "storageHash": "4ceeb2c25f9ffd0c80c70b95d3b0d75279132c8aa788828fca2e2b606570a067",
     "types": {
       "AuthUserId": {
         "codecId": "pg/uuid@1",
@@ -3862,7 +3988,7 @@
     }
   },
   "execution": {
-    "executionHash": "16212b2a108edf1cbe98d9f03d5e864cbec4a88abc22f9ce1eb15d63c410a8c7",
+    "executionHash": "ea7aeb7f9b1e13a14899fa91d6161c4437acfc791ed11070ffa2ce133d5e1828",
     "mutations": {
       "defaults": [
         {
@@ -3969,6 +4095,21 @@
           "ref": {
             "entry": "party_sessions",
             "field": "id",
+            "namespace": "public"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "entry": "platform_policy",
+            "field": "updatedAt",
             "namespace": "public"
           }
         },

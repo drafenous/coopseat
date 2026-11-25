@@ -92,6 +92,18 @@ test('accepts rounded overlay holes and rejects invalid radii', () => {
       validateBounds({ ...rect, holes: [{ ...hole, radius }] }),
     );
 });
+test('accepts left or center video align', () => {
+  const rect = { x: 0, y: 0, width: 640, height: 360 };
+  assert.deepEqual(validateBounds({ ...rect, align: 'left' }), {
+    ...rect,
+    align: 'left',
+  });
+  assert.deepEqual(validateBounds({ ...rect, align: 'center' }), {
+    ...rect,
+    align: 'center',
+  });
+  assert.throws(() => validateBounds({ ...rect, align: 'right' }));
+});
 test('accepts a backdrop dim between 0 and 1', () => {
   const rect = { x: 0, y: 0, width: 640, height: 360 };
   assert.equal(validateBounds({ ...rect, dim: 0.8 }).dim, 0.8);

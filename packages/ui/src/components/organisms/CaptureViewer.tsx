@@ -86,11 +86,11 @@ export function CaptureViewer({
           autoPlay
           playsInline
           muted
-          className={`absolute inset-0 size-full bg-black object-contain ${compatLive ? 'block' : 'hidden'}`}
+          className={`absolute inset-0 size-full bg-black object-contain cinema-chrome:object-left ${compatLive ? 'block' : 'hidden'}`}
         />
         <canvas
           ref={canvasRef}
-          className={`pointer-events-none absolute inset-0 size-full bg-black object-contain ${compatLive && filtered ? 'block' : 'hidden'}`}
+          className={`pointer-events-none absolute inset-0 size-full bg-black object-contain cinema-chrome:object-left ${compatLive && filtered ? 'block' : 'hidden'}`}
         />
         <audio ref={audioRef} autoPlay />
         {emptyState}

@@ -7,7 +7,7 @@ export default async function AuthLayout({ children }: LayoutProps<'/'>) {
   const locale = await getLocale();
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-6 px-4 py-12">
-      <Brand href={localeHref(locale, '/')} version={null} />
+      <Brand href={localeHref(locale, '/')} />
       {children}
       <LanguageSwitcher />
     </main>

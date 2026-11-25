@@ -62,12 +62,22 @@ function holes(r: DOMRect, k: number, shadowless: Set<HTMLElement>): Hole[] {
   return out;
 }
 
-const HIDDEN = { x: 0, y: 0, width: 0, height: 0, holes: [], dim: 0 };
+const HIDDEN = {
+  x: 0,
+  y: 0,
+  width: 0,
+  height: 0,
+  holes: [] as Hole[],
+  dim: 0,
+  align: 'center' as const,
+};
 
 export function useNativeBounds(
   screen: RefObject<HTMLElement | null>,
   active: boolean,
   dimmed: boolean,
+  /** When cinema chrome overlays the native preview, punch holes immediately and dim lightly. */
+  cinemaChrome = false,
 ) {
   useEffect(() => {
     // A zero rect hides the child window. Leaving the last rect up covers whatever replaced the preview.
@@ -88,6 +98,7 @@ export function useNativeBounds(
       height: number;
       holes: Hole[];
       dim: number;
+      align: 'left' | 'center';
     } | null = null;
     const flush = () => {
       timer = 0;
@@ -95,6 +106,8 @@ export function useNativeBounds(
       pending = null;
       if (next) void bridge()?.bounds(next);
     };
+    // Cinema chrome mounts overlays under the HWND — refresh holes on the next frame.
+    holesAt = cinemaChrome ? 0 : holesAt;
     const tick = () => {
       const el = screen.current;
       if (el) {
@@ -103,7 +116,8 @@ export function useNativeBounds(
         const now = performance.now();
         // Reading overlay styles forces layout. Once a window resize starts, doing it
         // every frame keeps the page busy after the drag has ended.
-        if (now - holesAt > 250) {
+        const holeInterval = cinemaChrome ? 50 : 250;
+        if (now - holesAt > holeInterval) {
           holesAt = now;
           cachedHoles = holes(r, k, shadowless);
         }
@@ -114,14 +128,16 @@ export function useNativeBounds(
           height: Math.round(r.height * k),
           holes: cachedHoles,
           dim: dimmed ? BACKDROP_DIM : 0,
+          align: (cinemaChrome ? 'left' : 'center') as 'left' | 'center',
         };
         const key = JSON.stringify(rect);
         if (key !== last) {
           last = key;
           pending = rect;
           // A drag sends a new size every frame. Applying each one resets the preview
-          // surface and is what freezes the page.
-          if (!timer) timer = window.setTimeout(flush, 100);
+          // surface and is what freezes the page. Cinema chrome needs a snappier punch-out.
+          if (!timer)
+            timer = window.setTimeout(flush, cinemaChrome ? 16 : 100);
         }
       }
       frame = requestAnimationFrame(tick);
@@ -133,5 +149,5 @@ export function useNativeBounds(
       flush();
       for (const el of shadowless) el.style.boxShadow = '';
     };
-  }, [screen, active, dimmed]);
+  }, [screen, active, dimmed, cinemaChrome]);
 }

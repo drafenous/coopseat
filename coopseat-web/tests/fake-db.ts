@@ -125,6 +125,7 @@ export function createFakeDb() {
     RelayCredential: [] as Row[],
     RelayUsage: [] as Row[],
     PartyPolicy: [] as Row[],
+    PlatformPolicy: [] as Row[],
     PartyRoom: [] as Row[],
     PartyRoomWhitelist: [] as Row[],
     PartyRoomModerator: [] as Row[],
@@ -220,6 +221,15 @@ export function createFakeDb() {
           sessionMaxHours: 12,
           ownerGraceSeconds: 60,
           chatEnabled: true,
+          note: null,
+          updatedAt: now(),
+        }));
+      },
+      get PlatformPolicy() {
+        return table(data.PlatformPolicy, () => ({
+          id: 'global',
+          ageVerificationDisabled: false,
+          skipAgeVerification: false,
           note: null,
           updatedAt: now(),
         }));

@@ -3,6 +3,7 @@ import type { AuthUser } from './gotrue';
 import { ensureProfile } from './profiles';
 import { permissionsFor } from '@/lib/gates';
 import { activeSanctions } from './party/sanctions';
+import { getPlatformPolicy } from './platform-policy';
 import { securityCodesRemaining } from './security-codes';
 
 /** Watch/host gates from an auth user and their profile. Shared with party admission. */
@@ -10,13 +11,15 @@ export function accountPermissions(
   user: AuthUser,
   claims: AccessClaims,
   profile: { nickname: string | null; ageStatus: string },
+  opts?: { skipAgeVerification?: boolean },
 ) {
   const emailConfirmed = Boolean(user.email && user.email_confirmed_at);
   const mfaEnabled = (user.factors ?? []).some((f) => f.status === 'verified');
   return permissionsFor({
     emailConfirmed,
     nicknameSet: profile.nickname !== null,
-    ageVerified: profile.ageStatus === 'VERIFIED',
+    ageVerified:
+      Boolean(opts?.skipAgeVerification) || profile.ageStatus === 'VERIFIED',
     mfaEnabled,
     aal: claims.aal ?? 'aal1',
   });
@@ -28,9 +31,10 @@ export async function accountSummary(user: AuthUser, claims: AccessClaims) {
     user.identities
       ?.map((i) => i.identity_data?.avatar_url ?? i.identity_data?.picture)
       .find((url): url is string => typeof url === 'string') ?? null;
-  const [profile, sanctions] = await Promise.all([
+  const [profile, sanctions, platform] = await Promise.all([
     ensureProfile(user.id, avatar),
     activeSanctions(user.id),
+    getPlatformPolicy(),
   ]);
   const suspended = sanctions.has('platform');
   const verifiedFactors = (user.factors ?? []).filter(
@@ -68,7 +72,13 @@ export async function accountSummary(user: AuthUser, claims: AccessClaims) {
       level: claims.aal ?? 'aal1',
       securityCodesRemaining: securityCodesLeft,
     },
-    permissions: accountPermissions(user, claims, profile),
+    features: {
+      ageVerificationDisabled: platform.ageVerificationDisabled,
+      skipAgeVerification: platform.skipAgeVerification,
+    },
+    permissions: accountPermissions(user, claims, profile, {
+      skipAgeVerification: platform.skipAgeVerification,
+    }),
   };
 }
 

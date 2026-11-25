@@ -7,8 +7,9 @@ import {
 } from 'react';
 import { LogOut, Tv } from 'lucide-react';
 import type { Party } from '../../hooks/useParty';
-import { mainGridClass } from '../../lib/party/layout';
+import { useT } from '../../i18n';
 import { cx } from '../../lib/cx';
+import { mainGridClass } from '../../lib/party/layout';
 import { IconButton } from '../atoms';
 import {
   Alert,
@@ -16,7 +17,6 @@ import {
   RequestStreamButton,
   StreamTile,
 } from '../molecules';
-import { useT } from '../../i18n';
 
 type Props = {
   party: Party;
@@ -35,6 +35,8 @@ type Props = {
   previewRef?: RefObject<HTMLDivElement | null>;
   /** Self tile that the native window covers while this machine is streaming it. */
   nativeSlotRef?: RefObject<HTMLElement | null>;
+  /** When true, the streamer strip under the main stage is not shown. */
+  stripCollapsed?: boolean;
 };
 
 type DragPayload = { id: string; from: 'main' | 'strip'; index: number };
@@ -52,12 +54,14 @@ export function StreamStage({
   mainVideoRef,
   previewRef,
   nativeSlotRef,
+  stripCollapsed = false,
 }: Props) {
   const t = useT().party;
   const nick = (id: string) => p.peers[id]?.nick ?? '';
   const selfId = p.self?.id;
   const occupied = p.slots.main.filter((id): id is string => id != null);
   const [dragOver, setDragOver] = useState<string | null>(null);
+  const showStrip = p.slots.strip.length > 0 && !stripCollapsed;
 
   const readPayload = (e: DragEvent): DragPayload | null => {
     try {
@@ -300,7 +304,7 @@ export function StreamStage({
                     }),
               )}
             </div>
-            {p.slots.strip.length > 0 && (
+            {showStrip && (
               <div
                 className={cx(
                   'grid flex-none grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2 rounded-lg p-0.5',

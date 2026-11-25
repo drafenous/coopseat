@@ -113,8 +113,11 @@ function PartySection({ account, busy, run }: Omit<SectionProps, 'setFlash'>) {
     ...account.permissions[key],
   }));
   const allUnlocked = gates.every((g) => g.allowed);
+  const ageUiDisabled = Boolean(account.features?.ageVerificationDisabled);
   const canVerify =
-    account.ageStatus !== 'VERIFIED' && account.ageStatus !== 'PENDING';
+    !ageUiDisabled &&
+    account.ageStatus !== 'VERIFIED' &&
+    account.ageStatus !== 'PENDING';
 
   return (
     <Section
@@ -144,31 +147,35 @@ function PartySection({ account, busy, run }: Omit<SectionProps, 'setFlash'>) {
         ))}
       </ul>
 
-      <div className="border-t border-white/5 pt-3">
-        <p className="text-sm">
-          {t.account.ageTitle}:{' '}
-          <strong>{t.account.ageLabels[account.ageStatus]}</strong>
-        </p>
-        <p className="mt-1 text-xs text-muted">{t.account.ageExplainer}</p>
-      </div>
-      {canVerify ? (
-        <Button
-          disabled={
-            busy === 'kyc' || !account.emailConfirmed || !account.nickname
-          }
-          onClick={() =>
-            run('kyc', async () => {
-              const { url } = await api<{ url: string }>(
-                '/api/identity/sessions',
-                { method: 'POST', body: {} },
-              );
-              trackEvent({ name: 'age_verification_start' });
-              window.location.href = url;
-            })
-          }
-        >
-          {t.account.verifyAge}
-        </Button>
+      {!ageUiDisabled ? (
+        <>
+          <div className="border-t border-white/5 pt-3">
+            <p className="text-sm">
+              {t.account.ageTitle}:{' '}
+              <strong>{t.account.ageLabels[account.ageStatus]}</strong>
+            </p>
+            <p className="mt-1 text-xs text-muted">{t.account.ageExplainer}</p>
+          </div>
+          {canVerify ? (
+            <Button
+              disabled={
+                busy === 'kyc' || !account.emailConfirmed || !account.nickname
+              }
+              onClick={() =>
+                run('kyc', async () => {
+                  const { url } = await api<{ url: string }>(
+                    '/api/identity/sessions',
+                    { method: 'POST', body: {} },
+                  );
+                  trackEvent({ name: 'age_verification_start' });
+                  window.location.href = url;
+                })
+              }
+            >
+              {t.account.verifyAge}
+            </Button>
+          ) : null}
+        </>
       ) : null}
     </Section>
   );

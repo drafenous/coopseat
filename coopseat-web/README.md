@@ -169,6 +169,36 @@ A página `/download` mostra a versão, as opções instalador e portátil e os 
 
 ## KYC
 
+### Controle da verificação de idade
+
+As flags ficam no Postgres (`platform_policy`, linha `global`) e valem na próxima requisição, sem deploy. Sem a linha, a verificação continua exigida e a UI aparece (defaults). A migration seed já liga as duas para sair do Didit; para reativar, use o SQL abaixo.
+
+| Tabela | Chave | Efeito |
+| --- | --- | --- |
+| `platform_policy` | `ageVerificationDisabled` | Esconde o CTA/status de idade na conta e recusa `POST /api/identity/sessions` (`kyc_unavailable`) |
+| | `skipAgeVerification` | Trata idade como satisfeita nos gates de watch/chat/host (e na nomeação de moderadores) sem `ageStatus = VERIFIED` |
+
+Para pausar o Didit (recomendado: as duas juntas):
+
+```sql
+insert into platform_policy (id, "ageVerificationDisabled", "skipAgeVerification", "updatedAt")
+  values ('global', true, true, now())
+  on conflict (id) do update set
+    "ageVerificationDisabled" = excluded."ageVerificationDisabled",
+    "skipAgeVerification" = excluded."skipAgeVerification",
+    "updatedAt" = now();
+```
+
+Para voltar a exigir verificação e mostrar a UI:
+
+```sql
+update platform_policy
+  set "ageVerificationDisabled" = false,
+      "skipAgeVerification" = false,
+      "updatedAt" = now()
+  where id = 'global';
+```
+
 `KYC_PROVIDER=mock` usa a página `/verification/mock`, permitida apenas fora de produção ou com `ALLOW_MOCK_KYC=1`.
 
 `KYC_PROVIDER=didit` usa o fluxo hospedado do [Didit](https://didit.me) (500 verificações completas grátis por mês). No console do Didit:
@@ -189,7 +219,7 @@ Para outro provedor, implemente `IdentityProvider` (`createSession` e `parseWebh
 
 ## Estrutura
 
-- `src/prisma/contract.prisma`: modelos `Profile`, `IdentityVerification`, `AuthTicket`, `RateLimitHit`, os de controle do relay (`RelayPolicy`, `RelayUserOverride`, `RelayCredential`, `RelayUsage`) e os da Gaming-Party (`Party*`, `PlatformSanction`), com RLS.
+- `src/prisma/contract.prisma`: modelos `Profile`, `IdentityVerification`, `AuthTicket`, `RateLimitHit`, os de controle do relay (`RelayPolicy`, `RelayUserOverride`, `RelayCredential`, `RelayUsage`), `PlatformPolicy` e os da Gaming-Party (`Party*`, `PlatformSanction`), com RLS.
 - `src/server/`: GoTrue, JWT (JWKS), sessões, tickets, rate limit, captcha, perfis, KYC, política do relay TURN e `party/` (acesso, room tokens, sanções, chamadas ao signal).
 - `src/app/api/`: rotas do BFF.
 - `src/app/(main)/(auth)`, `src/app/(main)/account`, `src/app/(main)/(site)`: páginas.

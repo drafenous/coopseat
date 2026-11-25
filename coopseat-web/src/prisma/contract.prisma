@@ -191,6 +191,21 @@ namespace public {
     @@rls
   }
 
+  /// Platform-wide kill switches (singleton). Operators toggle via SQL; no admin UI.
+  model PlatformPolicy {
+    id                       String                     @id @default("global")
+    /// Hide age-verification UI and refuse new KYC sessions.
+    ageVerificationDisabled  Boolean                    @default(false)
+    /// Treat age as satisfied for watch/chat/host gates without a VERIFIED profile.
+    skipAgeVerification      Boolean                    @default(false)
+    note                     String?
+    updatedAt                temporal.updatedAtString()
+
+    @@check(expression: "id = 'global'", name: "platform_policy_singleton")
+    @@map("platform_policy")
+    @@rls
+  }
+
   model PartyRoom {
     ownerId          AuthUserId                 @id
     owner            Profile                    @relation(fields: [ownerId], references: [id], onDelete: Cascade)

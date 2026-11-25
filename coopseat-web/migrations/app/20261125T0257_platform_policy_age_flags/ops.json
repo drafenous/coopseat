@@ -1,0 +1,107 @@
+[
+  {
+    "id": "table.platform_policy",
+    "label": "Create table \"platform_policy\"",
+    "summary": "Creates table \"platform_policy\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "platform_policy"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"platform_policy\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"platform_policy\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"platform_policy\"",
+        "sql": "CREATE TABLE \"public\".\"platform_policy\" (\n  \"ageVerificationDisabled\" bool DEFAULT false NOT NULL,\n  \"id\" text DEFAULT 'global' NOT NULL,\n  \"note\" text,\n  \"skipAgeVerification\" bool DEFAULT false NOT NULL,\n  \"updatedAt\" timestamptz NOT NULL,\n  PRIMARY KEY (\"id\"),\n  CONSTRAINT \"platform_policy_singleton_3422eee5\" CHECK (id = 'global')\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"platform_policy\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"platform_policy\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data.platform_policy.seed-didit-off",
+    "label": "Seed platform_policy global with age verification disabled",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "platform_policy",
+        "table": "platform_policy"
+      }
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "insert global platform_policy with ageVerificationDisabled and skipAgeVerification true",
+        "sql": "INSERT INTO \"public\".\"platform_policy\" (\"id\", \"ageVerificationDisabled\", \"skipAgeVerification\", \"updatedAt\")\nVALUES ('global', true, true, now())\nON CONFLICT (\"id\") DO UPDATE SET\n  \"ageVerificationDisabled\" = EXCLUDED.\"ageVerificationDisabled\",\n  \"skipAgeVerification\" = EXCLUDED.\"skipAgeVerification\",\n  \"updatedAt\" = now()"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify global platform_policy has both age flags enabled",
+        "sql": "SELECT EXISTS (\n  SELECT 1 FROM \"public\".\"platform_policy\"\n  WHERE \"id\" = 'global'\n    AND \"ageVerificationDisabled\" = true\n    AND \"skipAgeVerification\" = true\n  LIMIT 1\n) AS \"result\""
+      }
+    ]
+  },
+  {
+    "id": "rowLevelSecurity.public.platform_policy",
+    "label": "Enable row-level security on \"platform_policy\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "rowLevelSecurity",
+        "name": "platform_policy"
+      }
+    },
+    "precheck": [
+      {
+        "description": "check RLS is not already enabled on \"platform_policy\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND NOT (\"c\".\"relrowsecurity\"))) AS \"result\"",
+        "params": [
+          "public",
+          "platform_policy"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "enable row-level security on \"platform_policy\"",
+        "sql": "ALTER TABLE \"public\".\"platform_policy\" ENABLE ROW LEVEL SECURITY"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify row-level security is enabled on \"platform_policy\"",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"relnamespace\" WHERE (\"n\".\"nspname\" = $1 AND \"c\".\"relname\" = $2 AND \"c\".\"relrowsecurity\")) AS \"result\"",
+        "params": [
+          "public",
+          "platform_policy"
+        ]
+      }
+    ]
+  }
+]

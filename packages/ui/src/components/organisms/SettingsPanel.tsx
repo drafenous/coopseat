@@ -85,7 +85,7 @@ export function SettingsPanel({
     running || busy || Boolean(transmit?.streaming || transmit?.busy);
   const t = useT().settings;
   return (
-    <aside className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#121921] immersive:hidden max-[750px]:overflow-visible">
+    <aside className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[14px] border border-[#2a3542] bg-[#121921] cinema-chrome:rounded-none max-[750px]:overflow-visible">
       <div className="min-h-0 flex-1 overflow-y-auto px-5 pt-[18px] pb-2 [scrollbar-color:#2a3846_transparent] [scrollbar-width:thin] min-[1800px]:px-6 min-[1800px]:pt-[22px] max-[750px]:overflow-visible">
         <div className="mb-[18px] flex items-center gap-[9px] text-[#c3d0dd]">
           <Settings2 size={18} />

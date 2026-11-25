@@ -5,12 +5,14 @@ import {
   Flag,
   Keyboard,
   Maximize,
+  PanelBottom,
   PictureInPicture2,
   Pin,
 } from 'lucide-react';
+import { useT } from '../../i18n';
+import { cx } from '../../lib/cx';
 import { IconButton } from '../atoms';
 import { CinemaMenu, VolumeControl } from '../molecules';
-import { useT } from '../../i18n';
 import { ShortcutsModal } from './ShortcutsModal';
 
 type Props = {
@@ -36,6 +38,12 @@ type Props = {
   onCinemaDelay(delay: number): void;
   onFullscreen(): void;
   onReport(): void;
+  /** Cinema: hide chrome, or show it as a translucent overlay. */
+  cinemaChrome?: 'hidden' | 'overlay';
+  /** Party: toggle the streamer strip under the stage. */
+  stripCollapsed?: boolean;
+  canToggleStrip?: boolean;
+  onToggleStrip?(): void;
 };
 
 export function TransportBar({
@@ -61,13 +69,25 @@ export function TransportBar({
   onCinemaDelay,
   onFullscreen,
   onReport,
+  cinemaChrome,
+  stripCollapsed = false,
+  canToggleStrip = false,
+  onToggleStrip,
 }: Props) {
   const all = useT();
   const t = all.transport;
+  const stage = all.party.stage;
   const [shortcuts, setShortcuts] = useState(false);
   return (
     <>
-      <div className="flex h-14 flex-none items-center justify-between gap-3 border-t border-[#ffffff0a] bg-[#111821] px-[13px] immersive:hidden">
+      <div
+        data-overlay={cinemaChrome === 'overlay' || undefined}
+        className={cx(
+          'flex h-14 flex-none items-center justify-between gap-3 border-t border-[#ffffff0a] bg-[#111821] px-[13px]',
+          cinemaChrome === 'hidden' && 'hidden',
+          cinemaChrome === 'overlay' && 'relative z-20',
+        )}
+      >
         <VolumeControl
           volume={volume}
           onChange={onVolume}
@@ -80,6 +100,17 @@ export function TransportBar({
         >
           <Keyboard size={17} />
         </IconButton>
+        {canToggleStrip && onToggleStrip && (
+          <IconButton
+            label={stripCollapsed ? stage.showStrip : stage.hideStrip}
+            title={stripCollapsed ? stage.showStrip : stage.hideStrip}
+            selected={!stripCollapsed}
+            aria-pressed={!stripCollapsed}
+            onClick={onToggleStrip}
+          >
+            <PanelBottom size={17} />
+          </IconButton>
+        )}
         <div className="flex items-center gap-1.5">
           <IconButton
             label={t.stats}

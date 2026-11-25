@@ -20,7 +20,7 @@ export async function SiteFooter() {
     <footer className="border-t border-line-soft">
       <div className="mx-auto grid max-w-6xl gap-10 px-6 py-14 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr]">
         <div>
-          <Brand href={href('/')} version={null} />
+          <Brand href={href('/')} />
           <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted">
             {h.footer.tagline}
           </p>

@@ -105,7 +105,7 @@ export function StreamTile({
       {/* Our own preview is always muted to avoid echo. */}
       <video
         ref={setVideo}
-        className="h-full w-full object-contain"
+        className="h-full w-full object-contain cinema-chrome:object-left"
         autoPlay
         playsInline
         muted={self || muted}

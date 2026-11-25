@@ -34,9 +34,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'ac614c0f6d849d988afc6be1224f3b5b5f52e92d8a914cb0ce14681843458df2'>;
+  StorageHashBase<'4ceeb2c25f9ffd0c80c70b95d3b0d75279132c8aa788828fca2e2b606570a067'>;
 export type ExecutionHash =
-  ExecutionHashBase<'16212b2a108edf1cbe98d9f03d5e864cbec4a88abc22f9ce1eb15d63c410a8c7'>;
+  ExecutionHashBase<'ea7aeb7f9b1e13a14899fa91d6161c4437acfc791ed11070ffa2ce133d5e1828'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -346,6 +346,13 @@ export type FieldOutputTypes = {
       readonly removedBy: CodecTypes['pg/uuid@1']['output'] | null;
       readonly sessionId: CodecTypes['pg/uuid@1']['output'];
     };
+    readonly PlatformPolicy: {
+      readonly ageVerificationDisabled: CodecTypes['pg/bool@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly note: CodecTypes['pg/text@1']['output'] | null;
+      readonly skipAgeVerification: CodecTypes['pg/bool@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly PlatformSanction: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly createdBy: CodecTypes['pg/text@1']['output'] | null;
@@ -517,6 +524,13 @@ export type FieldInputTypes = {
       readonly removal: CodecTypes['pg/text@1']['input'] | null;
       readonly removedBy: CodecTypes['pg/uuid@1']['input'] | null;
       readonly sessionId: CodecTypes['pg/uuid@1']['input'];
+    };
+    readonly PlatformPolicy: {
+      readonly ageVerificationDisabled: CodecTypes['pg/bool@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly note: CodecTypes['pg/text@1']['input'] | null;
+      readonly skipAgeVerification: CodecTypes['pg/bool@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly PlatformSanction: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -690,6 +704,13 @@ export type StorageColumnTypes = {
       readonly roomId: CodecTypes['pg/uuid@1']['output'];
       readonly startedAt: CodecTypes['pg/timestamptz-string@1']['output'];
     };
+    readonly platform_policy: {
+      readonly ageVerificationDisabled: CodecTypes['pg/bool@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly note: CodecTypes['pg/text@1']['output'] | null;
+      readonly skipAgeVerification: CodecTypes['pg/bool@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    };
     readonly platform_sanctions: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
       readonly createdBy: CodecTypes['pg/text@1']['output'] | null;
@@ -861,6 +882,13 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/uuid@1']['input'];
       readonly roomId: CodecTypes['pg/uuid@1']['input'];
       readonly startedAt: CodecTypes['pg/timestamptz-string@1']['input'];
+    };
+    readonly platform_policy: {
+      readonly ageVerificationDisabled: CodecTypes['pg/bool@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly note: CodecTypes['pg/text@1']['input'] | null;
+      readonly skipAgeVerification: CodecTypes['pg/bool@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz-string@1']['input'];
     };
     readonly platform_sanctions: {
       readonly createdAt: CodecTypes['pg/timestamptz-string@1']['input'];
@@ -1056,6 +1084,14 @@ export namespace Models {
     session: public_PartySession;
     readonly [RelationKeys]?: 'profile' | 'session';
   };
+  export type public_PlatformPolicy = {
+    ageVerificationDisabled: CodecTypes['pg/bool@1']['output'];
+    id: CodecTypes['pg/text@1']['output'];
+    note: CodecTypes['pg/text@1']['output'] | null;
+    skipAgeVerification: CodecTypes['pg/bool@1']['output'];
+    updatedAt: CodecTypes['pg/timestamptz-string@1']['output'];
+    readonly [RelationKeys]?: never;
+  };
   export type public_PlatformSanction = {
     createdAt: CodecTypes['pg/timestamptz-string@1']['output'];
     createdBy: CodecTypes['pg/text@1']['output'] | null;
@@ -1154,6 +1190,7 @@ export declare const models: {
     PartyRoomWhitelist: Models.public_PartyRoomWhitelist;
     PartySession: Models.public_PartySession;
     PartySessionParticipant: Models.public_PartySessionParticipant;
+    PlatformPolicy: Models.public_PlatformPolicy;
     PlatformSanction: Models.public_PlatformSanction;
     Profile: Models.public_Profile;
     RateLimitHit: Models.public_RateLimitHit;
@@ -1991,6 +2028,51 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly platform_policy: {
+              columns: {
+                readonly ageVerificationDisabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly id: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'global'>;
+                  };
+                };
+                readonly note: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly skipAgeVerification: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
             readonly platform_sanctions: {
               columns: {
                 readonly createdAt: {
@@ -2563,6 +2645,10 @@ type ContractBase = Omit<
     readonly party_sessions: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'PartySession';
+    };
+    readonly platform_policy: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PlatformPolicy';
     };
     readonly platform_sanctions: {
       readonly namespace: 'public' & NamespaceId;
@@ -3288,6 +3374,45 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly PlatformPolicy: {
+            readonly fields: {
+              readonly ageVerificationDisabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly note: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly skipAgeVerification: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-string@1';
+                };
+              };
+            };
+            readonly relations: Record<string, never>;
+            readonly storage: {
+              readonly table: 'platform_policy';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly ageVerificationDisabled: { readonly column: 'ageVerificationDisabled' };
+                readonly id: { readonly column: 'id' };
+                readonly note: { readonly column: 'note' };
+                readonly skipAgeVerification: { readonly column: 'skipAgeVerification' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
           readonly PlatformSanction: {
             readonly fields: {
               readonly createdAt: {
@@ -3897,6 +4022,15 @@ type ContractBase = Omit<
           readonly ref: {
             readonly entry: 'party_sessions';
             readonly field: 'id';
+            readonly namespace: 'public';
+          };
+        },
+        {
+          readonly onCreate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly onUpdate: { readonly id: 'timestampNow'; readonly kind: 'generator' };
+          readonly ref: {
+            readonly entry: 'platform_policy';
+            readonly field: 'updatedAt';
             readonly namespace: 'public';
           };
         },

@@ -63,6 +63,11 @@ function validateBounds(o) {
     if (!bounded(o.dim, 0, 1)) throw Error('Área de vídeo inválida.');
     r.dim = o.dim;
   }
+  if (o.align !== undefined) {
+    if (o.align !== 'left' && o.align !== 'center')
+      throw Error('Área de vídeo inválida.');
+    r.align = o.align;
+  }
   return r;
 }
 

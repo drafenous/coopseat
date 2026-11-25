@@ -10,6 +10,7 @@ import { accountPermissions } from '../account';
 import { auth as authErrors } from '../auth-errors';
 import { gotrue } from '../gotrue';
 import { ApiError } from '../http';
+import { getPlatformPolicy } from '../platform-policy';
 import { ensureProfile, isUniqueViolation } from '../profiles';
 import { rateLimit } from '../rate-limit';
 import type { AuthContext } from '../session';
@@ -29,17 +30,20 @@ export type Viewer = {
 
 /** Auth user, profile and sanctions in one round, then the watch gate. Throws if the account is suspended. */
 export async function loadViewer(session: AuthContext): Promise<Viewer> {
-  const [user, profile, sanctions] = await Promise.all([
+  const [user, profile, sanctions, platform] = await Promise.all([
     authErrors(gotrue.getUser(session.token)),
     ensureProfile(session.claims.sub),
     activeSanctions(session.claims.sub),
+    getPlatformPolicy(),
   ]);
   if (sanctions.has('platform')) throw new ApiError(403, 'account_suspended');
   return {
     profileId: session.claims.sub,
     nickname: profile.nickname,
     sanctions,
-    permissions: accountPermissions(user, session.claims, profile),
+    permissions: accountPermissions(user, session.claims, profile, {
+      skipAgeVerification: platform.skipAgeVerification,
+    }),
   };
 }
 

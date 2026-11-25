@@ -1,7 +1,7 @@
 import { CircleHelp, Monitor, Settings, Wrench } from 'lucide-react';
 import type { Auth } from '../../hooks/useAuth';
 import { useT } from '../../i18n';
-import { platform } from '../../platform';
+import { cx } from '../../lib/cx';
 import { RoomSearch } from '../../rooms/RoomSearch';
 import { IconButton } from '../atoms';
 import { buttonClass } from '../atoms/Button';
@@ -24,6 +24,8 @@ type Props = {
   onOpenDesktop?: () => void;
   /** Web only: search results can hand the room to the desktop app. */
   downloadHref?: string;
+  /** Cinema: hide chrome, or pin it as a translucent overlay. */
+  cinemaChrome?: 'hidden' | 'overlay';
 };
 
 export function AppHeader({
@@ -41,12 +43,20 @@ export function AppHeader({
   roomsOpen,
   onOpenDesktop,
   downloadHref,
+  cinemaChrome,
 }: Props) {
   const t = useT().header;
   const a = auth.account;
   return (
-    <header className="flex h-[68px] flex-none items-center justify-between gap-4 border-b border-[#ffffff0d] bg-[#0e141b] px-[clamp(16px,2.5vw,48px)] immersive:hidden">
-      <Brand version={platform().kind === 'web' ? null : undefined} />
+    <header
+      data-overlay={cinemaChrome === 'overlay' || undefined}
+      className={cx(
+        'flex h-[68px] flex-none items-center justify-between gap-4 border-b border-[#ffffff0d] bg-[#0e141b] px-[clamp(16px,2.5vw,48px)]',
+        cinemaChrome === 'hidden' && 'hidden',
+        cinemaChrome === 'overlay' && 'fixed inset-x-0 top-0 z-20',
+      )}
+    >
+      <Brand />
       <div className="ml-auto flex items-center gap-3">
         <RoomSearch
           onOpenRoom={onOpenRoom}

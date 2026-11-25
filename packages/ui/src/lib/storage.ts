@@ -11,4 +11,6 @@ export const TELEMETRY_KEY = 'input-telemetry';
 export const TELEMETRY_ID_KEY = 'input-telemetry-id';
 export const PARTY_LAYOUT_KEY = 'party-layout';
 export const PARTY_PANEL_KEY = 'party-panel-collapsed';
+/** When "1", the party streamer strip under the stage is collapsed. */
+export const PARTY_STRIP_KEY = 'party-strip-collapsed';
 export const PARTY_SOURCE_KEY = 'party-source-kind';

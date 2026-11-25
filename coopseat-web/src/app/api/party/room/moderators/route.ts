@@ -16,6 +16,7 @@ import {
   requireVerified,
 } from '@/server/party/routes';
 import { signalCommand } from '@/server/party/signal';
+import { getPlatformPolicy } from '@/server/platform-policy';
 
 async function refreshLive(ownerId: string, profileId: string) {
   const session = await getActiveSession(ownerId, await getPartyPolicy());
@@ -36,8 +37,13 @@ export const POST = route(async (req) => {
   ) {
     throw new ApiError(400, 'party_target_invalid');
   }
-  if (target.ageStatus !== 'VERIFIED')
+  const platform = await getPlatformPolicy();
+  if (
+    !platform.skipAgeVerification &&
+    target.ageStatus !== 'VERIFIED'
+  ) {
     throw new ApiError(400, 'party_target_unverified');
+  }
 
   const db = await adminDb();
   const mods = db.orm.public.PartyRoomModerator;

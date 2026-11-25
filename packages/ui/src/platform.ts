@@ -46,6 +46,8 @@ export type DesktopBridge = {
       radius?: number;
     }[];
     dim?: number;
+    /** Letterbox flush left while cinema chrome covers the right. */
+    align?: 'left' | 'center';
   }): Promise<void>;
   window(action: string): Promise<boolean | void>;
   donate(): Promise<void>;

@@ -89,9 +89,17 @@ export function Select<T extends SelectValue>({
       below = window.innerHeight - r.bottom - MARGIN,
       above = r.top - MARGIN,
       up = below < 200 && above > below;
+    let left = r.left;
+    const listEl = list.current;
+    if (listEl) {
+      const lw = Math.max(r.width, listEl.getBoundingClientRect().width);
+      if (left + lw > window.innerWidth - MARGIN)
+        left = Math.max(MARGIN, r.right - lw);
+    }
     setStyle({
-      left: r.left,
-      width: r.width,
+      left,
+      minWidth: r.width,
+      width: 'max-content',
       maxHeight: Math.min(MAX_HEIGHT, (up ? above : below) - GAP),
       ...(up
         ? { bottom: window.innerHeight - r.top + GAP }
@@ -118,6 +126,10 @@ export function Select<T extends SelectValue>({
       document.removeEventListener('mousedown', down);
     };
   }, [open, place]);
+  // Re-measure after the list mounts so max-content width can clamp to the viewport.
+  useLayoutEffect(() => {
+    if (open && style) place();
+  }, [open, style?.minWidth, place]);
   useEffect(() => {
     if (open && active >= 0)
       document
@@ -268,7 +280,7 @@ export function Select<T extends SelectValue>({
                     isSelected ? 'text-accent' : 'text-[#d4dee8]',
                   )}
                 >
-                  <span className="min-w-0 flex-1 break-words">{o.label}</span>
+                  <span className="flex-1 whitespace-nowrap">{o.label}</span>
                   {isSelected && <Check size={14} className="flex-none" />}
                 </li>
               );
