@@ -4,6 +4,17 @@ All notable changes to the CoopSeat desktop app are documented here. The format 
 
 ## [Unreleased]
 
+## [0.4.5] - 2026-11-25
+
+### Added
+
+- Packaged capture asks Windows for borderless graphics capture, so a yellow frame is not drawn around the shared window or screen.
+- Copying a room link can use the system clipboard from inside the app.
+
+### Changed
+
+- Cinema chrome overlays and the party streamer-strip toggle ship with the shared player.
+
 ## [0.4.4] - 2026-11-03
 
 ### Fixed

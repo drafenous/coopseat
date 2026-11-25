@@ -4,6 +4,17 @@ All notable changes to `@coopseat/ui` are documented here. The format is based o
 
 ## [Unreleased]
 
+## [0.3.4] - 2026-11-25
+
+### Added
+
+- Cinema can keep the header, chat, and settings as a translucent overlay over the video, instead of only hiding them.
+- In a party, the streamer strip under the stage can be shown or hidden from the transport bar.
+
+### Changed
+
+- On the web, screen and window capture use one browser picker choice. Window-only audio still applies when a window is chosen.
+
 ## [0.3.3] - 2026-11-03
 
 ### Fixed

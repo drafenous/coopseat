@@ -4,6 +4,17 @@ All notable changes to the CoopSeat website and BFF are documented here. The for
 
 ## [Unreleased]
 
+## [0.4.4] - 2026-11-25
+
+### Added
+
+- Operators can toggle platform-wide age-verification kill switches (`platform_policy`) without a deploy.
+
+### Changed
+
+- The Microsoft Store is the recommended way to install CoopSeat on the download page.
+- Cinema chrome overlays and the party streamer-strip toggle ship with the shared player.
+
 ## [0.4.3] - 2026-11-03
 
 ### Fixed
