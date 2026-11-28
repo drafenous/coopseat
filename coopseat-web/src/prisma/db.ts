@@ -8,16 +8,20 @@ import contractJson from './contract.json' with { type: 'json' };
 import { isAuthDb } from './request-db';
 
 /**
- * The role session stays checked out while the runtime reads the contract
- * marker on a second connection. Parallel queries then fill the pool and the
- * marker read waits until the 20s connect timeout. Marker drift is checked by
- * `prisma db migrate` in CI, so requests skip that read and hold one connection
- * each. The application pool serves party (up to five queries). Login, /api/me
- * and the account page use the auth pool, so a live room does not block them.
- * Idle connections are returned after a second.
+ * Session pooler (port 5432), not the transaction pooler: the Supabase runtime
+ * binds a role for the life of the connection. That pooler's `pool_size` is 15
+ * server clients, and each checked-out client holds one of them until it goes
+ * idle. A join used to check out six app connections at once, so two warm
+ * instances filled the pooler: new clients failed with EMAXCONNSESSION and
+ * queries already running were canceled with statement timeout (57014).
+ * One client per pool. Parallel queries queue on that client. Marker drift is
+ * checked by `prisma db migrate` in CI (`verifyMarker: false`), so a request
+ * does not take a second connection. Login, /api/me and the account page use
+ * the auth pool, so a live room does not block them. Idle clients close after
+ * a second and return the pooler slot.
  */
-const APP_POOL_MAX = 6;
-const AUTH_POOL_MAX = 3;
+const APP_POOL_MAX = 1;
+const AUTH_POOL_MAX = 1;
 
 const pools: { app?: Pool; auth?: Pool } = {};
 
